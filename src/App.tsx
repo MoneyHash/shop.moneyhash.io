@@ -1,9 +1,7 @@
-import './App.css';
-
 function App() {
   return (
-    <div>
-      <h1>MoneyHash</h1>
+    <div className="h-full flex justify-center items-center">
+      <h1 className="text-3xl font-bold text-center">MoneyHash</h1>
     </div>
   );
 }
