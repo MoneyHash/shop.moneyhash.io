@@ -1,10 +1,15 @@
 import { Fragment, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { ShoppingBagIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { Popover, Transition } from '@headlessui/react';
 import clsx from 'clsx';
-import useShoppingCart from '../store/useShopingCart';
+import useShoppingCart from '../store/useShoppingCart';
+import useCurrency from '../store/useCurrency';
+import twoFixedDigit from '../utils/twoFixedDigits';
+import formatCurrency from '../utils/formatCurrency';
 
 export default function ShoppingCart() {
+  const currency = useCurrency(state => state.currency);
   const {
     cart,
     removeProductFromCart,
@@ -18,7 +23,7 @@ export default function ShoppingCart() {
   );
 
   return (
-    <Popover className="ml-4 flow-root text-sm lg:relative lg:ml-8">
+    <Popover className="ml-4 flow-root text-sm lg:relative lg:ml-3">
       <Popover.Button className="group -m-2 flex items-center p-2">
         <ShoppingBagIcon
           className="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
@@ -63,7 +68,14 @@ export default function ShoppingCart() {
                     <div>
                       <div className="flex justify-between text-base font-medium text-gray-900">
                         <h3>{product.name}</h3>
-                        <p className="ml-4">{product.price.USD}</p>
+                        <p className="ml-4">
+                          {formatCurrency({
+                            currency,
+                            amount: twoFixedDigit(
+                              product.quantity * product.price[currency],
+                            ),
+                          })}
+                        </p>
                       </div>
                       <p className="mt-1 text-sm text-gray-500">
                         {product.description}
@@ -106,16 +118,16 @@ export default function ShoppingCart() {
               ))}
             </ul>
           </div>
-          <div className="pt-2 -mx-2 px-2 -mb-2 border-t border-t-slate-100">
-            <a
-              href="/checkout"
+          <div className="pt-4 -mx-2 px-4 -mb-2 border-t border-t-slate-100">
+            <Link
+              to="/checkout"
               className={clsx(
                 'block text-center w-full rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50',
                 cart.length === 0 && 'pointer-events-none opacity-50',
               )}
             >
               Checkout
-            </a>
+            </Link>
           </div>
         </Popover.Panel>
       </Transition>

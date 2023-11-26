@@ -1,10 +1,13 @@
-import Home from './pages/home';
+import { Outlet, ScrollRestoration } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
-    <div>
-      <Home />
-    </div>
+    <>
+      <ScrollRestoration />
+      <Outlet />
+      <Toaster />
+    </>
   );
 }
 

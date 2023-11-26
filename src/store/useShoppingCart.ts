@@ -10,7 +10,8 @@ type Action = {
   incrementProductQuantity: (productId: string) => void;
   decrementProductQuantity: (productId: string) => void;
   removeProductFromCart: (productId: string) => void;
-  reset: () => void;
+  resetCart: () => void;
+  emptyCart: () => void;
 };
 
 const initialCart: State['cart'] = [
@@ -54,7 +55,8 @@ const useShoppingCart = create<State & Action>(set => ({
       cart: state.cart.filter(p => p.id !== productId),
     }));
   },
-  reset: () => set({ cart: initialCart }),
+  resetCart: () => set({ cart: initialCart }),
+  emptyCart: () => set({ cart: [] }),
 }));
 
 export default useShoppingCart;

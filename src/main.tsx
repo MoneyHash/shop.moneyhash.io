@@ -1,10 +1,36 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import './index.css';
 
+import Home from './pages/home';
+import Checkout from './pages/checkout';
+import Order from './pages/order';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />,
+    children: [
+      {
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: '/checkout',
+        element: <Checkout />,
+      },
+      {
+        path: '/checkout/order/:orderId',
+        element: <Order />,
+      },
+    ],
+  },
+]);
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>,
 );

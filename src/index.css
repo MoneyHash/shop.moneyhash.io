@@ -12,4 +12,8 @@
   html {
     scroll-behavior: smooth;
   }
+
+  html {
+    overflow-x: hidden;
+  }
 }

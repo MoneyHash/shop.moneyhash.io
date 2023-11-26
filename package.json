@@ -17,12 +17,16 @@
   "dependencies": {
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
-    "@moneyhash/js-sdk": "^0.1.1",
+    "@moneyhash/js-sdk": "^0.1.2",
     "axios": "^1.6.2",
     "clsx": "^2.0.0",
     "nanoid": "^5.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hook-form": "^7.48.2",
+    "react-hot-toast": "^2.4.1",
+    "react-linkify-it": "^1.0.8",
+    "react-router-dom": "^6.19.0",
     "zustand": "^4.4.6"
   },
   "devDependencies": {
