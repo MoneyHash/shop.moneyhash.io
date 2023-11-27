@@ -52,6 +52,9 @@ export default function Checkout() {
         city: data.city,
         state: data.state,
         postal_code: data.postal_code,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone_number: data.phone_number,
       },
       product_items: cart.map(product => ({
         name: product.name,
@@ -142,7 +145,7 @@ export default function Checkout() {
             {paymentMethods ? (
               <div
                 id="moneyhash-iframe"
-                className="w-full h-full min-h-[1000px] bg-red-500 -mt-20"
+                className="w-full h-full min-h-[1000px] -mt-20"
               >
                 <h3 className="text-lg font-medium text-gray-900 mt-20">
                   Payment method

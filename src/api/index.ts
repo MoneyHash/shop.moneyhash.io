@@ -6,7 +6,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.response.use(res => res.data);
 
-const ACCOUNT_API_KEY = 'PzNEWbYv.D3Mfra0jsdy7zrJYHyhl68XF5vIlmvA3';
+const ACCOUNT_API_KEY = 'E0RfHM6B.AovEXfxAz0wAwDYRoCCrXiDYyBLcyp2l';
 
 axiosInstance.interceptors.request.use(config => {
   // eslint-disable-next-line no-param-reassign
