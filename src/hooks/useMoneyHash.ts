@@ -41,6 +41,10 @@ export default function useMoneyHash({
               background: '#322e81',
             },
           },
+          loader: {
+            backgroundColor: 'white',
+            color: 'black',
+          },
         },
       }),
     [],

@@ -145,7 +145,7 @@ export default function Checkout() {
             {paymentMethods ? (
               <div
                 id="moneyhash-iframe"
-                className="w-full h-full min-h-[1000px] -mt-20"
+                className="w-full h-full min-h-[800px] -mt-20 [&_iframe]:bg-white"
               >
                 <h3 className="text-lg font-medium text-gray-900 mt-20">
                   Payment method
