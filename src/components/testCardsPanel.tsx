@@ -12,7 +12,7 @@ export default function TestCardsPanel() {
   return (
     <div
       className={clsx(
-        'fixed bottom-0 right-5 max-w-xs w-full flex flex-col rounded-md bg-slate-800 text-white text-sm z-10 transition-transform',
+        'fixed bottom-0 right-5 max-w-xs w-full flex flex-col rounded-md bg-slate-800 text-white text-sm z-20 transition-transform',
         isOpen ? 'translate-y-0' : 'translate-y-[268px]',
       )}
     >

@@ -1,4 +1,3 @@
-import Banner from '../components/banner';
 import NavBar from '../components/navbar';
 import ProductItem from '../components/productItem';
 import productSections from '../utils/productSections';
@@ -7,7 +6,6 @@ export default function Home() {
   return (
     <div className="bg-white">
       <NavBar />
-      <Banner />
 
       <div className="pb-80 pt-16 sm:pb-40 sm:pt-24 lg:pb-48 lg:pt-40 relative overflow-hidden sm:overflow-visible">
         <div className="relative mx-auto max-w-7xl px-4 sm:static sm:px-6 lg:px-8">

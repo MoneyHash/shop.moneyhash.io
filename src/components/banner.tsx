@@ -1,6 +1,15 @@
+import clsx from 'clsx';
+import { useLocation } from 'react-router-dom';
+
 export default function Banner() {
+  const location = useLocation();
   return (
-    <div className="fixed bottom-4 px-2 flex justify-center w-full pointer-events-none z-10">
+    <div
+      className={clsx(
+        'fixed bottom-4 px-2 flex justify-center w-full pointer-events-none z-10',
+        location.pathname === '/checkout' && 'max-xl:bottom-16',
+      )}
+    >
       <div className="w-full flex items-center justify-center shadow-lg max-w-3xl bg-white border border-gray-100 rounded-full space-x-2 text-gray-800 font-medium text-xs py-3 px-4 pointer-events-auto md:text-sm">
         <svg
           xmlns="http://www.w3.org/2000/svg"
