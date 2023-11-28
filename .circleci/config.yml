@@ -1,0 +1,37 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/configuration-reference
+version: 2.1
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/configuration-reference/#jobs
+jobs:
+  deploy-app:
+    docker: # Specify executor for running deploy job
+      - image: cimg/node:20.0-browsers # Specify docker image to use
+    steps:
+      - checkout
+      - run: # install and activate virtual environment with pip
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install python3 -y
+            sudo apt-get install pip
+            pip install awscli
+            pip install django-environ==0.4.5
+            yarn
+      - run:
+          name: Build & deploy
+          command: |
+            yarn build
+            cd dist
+            AWS_SECRET_ACCESS_KEY=$S3_AWS_SECRET_ACCESS_KEY AWS_ACCESS_KEY_ID=$S3_AWS_ACCESS_KEY_ID aws s3 sync --acl public-read . s3://shop.moneyhash.io/
+
+# Orchestrate jobs using workflows
+# See: https://circleci.com/docs/configuration-reference/#workflows
+workflows:
+  deploy-workflow:
+    jobs:
+      - deploy-app:
+          filters:
+            branches:
+              only: main
