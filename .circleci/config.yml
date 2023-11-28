@@ -5,22 +5,34 @@ version: 2.1
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/configuration-reference/#jobs
 jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/configuration-reference/#executor-job
-    docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/configuration-reference/#steps
+  deploy-app:
+    docker: # Specify executor for running deploy job
+      - image: cimg/node:20.0-browsers # Specify docker image to use
     steps:
       - checkout
+      - run: # install and activate virtual environment with pip
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install python3 -y
+            sudo apt-get install pip
+            pip install awscli
+            pip install django-environ==0.4.5
+            yarn
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+          name: Build & deploy
+          command: |
+            yarn build
+            cd dist
+            AWS_SECRET_ACCESS_KEY=$S3_AWS_SECRET_ACCESS_KEY AWS_ACCESS_KEY_ID=$S3_AWS_ACCESS_KEY_ID aws s3 sync --acl public-read . s3://shop.moneyhash.io/
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
 workflows:
-  say-hello-workflow:
+  deploy-workflow:
     jobs:
-      - say-hello
+      - deploy-app:
+          filters:
+            branches:
+              # only: main
+              only: circleci-project-setup
