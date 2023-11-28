@@ -34,5 +34,4 @@ workflows:
       - deploy-app:
           filters:
             branches:
-              # only: main
-              only: circleci-project-setup
+              only: main
