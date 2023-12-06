@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { type Method } from '@moneyhash/js-sdk/headless';
+import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import NavBar from '../components/navbar';
 import useShoppingCart from '../store/useShoppingCart';
 import twoFixedDigit from '../utils/twoFixedDigits';
@@ -16,6 +17,7 @@ export default function Checkout() {
   const [intentId, setIntentId] = useState('');
   const [isPaying, setIsPaying] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<Method | null>(null);
   const navigate = useNavigate();
   const currency = useCurrency(state => state.currency);
   const cart = useShoppingCart(state => state.cart);
@@ -70,6 +72,15 @@ export default function Checkout() {
     setIntentId(intent.data.id);
     setPaymentMethods(paymentMethods);
   };
+
+  useEffect(() => {
+    if (!selectedMethod) return;
+    moneyHash.renderForm({
+      intentId,
+      selector: '#moneyhash-iframe',
+    });
+  }, [selectedMethod, intentId, moneyHash]);
+
   return (
     <div className="min-h-full flex flex-col">
       <NavBar hideCurrency hideCart />
@@ -140,14 +151,12 @@ export default function Checkout() {
 
           <section
             aria-labelledby="payment-and-shipping-heading"
-            className="py-16 pb-36 lg:col-start-1 lg:row-start-1 lg:mx-auto lg:w-full lg:max-w-lg lg:pb-24 lg:pt-0"
+            className="py-16 pb-36 px-4 lg:px-0 lg:col-start-1 lg:row-start-1 lg:mx-auto lg:w-full lg:max-w-lg lg:pb-24 lg:pt-0"
           >
-            {paymentMethods ? (
-              <div
-                id="moneyhash-iframe"
-                className="w-full h-full min-h-[800px] -mt-20 [&_iframe]:bg-white"
-              >
-                <h3 className="text-lg font-medium text-gray-900 mt-20">
+            {!paymentMethods && <InfoForm onSubmit={handleSubmit} />}
+            {paymentMethods && !selectedMethod && (
+              <>
+                <h3 className="text-lg font-medium text-gray-900">
                   Payment method
                 </h3>
                 <div className="flex flex-wrap gap-4 mt-4">
@@ -173,11 +182,8 @@ export default function Checkout() {
                           });
                           return;
                         }
-
-                        await moneyHash.renderForm({
-                          intentId,
-                          selector: '#moneyhash-iframe',
-                        });
+                        setIsPaying(false);
+                        setSelectedMethod(method);
                       }}
                     >
                       <div className="relative flex items-center gap-3 bg-white py-2 px-3 rounded-md group-hover:bg-slate-50">
@@ -193,9 +199,25 @@ export default function Checkout() {
                     </button>
                   ))}
                 </div>
+              </>
+            )}
+            {paymentMethods && selectedMethod && (
+              <div className="h-full">
+                <button
+                  type="button"
+                  className="relative z-10 flex items-center space-x-1 text-sm font-medium text-indigo-600 underline underline-offset-2 hover:text-indigo-500"
+                  onClick={() => {
+                    setSelectedMethod(null);
+                  }}
+                >
+                  <ArrowLeftIcon className="w-4 h-4" />
+                  <span>Select different payment method</span>
+                </button>
+                <div
+                  id="moneyhash-iframe"
+                  className="w-full h-full min-h-[800px] [&_iframe]:bg-white relative -top-10"
+                />
               </div>
-            ) : (
-              <InfoForm onSubmit={handleSubmit} />
             )}
           </section>
         </div>

@@ -19,7 +19,7 @@ export default function NavBar({
   return (
     <nav
       aria-label="Top"
-      className="z-10 bg-white bg-opacity-90 backdrop-blur-xl sticky top-0 border-b shadow-sm border-slate-100"
+      className="z-20 bg-white bg-opacity-90 backdrop-blur-xl sticky top-0 border-b shadow-sm border-slate-100"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center">
         <div className="flex items-center">
