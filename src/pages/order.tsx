@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import { LinkItUrl } from 'react-linkify-it';
@@ -9,12 +9,15 @@ import formatCurrency from '../utils/formatCurrency';
 import { products, type Currency } from '../utils/productSections';
 import NotFound from '../components/notFound';
 import TransactionFailed from '../components/transactionFailed';
+import TransactionClosed from '../components/transactionClosed';
 
 export default function Order() {
   const [intentDetails, setIntentDetails] =
     useState<IntentDetails<'payment'> | null>(null);
   const [error, setError] = useState();
-  const { orderId } = useParams<{ orderId: string }>();
+  // const { orderId } = useParams<{ orderId: string }>();
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get('intent_id');
   const moneyHash = useMoneyHash();
 
   useEffect(() => {
@@ -63,6 +66,15 @@ export default function Order() {
     );
   }
 
+  if (intentDetails?.state === 'CLOSED') {
+    return (
+      <div>
+        <NavBar hideCurrency hideCart />
+        <TransactionClosed />
+      </div>
+    );
+  }
+
   return (
     <div>
       <NavBar hideCurrency hideCart />
@@ -70,7 +82,7 @@ export default function Order() {
         <div className="bg-white">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
             <div className="max-w-xl">
-              <h1 className="text-base font-medium text-indigo-600">
+              <h1 className="text-base font-medium text-decathlon-dark">
                 Thank you!
               </h1>
               <p className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
@@ -85,7 +97,7 @@ export default function Order() {
                   0 && (
                   <a
                     href="#actions"
-                    className="underline text-blue-500 hover:text-blue-600 text-sm"
+                    className="underline text-decathlon hover:text-decathlon-dark text-sm"
                   >
                     Please check the actions required ↓
                   </a>
@@ -94,7 +106,7 @@ export default function Order() {
 
               <dl className="mt-12 text-sm font-medium">
                 <dt className="text-gray-900">Tracking id</dt>
-                <dd className="mt-2 text-indigo-600">
+                <dd className="mt-2 text-decathlon-dark">
                   {intentDetails.transaction.id}
                 </dd>
               </dl>

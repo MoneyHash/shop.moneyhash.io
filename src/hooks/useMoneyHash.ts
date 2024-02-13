@@ -2,6 +2,7 @@ import MoneyHash, {
   MoneyHashHeadlessOptions,
 } from '@moneyhash/js-sdk/headless';
 import { useEffect, useMemo, useRef } from 'react';
+import useCurrency from '../store/useCurrency';
 
 export default function useMoneyHash({
   onComplete,
@@ -10,6 +11,7 @@ export default function useMoneyHash({
   onComplete?: MoneyHashHeadlessOptions<'payment'>['onComplete'];
   onFail?: MoneyHashHeadlessOptions<'payment'>['onFail'];
 } = {}) {
+  const currency = useCurrency(state => state.currency);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
@@ -22,32 +24,33 @@ export default function useMoneyHash({
         type: 'payment',
         onComplete: onCompleteRef.current,
         onFail: onFailRef.current,
+        locale: currency === 'EGP' ? 'ar-EG' : undefined,
         styles: {
           input: {
             focus: {
-              borderColor: '#322e81',
-              boxShadow: '0 0 0 1px #322e8178',
+              borderColor: '#1A82C3',
+              boxShadow: '0 0 0 1px #1A82C378',
             },
           },
           submitButton: {
             base: {
-              background: '#4f46e5',
+              background: '#1A82C3',
               color: '#fff',
             },
             hover: {
-              background: '#322e81',
+              background: '#15699e',
             },
             focus: {
-              background: '#322e81',
+              background: '#15699e',
             },
           },
           loader: {
             backgroundColor: 'white',
-            color: 'black',
+            color: '#1A82C3',
           },
         },
       }),
-    [],
+    [currency],
   );
 
   useEffect(

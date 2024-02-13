@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { type Method } from '@moneyhash/js-sdk/headless';
-import { ArrowLeftIcon } from '@heroicons/react/24/solid';
+import { RadioGroup } from '@headlessui/react';
+
 import NavBar from '../components/navbar';
 import useShoppingCart from '../store/useShoppingCart';
 import twoFixedDigit from '../utils/twoFixedDigits';
@@ -11,24 +12,47 @@ import useMoneyHash from '../hooks/useMoneyHash';
 import createIntent from '../api/createIntent';
 import useCurrency from '../store/useCurrency';
 import formatCurrency from '../utils/formatCurrency';
-import TestCardsPanel from '../components/testCardsPanel';
+import PaymentExperiencePanel from '../components/paymentExperiencePanel';
+import AccordionSteps from '../components/accordion';
+import usePaymentExperience from '../store/usePaymentExperience';
+
+type FormValues = {
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  email: string;
+  address: string;
+  city: string;
+  state: string;
+  postal_code: string;
+};
+
+type ShippingMethod = 'delivery' | 'pick-up';
 
 export default function Checkout() {
   const [intentId, setIntentId] = useState('');
-  const [isPaying, setIsPaying] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<Method | null>(null);
-  const navigate = useNavigate();
+  const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
+  const [activeStep, setActiveStep] = useState('0');
+  const [formValues, setFormValues] = useState<FormValues>({
+    first_name: 'John',
+    last_name: 'Doe',
+    email: 'example@email.com',
+    phone_number: '+201064610000',
+    city: 'Nasr City',
+    postal_code: '11828',
+    state: 'Cairo',
+    address: 'Ahmed Fakhry street, Building 22',
+  });
+  const [shippingMethod, setShippingMethod] =
+    useState<ShippingMethod>('delivery');
+
   const currency = useCurrency(state => state.currency);
   const cart = useShoppingCart(state => state.cart);
-  const emptyCart = useShoppingCart(state => state.emptyCart);
-  const moneyHash = useMoneyHash({
-    onComplete: ({ intent }) => {
-      emptyCart();
-      navigate(`/checkout/order/${intent.id}`, { replace: true });
-    },
-    onFail: ({ intent }) => navigate(`/checkout/order/${intent.id}`),
-  });
+  const paymentExperience = usePaymentExperience(state => state.experience);
+
+  const moneyHash = useMoneyHash();
+
   const totalPrice = useMemo(
     () =>
       cart.reduce(
@@ -39,10 +63,11 @@ export default function Checkout() {
     [cart, currency],
   );
 
-  const handleSubmit = async (data: FormValues) => {
+  const handleCreateIntent = async (data: FormValues) => {
     const intent = await createIntent({
       amount: totalPrice,
       currency,
+      customer: '8ce88856-b86c-420a-96e1-17512cc314b1',
       billing_data: {
         first_name: data.first_name,
         last_name: data.last_name,
@@ -63,28 +88,25 @@ export default function Checkout() {
         description: product.description,
         quantity: product.quantity,
         amount: product.price[currency],
-        category: 'Electronics',
-        subcategory: 'Audio',
-        type: 'Digital',
       })),
+      hide_amount_sidebar: true,
+      hide_navigation_to_payment_methods: true,
+      ...(paymentExperience === 'redirect' && {
+        successful_redirect_url: `${window.location.origin}/checkout/order`,
+        failed_redirect_url: `${window.location.origin}/checkout/order`,
+        pending_external_action_redirect_url: `${window.location.origin}/checkout/order`,
+        back_url: `${window.location.origin}/checkout/order`,
+      }),
     });
     const { paymentMethods } = await moneyHash.getIntentMethods(intent.data.id);
     setIntentId(intent.data.id);
     setPaymentMethods(paymentMethods);
   };
 
-  useEffect(() => {
-    if (!selectedMethod) return;
-    moneyHash.renderForm({
-      intentId,
-      selector: '#moneyhash-iframe',
-    });
-  }, [selectedMethod, intentId, moneyHash]);
-
   return (
     <div className="min-h-full flex flex-col">
       <NavBar hideCurrency hideCart />
-      <TestCardsPanel />
+      <PaymentExperiencePanel />
 
       <div className="flex-1 flex flex-col">
         {/* Background color split screen for large screens */}
@@ -93,7 +115,7 @@ export default function Checkout() {
           aria-hidden="true"
         />
         <div
-          className="fixed right-0 top-0 hidden h-full w-1/2 bg-indigo-900 lg:block"
+          className="fixed right-0 top-0 hidden h-full w-1/2 bg-decathlon-dark lg:block"
           aria-hidden="true"
         />
 
@@ -102,7 +124,7 @@ export default function Checkout() {
 
           <section
             aria-labelledby="summary-heading"
-            className="bg-indigo-900 py-12 text-indigo-300 md:px-10 lg:col-start-2 lg:row-start-1 lg:mx-auto lg:w-full lg:max-w-lg lg:bg-transparent lg:px-0 lg:pb-24 lg:pt-0"
+            className="bg-decathlon-dark py-12 text-indigo-300 md:px-10 lg:col-start-2 lg:row-start-1 lg:mx-auto lg:w-full lg:max-w-lg lg:bg-transparent lg:px-0 lg:pb-24 lg:pt-0"
           >
             <div className="mx-auto max-w-2xl px-4 lg:max-w-none lg:px-0">
               <h2 id="summary-heading" className="sr-only">
@@ -153,72 +175,86 @@ export default function Checkout() {
             aria-labelledby="payment-and-shipping-heading"
             className="py-16 pb-36 px-4 lg:px-0 lg:col-start-1 lg:row-start-1 lg:mx-auto lg:w-full lg:max-w-lg lg:pb-24 lg:pt-0"
           >
-            {!paymentMethods && <InfoForm onSubmit={handleSubmit} />}
-            {paymentMethods && !selectedMethod && (
-              <>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Payment method
-                </h3>
-                <div className="flex flex-wrap gap-4 mt-4">
-                  {paymentMethods.map(method => (
-                    <button
-                      key={method.id}
-                      type="button"
-                      disabled={isPaying}
-                      className="group rounded-lg bg-slate-200/50 hover:bg-gradient-to-r hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 p-0.5 focus:bg-gradient-to-r focus:from-indigo-500 focus:via-purple-500 focus:to-pink-500 focus:outline-none disabled:opacity-50 disabled:pointer-events-none"
-                      aria-label={`Pay with ${method.title}`}
-                      onClick={async () => {
-                        setIsPaying(true);
-                        const { state } = await moneyHash.proceedWith({
-                          type: 'method',
-                          intentId,
-                          id: method.id,
-                        });
-
-                        if (state !== 'INTENT_FORM') {
-                          emptyCart();
-                          navigate(`/checkout/order/${intentId}`, {
-                            replace: true,
-                          });
-                          return;
-                        }
-                        setIsPaying(false);
-                        setSelectedMethod(method);
-                      }}
-                    >
-                      <div className="relative flex items-center gap-3 bg-white py-2 px-3 rounded-md group-hover:bg-slate-50">
-                        <span className="font-medium text-slate-800">
-                          {method.title}
-                        </span>
-                        <img
-                          src={method.icons[0]}
-                          alt={method.title}
-                          className="w-[34px] h-6"
-                        />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-            {paymentMethods && selectedMethod && (
-              <div className="h-full">
-                <button
-                  type="button"
-                  className="relative z-10 flex items-center space-x-1 text-sm font-medium text-indigo-600 underline underline-offset-2 hover:text-indigo-500"
-                  onClick={() => {
-                    setSelectedMethod(null);
+            <AccordionSteps value={activeStep} onChange={setActiveStep}>
+              <AccordionSteps.Step
+                stepIndex={0}
+                activeStep={+activeStep}
+                title="Personal Information"
+              >
+                <PersonalInformationForm
+                  defaultValues={formValues}
+                  onSubmit={values => {
+                    setFormValues(prevValues => ({ ...prevValues, ...values }));
+                    setActiveStep('1');
                   }}
-                >
-                  <ArrowLeftIcon className="w-4 h-4" />
-                  <span>Select different payment method</span>
-                </button>
-                <div
-                  id="moneyhash-iframe"
-                  className="w-full h-full min-h-[800px] [&_iframe]:bg-white relative -top-10"
                 />
-              </div>
-            )}
+              </AccordionSteps.Step>
+
+              <AccordionSteps.Step
+                stepIndex={1}
+                activeStep={+activeStep}
+                title="Address"
+              >
+                <AddressForm
+                  defaultValues={formValues}
+                  onSubmit={values => {
+                    setFormValues(prevValues => ({ ...prevValues, ...values }));
+                    setActiveStep('2');
+                  }}
+                />
+              </AccordionSteps.Step>
+
+              <AccordionSteps.Step
+                stepIndex={2}
+                activeStep={+activeStep}
+                title="Shipping Method"
+              >
+                <ShippingMethodForm
+                  defaultValues={{ shippingMethod }}
+                  onSubmit={async ({ shippingMethod }) => {
+                    setShippingMethod(shippingMethod);
+                    await handleCreateIntent(formValues);
+                    setActiveStep('3');
+                  }}
+                />
+              </AccordionSteps.Step>
+
+              <AccordionSteps.Step
+                stepIndex={3}
+                activeStep={+activeStep}
+                title="Payment"
+              >
+                {paymentExperience === 'redirect' ? (
+                  <PaymentFormRedirectExperience
+                    intentId={intentId}
+                    methods={paymentMethods!}
+                    selectedMethodId={selectedMethodId}
+                    onChange={async methodId => {
+                      setSelectedMethodId(methodId);
+                      await moneyHash.proceedWith({
+                        type: 'method',
+                        id: methodId,
+                        intentId,
+                      });
+                    }}
+                  />
+                ) : (
+                  <PaymentFormInAppExperience
+                    intentId={intentId}
+                    methods={paymentMethods!}
+                    selectedMethodId={selectedMethodId}
+                    onChange={async methodId => {
+                      setSelectedMethodId(methodId);
+                      await moneyHash.proceedWith({
+                        type: 'method',
+                        id: methodId,
+                        intentId,
+                      });
+                    }}
+                  />
+                )}
+              </AccordionSteps.Step>
+            </AccordionSteps>
           </section>
         </div>
       </div>
@@ -226,218 +262,493 @@ export default function Checkout() {
   );
 }
 
-type FormValues = {
-  first_name: string;
-  last_name: string;
-  phone_number: string;
-  email: string;
-  address: string;
-  city: string;
-  state: string;
-  postal_code: string;
-};
-
-function InfoForm({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
+function PersonalInformationForm({
+  onSubmit,
+  defaultValues,
+}: {
+  onSubmit: (data: FormValues) => void;
+  defaultValues: Partial<FormValues> | null;
+}) {
   const {
     register,
     handleSubmit,
     formState: { isSubmitting },
   } = useForm<FormValues>({
-    defaultValues: {
-      first_name: 'John',
-      last_name: 'Doe',
-      email: 'example@email.com',
-      phone_number: '+201064610000',
-      city: 'Nasr City',
-      postal_code: '11828',
-      state: 'Cairo',
-      address: 'Ahmed Fakhry street, Building 22',
-    },
+    shouldUnregister: true,
+    defaultValues: defaultValues || {},
   });
 
   return (
-    <>
-      <h2 id="payment-and-shipping-heading" className="sr-only">
-        Payment and shipping details
-      </h2>
-
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="mx-auto max-w-2xl px-4 lg:max-w-none lg:px-0">
-          <div>
-            <h3
-              id="contact-info-heading"
-              className="text-lg font-medium text-gray-900"
-            >
-              Contact information
-            </h3>
-
-            <div className="mt-6 grid md:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="first_name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  First Name
-                </label>
-                <div className="mt-1">
-                  <input
-                    id="first_name"
-                    autoComplete="given-name"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    {...register('first_name', { required: true })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="last_name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Last Name
-                </label>
-                <div className="mt-1">
-                  <input
-                    id="last_name"
-                    autoComplete="family-name"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    {...register('last_name', { required: true })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="phone_number"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Phone Number
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="tel"
-                    id="phone_number"
-                    autoComplete="tel"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    {...register('phone_number', { required: true })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Email address
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="email"
-                    id="email"
-                    autoComplete="email"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    {...register('email', { required: true })}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10">
-            <h3 className="text-lg font-medium text-gray-900">
-              Shipping address
-            </h3>
-
-            <div className="mt-6 grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="address"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Address
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    id="address"
-                    autoComplete="street-address"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    {...register('address', { required: true })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="city"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  City
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    id="city"
-                    autoComplete="address-level2"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    {...register('city', { required: true })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="state"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  State
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    id="state"
-                    autoComplete="address-level1"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    {...register('state', { required: true })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="postal_code"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Postal code
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    id="postal_code"
-                    autoComplete="postal-code"
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    {...register('postal_code', { required: true })}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 flex justify-end border-t border-gray-200 pt-6">
-            <button
-              type="submit"
-              className={clsx(
-                'rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50',
-                isSubmitting && 'opacity-50 cursor-progress',
-              )}
-              disabled={isSubmitting}
-            >
-              Submit
-            </button>
+    <form onSubmit={handleSubmit(onSubmit)} className="pb-2">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="first_name"
+            className="block text-sm font-medium text-gray-700"
+          >
+            First Name
+          </label>
+          <div className="mt-1">
+            <input
+              id="first_name"
+              autoComplete="given-name"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-decathlon focus:ring-decathlon sm:text-sm"
+              {...register('first_name', { required: true })}
+            />
           </div>
         </div>
-      </form>
-    </>
+
+        <div>
+          <label
+            htmlFor="last_name"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Last Name
+          </label>
+          <div className="mt-1">
+            <input
+              id="last_name"
+              autoComplete="family-name"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-decathlon focus:ring-decathlon sm:text-sm"
+              {...register('last_name', { required: true })}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="phone_number"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Phone Number
+          </label>
+          <div className="mt-1">
+            <input
+              type="tel"
+              id="phone_number"
+              autoComplete="tel"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-decathlon focus:ring-decathlon sm:text-sm"
+              {...register('phone_number', { required: true })}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Email address
+          </label>
+          <div className="mt-1">
+            <input
+              type="email"
+              id="email"
+              autoComplete="email"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-decathlon focus:ring-decathlon sm:text-sm"
+              {...register('email', { required: true })}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <button
+          type="submit"
+          className={clsx(
+            'rounded-md border border-transparent bg-decathlon px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50',
+            isSubmitting && 'opacity-50 cursor-progress',
+          )}
+          disabled={isSubmitting}
+        >
+          Next Step
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function AddressForm({
+  onSubmit,
+  defaultValues,
+}: {
+  onSubmit: (data: FormValues) => void;
+  defaultValues: Partial<FormValues> | null;
+}) {
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<FormValues>({
+    shouldUnregister: true,
+    defaultValues: defaultValues || {},
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="pb-2">
+      <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
+        <div className="sm:col-span-3">
+          <label
+            htmlFor="address"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Address
+          </label>
+          <div className="mt-1">
+            <input
+              type="text"
+              id="address"
+              autoComplete="street-address"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-decathlon focus:ring-decathlon sm:text-sm"
+              {...register('address', { required: true })}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="city"
+            className="block text-sm font-medium text-gray-700"
+          >
+            City
+          </label>
+          <div className="mt-1">
+            <input
+              type="text"
+              id="city"
+              autoComplete="address-level2"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-decathlon focus:ring-decathlon sm:text-sm"
+              {...register('city', { required: true })}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="state"
+            className="block text-sm font-medium text-gray-700"
+          >
+            State
+          </label>
+          <div className="mt-1">
+            <input
+              type="text"
+              id="state"
+              autoComplete="address-level1"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-decathlon focus:ring-decathlon sm:text-sm"
+              {...register('state', { required: true })}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="postal_code"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Postal code
+          </label>
+          <div className="mt-1">
+            <input
+              type="text"
+              id="postal_code"
+              autoComplete="postal-code"
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-decathlon focus:ring-decathlon sm:text-sm"
+              {...register('postal_code', { required: true })}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <button
+          type="submit"
+          className={clsx(
+            'rounded-md border border-transparent bg-decathlon px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50',
+            isSubmitting && 'opacity-50 cursor-progress',
+          )}
+          disabled={isSubmitting}
+        >
+          Next Step
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function ShippingMethodForm({
+  onSubmit,
+  defaultValues,
+}: {
+  defaultValues: { shippingMethod: ShippingMethod };
+  onSubmit: (data: { shippingMethod: ShippingMethod }) => void;
+}) {
+  const {
+    register,
+    formState: { isSubmitting },
+    handleSubmit,
+  } = useForm<{
+    shippingMethod: ShippingMethod;
+  }>({
+    shouldUnregister: true,
+    defaultValues,
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="py-2">
+      <div className="flex items-center space-x-2">
+        <input
+          id="delivery"
+          type="radio"
+          value="delivery"
+          className="text-decathlon focus:ring-decathlon w-4 h-4"
+          {...register('shippingMethod', { required: true })}
+        />
+        <label htmlFor="delivery" className="block font-medium text-gray-700">
+          Home delivery
+        </label>
+      </div>
+
+      <div className="flex items-center space-x-2 mt-2">
+        <input
+          id="pick-up"
+          type="radio"
+          value="pick-up"
+          className="text-decathlon focus:ring-decathlon w-4 h-4"
+          {...register('shippingMethod', { required: true })}
+        />
+        <label htmlFor="pick-up" className="block font-medium text-gray-700">
+          Pick-up in store
+        </label>
+      </div>
+
+      <div className="mt-6">
+        <button
+          type="submit"
+          className={clsx(
+            'rounded-md border border-transparent bg-decathlon px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50',
+            isSubmitting && 'opacity-50 cursor-progress',
+          )}
+        >
+          Next Step
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function PaymentFormInAppExperience({
+  intentId,
+  methods,
+  selectedMethodId,
+  onChange,
+}: {
+  methods: Method[];
+  intentId: string;
+  selectedMethodId: string | null;
+  onChange: (methodId: string) => void;
+}) {
+  const [isChangingMethod, setIsChangingMethod] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+
+  const navigate = useNavigate();
+  const currency = useCurrency(state => state.currency);
+  const emptyCart = useShoppingCart(state => state.emptyCart);
+  const moneyHash = useMoneyHash({
+    onComplete: ({ intent }) => {
+      emptyCart();
+      navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
+    },
+    onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
+  });
+
+  useEffect(() => {
+    if (!isPaying) return;
+    moneyHash.renderForm({ selector: '#moneyHash-iframe', intentId });
+  }, [isPaying, moneyHash, intentId]);
+
+  return (
+    <div className="py-4">
+      {!isPaying ? (
+        <>
+          <RadioGroup
+            dir={currency === 'EGP' ? 'rtl' : 'ltr'}
+            value={selectedMethodId}
+            onChange={async methodId => {
+              if (!methodId) return;
+              setIsChangingMethod(true);
+              try {
+                await onChange(methodId);
+                setIsChangingMethod(false);
+              } catch (error) {
+                setIsChangingMethod(false);
+              }
+            }}
+          >
+            <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
+            <div className="space-y-2.5">
+              {methods.map(method => (
+                <RadioGroup.Option
+                  key={method.title}
+                  value={method.id}
+                  className={({ active }) =>
+                    clsx(
+                      active
+                        ? 'border-decathlon ring-2 ring-decathlon/30'
+                        : 'border-gray-300',
+                      'relative block cursor-pointer rounded-lg border bg-white px-4 py-3 shadow-sm focus:outline-none sm:flex sm:justify-between',
+                    )
+                  }
+                >
+                  {({ active, checked }) => (
+                    <>
+                      <span className="flex items-center">
+                        <span className="flex flex-col text-sm">
+                          <RadioGroup.Label
+                            as="span"
+                            className="font-medium text-gray-900"
+                          >
+                            {method.title}
+                          </RadioGroup.Label>
+                        </span>
+                      </span>
+                      <img
+                        src={method.icons[0]}
+                        alt=""
+                        className="object-contain h-8 w-8"
+                      />
+                      <span
+                        className={clsx(
+                          active ? 'border' : 'border-2',
+                          checked ? 'border-decathlon' : 'border-transparent',
+                          'pointer-events-none absolute -inset-px rounded-lg',
+                        )}
+                        aria-hidden="true"
+                      />
+                    </>
+                  )}
+                </RadioGroup.Option>
+              ))}
+            </div>
+          </RadioGroup>
+          <button
+            type="button"
+            className={clsx(
+              'rounded-md border border-transparent bg-decathlon px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50 disabled:pointer-events-none disabled:opacity-50 mt-10',
+            )}
+            disabled={!selectedMethodId || isChangingMethod}
+            onClick={() => setIsPaying(true)}
+          >
+            Complete Order
+          </button>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            className="relative z-10 flex items-center space-x-1 text-sm font-medium text-decathlon-dark underline underline-offset-2 hover:text-decathlon"
+            onClick={() => setIsPaying(false)}
+          >
+            <span>Select different payment method</span>
+          </button>
+          <div
+            id="moneyHash-iframe"
+            className="w-full h-[800px] [&_iframe]:bg-white relative"
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function PaymentFormRedirectExperience({
+  intentId,
+  methods,
+  selectedMethodId,
+  onChange,
+}: {
+  methods: Method[];
+  intentId: string;
+  selectedMethodId: string | null;
+  onChange: (methodId: string) => void;
+}) {
+  const [isChangingMethod, setIsChangingMethod] = useState(false);
+  const currency = useCurrency(state => state.currency);
+
+  return (
+    <div className="py-4">
+      <RadioGroup
+        dir={currency === 'EGP' ? 'rtl' : 'ltr'}
+        value={selectedMethodId}
+        onChange={async methodId => {
+          if (!methodId) return;
+          setIsChangingMethod(true);
+          try {
+            await onChange(methodId);
+            setIsChangingMethod(false);
+          } catch (error) {
+            setIsChangingMethod(false);
+          }
+        }}
+      >
+        <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
+        <div className="space-y-2.5">
+          {methods.map(method => (
+            <RadioGroup.Option
+              key={method.title}
+              value={method.id}
+              className={({ active }) =>
+                clsx(
+                  active
+                    ? 'border-decathlon ring-2 ring-decathlon/30'
+                    : 'border-gray-300',
+                  'relative block cursor-pointer rounded-lg border bg-white px-4 py-3 shadow-sm focus:outline-none sm:flex sm:justify-between',
+                )
+              }
+            >
+              {({ active, checked }) => (
+                <>
+                  <span className="flex items-center">
+                    <span className="flex flex-col text-sm">
+                      <RadioGroup.Label
+                        as="span"
+                        className="font-medium text-gray-900"
+                      >
+                        {method.title}
+                      </RadioGroup.Label>
+                    </span>
+                  </span>
+                  <img
+                    src={method.icons[0]}
+                    alt=""
+                    className="object-contain h-8 w-8"
+                  />
+                  <span
+                    className={clsx(
+                      active ? 'border' : 'border-2',
+                      checked ? 'border-decathlon' : 'border-transparent',
+                      'pointer-events-none absolute -inset-px rounded-lg',
+                    )}
+                    aria-hidden="true"
+                  />
+                </>
+              )}
+            </RadioGroup.Option>
+          ))}
+        </div>
+      </RadioGroup>
+      <div className="mt-10">
+        <a
+          href={`https://stg-embed.moneyhash.io/embed/payment/${intentId}`}
+          className={clsx(
+            'rounded-md border border-transparent bg-decathlon px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50',
+            (!selectedMethodId || isChangingMethod) &&
+              'pointer-events-none opacity-50',
+          )}
+        >
+          Complete Order
+        </a>
+      </div>
+    </div>
   );
 }

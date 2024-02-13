@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-export default function TransactionFailed() {
+export default function TransactionClosed() {
   return (
     <div className="flex flex-col bg-white">
       <img
@@ -12,7 +12,7 @@ export default function TransactionFailed() {
       <div className="flex items-center justify-center flex-1">
         <div className="max-w-xl px-4 py-8 mx-auto text-center">
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Oh no, your payment failed
+            Your payment was canceled
           </h1>
 
           <p className="mt-4 text-gray-500">
@@ -20,10 +20,10 @@ export default function TransactionFailed() {
           </p>
 
           <Link
-            to="/checkout"
+            to="/"
             className="inline-block px-5 py-3 mt-6 text-sm font-medium text-white bg-decathlon rounded hover:bg-decathlon-dark focus:outline-none focus:ring focus:ring-decathlon/20"
           >
-            Checkout
+            Home
           </Link>
         </div>
       </div>

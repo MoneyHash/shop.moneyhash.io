@@ -106,7 +106,7 @@ export default function ShoppingCart() {
                       <div className="flex">
                         <button
                           type="button"
-                          className="font-medium text-indigo-600 hover:text-indigo-500"
+                          className="font-medium text-decathlon-dark hover:text-decathlon"
                           onClick={() => removeProductFromCart(product.id)}
                         >
                           Remove
@@ -122,7 +122,7 @@ export default function ShoppingCart() {
             <Link
               to="/checkout"
               className={clsx(
-                'block text-center w-full rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50',
+                'block text-center w-full rounded-md border border-transparent bg-decathlon px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50',
                 cart.length === 0 && 'pointer-events-none opacity-50',
               )}
             >
