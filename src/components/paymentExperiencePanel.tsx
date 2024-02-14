@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDownIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
+import { Link } from 'react-router-dom';
 import usePaymentExperience from '../store/usePaymentExperience';
 
 export default function PaymentExperiencePanel() {
@@ -10,7 +11,7 @@ export default function PaymentExperiencePanel() {
     <div
       className={clsx(
         'fixed bottom-0 right-5 max-w-xs w-full flex flex-col rounded-md bg-slate-800 text-white text-sm z-20 transition-transform',
-        isOpen ? 'translate-y-0' : 'translate-y-[140px]',
+        isOpen ? 'translate-y-0' : 'translate-y-[190px]',
       )}
     >
       <button
@@ -71,6 +72,13 @@ export default function PaymentExperiencePanel() {
         >
           Test Cards
         </a>
+        <Link
+          className="mt-5 text-center bg-green-500 rounded-md hover:bg-green-600 py-2"
+          to="/integration-guide"
+          target="_blank"
+        >
+          Integration Guide
+        </Link>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import './index.css';
 import Home from './pages/home';
 import Checkout from './pages/checkout';
 import Order from './pages/order';
+import IntegrationGuide from './pages/integrationGuide';
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: '/checkout/order',
         element: <Order />,
+      },
+      {
+        path: '/integration-guide',
+        element: <IntegrationGuide />,
       },
     ],
   },

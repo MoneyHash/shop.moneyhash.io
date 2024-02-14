@@ -67,7 +67,6 @@ export default function Checkout() {
     const intent = await createIntent({
       amount: totalPrice,
       currency,
-      customer: '8ce88856-b86c-420a-96e1-17512cc314b1',
       billing_data: {
         first_name: data.first_name,
         last_name: data.last_name,
