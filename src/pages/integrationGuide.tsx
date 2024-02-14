@@ -17,7 +17,7 @@ export default function IntegrationGuide() {
         </h1>
         <h2>Installing</h2>
         <CodeBlock language="powershell">
-          npm install moneyhash-js-sdk
+          npm install @moneyhash/js-sdk
         </CodeBlock>
         <hr />
         <h2>Collecting User Info</h2>
