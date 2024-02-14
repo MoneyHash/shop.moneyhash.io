@@ -159,7 +159,7 @@ const moneyHash = new MoneyHash({
             After Checkout is done, MoneyHash will redirect to one of the
             redirect links based on the intent status{' '}
             <span className="text-slate-500">
-              (links are specified while creating the)
+              (links are specified while creating the intent)
             </span>
             <ul>
               <li>successful_redirect_url</li>
