@@ -27,7 +27,7 @@ export default function PaymentExperiencePanel() {
           )}
         />
       </button>
-      <div className="p-4">
+      <div className="p-4 flex flex-col">
         <div className="flex space-x-2 items-center">
           <input
             type="radio"
@@ -62,7 +62,15 @@ export default function PaymentExperiencePanel() {
           />
           <label htmlFor="in-app">In App Checkout</label>
         </div>
-        <p className="mt-5">Change the payment experience of the demo</p>
+
+        <a
+          className="mt-5 text-center bg-decathlon rounded-md hover:bg-decathlon-dark py-2"
+          href="https://docs.stripe.com/testing?testing-method=card-numbers#cards"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Test Cards
+        </a>
       </div>
     </div>
   );
