@@ -601,16 +601,22 @@ function PaymentFormInAppExperience({
                 >
                   {({ active, checked }) => (
                     <>
-                      <span className="flex items-center">
-                        <span className="flex flex-col text-sm">
-                          <RadioGroup.Label
-                            as="span"
-                            className="font-medium text-gray-900"
-                          >
-                            {method.title}
-                          </RadioGroup.Label>
-                        </span>
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          id={method.id}
+                          type="radio"
+                          className="text-decathlon focus:ring-decathlon w-4 h-4"
+                          checked={method.id === selectedMethodId}
+                          onChange={() => {}}
+                        />
+
+                        <RadioGroup.Label
+                          as="span"
+                          className="font-medium text-gray-900 text-sm"
+                        >
+                          {method.title}
+                        </RadioGroup.Label>
+                      </div>
                       <img
                         src={method.icons[0]}
                         alt=""
@@ -707,16 +713,22 @@ function PaymentFormRedirectExperience({
             >
               {({ active, checked }) => (
                 <>
-                  <span className="flex items-center">
-                    <span className="flex flex-col text-sm">
-                      <RadioGroup.Label
-                        as="span"
-                        className="font-medium text-gray-900"
-                      >
-                        {method.title}
-                      </RadioGroup.Label>
-                    </span>
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id={method.id}
+                      type="radio"
+                      className="text-decathlon focus:ring-decathlon w-4 h-4"
+                      checked={method.id === selectedMethodId}
+                      onChange={() => {}}
+                    />
+
+                    <RadioGroup.Label
+                      as="span"
+                      className="font-medium text-gray-900 text-sm"
+                    >
+                      {method.title}
+                    </RadioGroup.Label>
+                  </div>
                   <img
                     src={method.icons[0]}
                     alt=""
