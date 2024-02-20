@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { type Method } from '@moneyhash/js-sdk/headless';
-import { RadioGroup } from '@headlessui/react';
+import { Dialog, RadioGroup, Transition } from '@headlessui/react';
 
 import NavBar from '../components/navbar';
 import useShoppingCart from '../store/useShoppingCart';
@@ -547,12 +547,119 @@ function PaymentFormInAppExperience({
   selectedMethodId: string | null;
   onChange: (methodId: string) => void;
 }) {
+  const [view, setView] = useState<'select-method' | 'checkout-form'>(
+    'select-method',
+  );
   const [isChangingMethod, setIsChangingMethod] = useState(false);
-  const [isPaying, setIsPaying] = useState(false);
-
-  const navigate = useNavigate();
   const currency = useCurrency(state => state.currency);
+
+  if (view === 'select-method') {
+    return (
+      <>
+        <RadioGroup
+          dir={currency === 'EGP' ? 'rtl' : 'ltr'}
+          value={selectedMethodId}
+          onChange={async methodId => {
+            if (!methodId) return;
+            setIsChangingMethod(true);
+            try {
+              await onChange(methodId);
+              setIsChangingMethod(false);
+            } catch (error) {
+              setIsChangingMethod(false);
+            }
+          }}
+        >
+          <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
+          <div className="space-y-2.5">
+            {methods.map(method => (
+              <RadioGroup.Option
+                key={method.title}
+                value={method.id}
+                className={({ active }) =>
+                  clsx(
+                    active
+                      ? 'border-decathlon ring-2 ring-decathlon/30'
+                      : 'border-gray-300',
+                    'relative block cursor-pointer rounded-lg border bg-white px-4 py-3 shadow-sm focus:outline-none sm:flex sm:justify-between',
+                  )
+                }
+              >
+                {({ active, checked }) => (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <input
+                        id={method.id}
+                        type="radio"
+                        className="text-decathlon focus:ring-decathlon w-4 h-4"
+                        checked={method.id === selectedMethodId}
+                        onChange={() => {}}
+                      />
+
+                      <RadioGroup.Label
+                        as="span"
+                        className="font-medium text-gray-900 text-sm"
+                      >
+                        {method.title}
+                      </RadioGroup.Label>
+                    </div>
+                    <img
+                      src={method.icons[0]}
+                      alt=""
+                      className="object-contain h-8 w-8"
+                    />
+                    <span
+                      className={clsx(
+                        active ? 'border' : 'border-2',
+                        checked ? 'border-decathlon' : 'border-transparent',
+                        'pointer-events-none absolute -inset-px rounded-lg',
+                      )}
+                      aria-hidden="true"
+                    />
+                  </>
+                )}
+              </RadioGroup.Option>
+            ))}
+          </div>
+        </RadioGroup>
+        <button
+          type="button"
+          className={clsx(
+            'rounded-md border border-transparent bg-decathlon px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50 disabled:pointer-events-none disabled:opacity-50 mt-10',
+          )}
+          disabled={!selectedMethodId || isChangingMethod}
+          onClick={() => setView('checkout-form')}
+        >
+          Complete Order
+        </button>
+      </>
+    );
+  }
+
+  return (
+    <div className="py-4">
+      <button
+        type="button"
+        className="relative z-10 flex items-center space-x-1 text-sm font-medium text-decathlon-dark underline underline-offset-2 hover:text-decathlon"
+        onClick={() => setView('select-method')}
+      >
+        <span>Select different payment method</span>
+      </button>
+
+      {selectedMethodId === 'PAY_FLEX' ? (
+        <PayFlexModal intentId={intentId} />
+      ) : (
+        <CheckoutForm intentId={intentId} />
+      )}
+    </div>
+  );
+}
+
+function PayFlexModal({ intentId }: { intentId: string }) {
+  const [isOpen, setIsOpen] = useState(true);
+  const navigate = useNavigate();
   const emptyCart = useShoppingCart(state => state.emptyCart);
+
   const moneyHash = useMoneyHash({
     onComplete: ({ intent }) => {
       emptyCart();
@@ -562,107 +669,83 @@ function PaymentFormInAppExperience({
   });
 
   useEffect(() => {
-    if (!isPaying) return;
-    moneyHash.renderForm({ selector: '#moneyHash-iframe', intentId });
-  }, [isPaying, moneyHash, intentId]);
+    if (isOpen) {
+      setTimeout(() => {
+        moneyHash.renderForm({ selector: '#moneyHash-iframe', intentId });
+      }, 100);
+    }
+  }, [isOpen, moneyHash, intentId]);
 
   return (
-    <div className="py-4">
-      {!isPaying ? (
-        <>
-          <RadioGroup
-            dir={currency === 'EGP' ? 'rtl' : 'ltr'}
-            value={selectedMethodId}
-            onChange={async methodId => {
-              if (!methodId) return;
-              setIsChangingMethod(true);
-              try {
-                await onChange(methodId);
-                setIsChangingMethod(false);
-              } catch (error) {
-                setIsChangingMethod(false);
-              }
-            }}
+    <Transition.Root show={isOpen} as={Fragment}>
+      <Dialog
+        as="div"
+        className="fixed inset-0 z-[100] overflow-y-auto"
+        onClose={() => setIsOpen(false)}
+      >
+        <div className="flex min-h-screen items-end justify-center px-4 pb-20 pt-4 text-center sm:block sm:p-0">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
           >
-            <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
-            <div className="space-y-2.5">
-              {methods.map(method => (
-                <RadioGroup.Option
-                  key={method.title}
-                  value={method.id}
-                  className={({ active }) =>
-                    clsx(
-                      active
-                        ? 'border-decathlon ring-2 ring-decathlon/30'
-                        : 'border-gray-300',
-                      'relative block cursor-pointer rounded-lg border bg-white px-4 py-3 shadow-sm focus:outline-none sm:flex sm:justify-between',
-                    )
-                  }
-                >
-                  {({ active, checked }) => (
-                    <>
-                      <div className="flex items-center gap-2">
-                        <input
-                          id={method.id}
-                          type="radio"
-                          className="text-decathlon focus:ring-decathlon w-4 h-4"
-                          checked={method.id === selectedMethodId}
-                          onChange={() => {}}
-                        />
+            <Dialog.Overlay className="fixed inset-0 bg-black/80 transition-opacity" />
+          </Transition.Child>
 
-                        <RadioGroup.Label
-                          as="span"
-                          className="font-medium text-gray-900 text-sm"
-                        >
-                          {method.title}
-                        </RadioGroup.Label>
-                      </div>
-                      <img
-                        src={method.icons[0]}
-                        alt=""
-                        className="object-contain h-8 w-8"
-                      />
-                      <span
-                        className={clsx(
-                          active ? 'border' : 'border-2',
-                          checked ? 'border-decathlon' : 'border-transparent',
-                          'pointer-events-none absolute -inset-px rounded-lg',
-                        )}
-                        aria-hidden="true"
-                      />
-                    </>
-                  )}
-                </RadioGroup.Option>
-              ))}
+          {/* This element is to trick the browser into centering the modal contents. */}
+          <span
+            className="hidden sm:inline-block sm:h-screen sm:align-middle"
+            aria-hidden="true"
+          >
+            &#8203;
+          </span>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            enterTo="opacity-100 translate-y-0 sm:scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+            leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+          >
+            <div className="bg-white inline-block overflow-y-auto rounded-lg px-4 pb-4 pt-5 text-left align-bottom shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 sm:align-middle relative z-10">
+              <div
+                id="moneyHash-iframe"
+                className="w-full h-[1000px] [&_iframe]:bg-white relative"
+              />
             </div>
-          </RadioGroup>
-          <button
-            type="button"
-            className={clsx(
-              'rounded-md border border-transparent bg-decathlon px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50 disabled:pointer-events-none disabled:opacity-50 mt-10',
-            )}
-            disabled={!selectedMethodId || isChangingMethod}
-            onClick={() => setIsPaying(true)}
-          >
-            Complete Order
-          </button>
-        </>
-      ) : (
-        <>
-          <button
-            type="button"
-            className="relative z-10 flex items-center space-x-1 text-sm font-medium text-decathlon-dark underline underline-offset-2 hover:text-decathlon"
-            onClick={() => setIsPaying(false)}
-          >
-            <span>Select different payment method</span>
-          </button>
-          <div
-            id="moneyHash-iframe"
-            className="w-full h-[800px] [&_iframe]:bg-white relative"
-          />
-        </>
-      )}
-    </div>
+          </Transition.Child>
+        </div>
+      </Dialog>
+    </Transition.Root>
+  );
+}
+
+function CheckoutForm({ intentId }: { intentId: string }) {
+  const navigate = useNavigate();
+  const emptyCart = useShoppingCart(state => state.emptyCart);
+
+  const moneyHash = useMoneyHash({
+    onComplete: ({ intent }) => {
+      emptyCart();
+      navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
+    },
+    onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
+  });
+
+  useEffect(() => {
+    moneyHash.renderForm({ selector: '#moneyHash-iframe', intentId });
+  }, [moneyHash, intentId]);
+
+  return (
+    <div
+      id="moneyHash-iframe"
+      className="w-full h-[800px] [&_iframe]:bg-white relative"
+    />
   );
 }
 

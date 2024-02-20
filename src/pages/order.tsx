@@ -205,20 +205,22 @@ export default function Order() {
                     <dt className="font-medium text-gray-900">
                       Contact Information
                     </dt>
-                    <dd className="mt-2 text-gray-700">
-                      <address className="not-italic">
-                        <span className="block">
-                          {intentDetails.transaction.billingData.first_name}{' '}
-                          {intentDetails.transaction.billingData.last_name}
-                        </span>
-                        <span className="block">
-                          {intentDetails.transaction.billingData.email}
-                        </span>
-                        <span className="block">
-                          {intentDetails.transaction.billingData.phone_number}
-                        </span>
-                      </address>
-                    </dd>
+                    {intentDetails.transaction.billingData && (
+                      <dd className="mt-2 text-gray-700">
+                        <address className="not-italic">
+                          <span className="block">
+                            {intentDetails.transaction.billingData.first_name}{' '}
+                            {intentDetails.transaction.billingData.last_name}
+                          </span>
+                          <span className="block">
+                            {intentDetails.transaction.billingData.email}
+                          </span>
+                          <span className="block">
+                            {intentDetails.transaction.billingData.phone_number}
+                          </span>
+                        </address>
+                      </dd>
+                    )}
                   </div>
                 </dl>
 
