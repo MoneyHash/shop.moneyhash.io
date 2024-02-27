@@ -32,6 +32,7 @@ type ShippingMethod = 'delivery' | 'pick-up';
 export default function Checkout() {
   const [intentId, setIntentId] = useState('');
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
+  const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState('0');
   const [formValues, setFormValues] = useState<FormValues>({
@@ -50,6 +51,8 @@ export default function Checkout() {
   const currency = useCurrency(state => state.currency);
   const cart = useShoppingCart(state => state.cart);
   const paymentExperience = usePaymentExperience(state => state.experience);
+  const emptyCart = useShoppingCart(state => state.emptyCart);
+  const navigate = useNavigate();
 
   const moneyHash = useMoneyHash();
 
@@ -97,8 +100,12 @@ export default function Checkout() {
         back_url: `${window.location.origin}/checkout/order`,
       }),
     });
-    const { paymentMethods } = await moneyHash.getIntentMethods(intent.data.id);
+    const { paymentMethods, expressMethods } = await moneyHash.getIntentMethods(
+      intent.data.id,
+    );
+
     setIntentId(intent.data.id);
+    setExpressMethods(expressMethods);
     setPaymentMethods(paymentMethods);
   };
 
@@ -223,6 +230,36 @@ export default function Checkout() {
                 activeStep={+activeStep}
                 title="Payment"
               >
+                {expressMethods?.map(method => (
+                  <button
+                    type="button"
+                    key={method.id}
+                    className="bg-black w-full flex justify-center rounded-md hover:opacity-90"
+                    onClick={() => {
+                      moneyHash.payWithApplePay({
+                        intentId,
+                        amount: totalPrice,
+                        currency,
+                        countryCode: 'AE',
+                        onCancel: () => {},
+                        onComplete: () => {
+                          emptyCart();
+                          navigate(`/checkout/order?intent_id=${intentId}`, {
+                            replace: true,
+                          });
+                        },
+                        onError: () => {
+                          navigate(`/checkout/order?intent_id=${intentId}`, {
+                            replace: true,
+                          });
+                        },
+                      });
+                    }}
+                  >
+                    <img src={method.icons[0]} alt="" className="" />
+                    <p className="sr-only">{method.title}</p>
+                  </button>
+                ))}
                 {paymentExperience === 'redirect' ? (
                   <PaymentFormRedirectExperience
                     intentId={intentId}
