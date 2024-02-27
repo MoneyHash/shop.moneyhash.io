@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://staging-web.moneyhash.io/api/v1.1',
+  baseURL: 'https://b207-45-243-170-29.ngrok-free.app/api/v1.1',
 });
 
 axiosInstance.interceptors.response.use(res => res.data);
