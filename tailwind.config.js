@@ -1,14 +1,57 @@
 import tailwindFormsPlugin from '@tailwindcss/forms';
 import tailwindTypographyPlugin from '@tailwindcss/typography';
+import tailwindAnimatePlugin from 'tailwindcss-animate';
 
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      container: {
+        center: true,
+        padding: '2rem',
+        screens: {
+          '2xl': '1400px',
+        },
+      },
       colors: {
-        decathlon: '#1A82C3',
-        'decathlon-dark': '#15699e',
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+          dark: 'hsl(var(--primary-dark))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
+      },
+      fontFamily: {
+        oswald: ['Oswald', 'sans-serif'],
       },
       keyframes: {
         slideDown: {
@@ -26,5 +69,9 @@ export default {
       },
     },
   },
-  plugins: [tailwindFormsPlugin, tailwindTypographyPlugin],
+  plugins: [
+    tailwindFormsPlugin,
+    tailwindTypographyPlugin,
+    tailwindAnimatePlugin,
+  ],
 };

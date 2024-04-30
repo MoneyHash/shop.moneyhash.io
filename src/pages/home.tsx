@@ -1,124 +1,196 @@
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/navbar';
-import ProductItem from '../components/productItem';
-import productSections from '../utils/productSections';
+import CoverImage from '../assets/cover2.avif';
+import FlyBetterImage from '../assets/emirates-fly-better-white.svg';
+import PlaneIcon from '../components/icons/planeIcon';
+import ClockIcon from '../components/icons/clockIcon';
+import PlaneWing from '../components/icons/planeWing';
+import PriceTagIcon from '../components/icons/PriceTagIcon';
+import Combobox from '../components/combobox';
+import DatePickerWithRange from '../components/dateRangePicker';
+import NumberInput from '../components/numberInput';
+import Button from '../components/button';
+import Ticket from '../components/ticket';
+import { airportOptions, classOptions, tickets } from '../utils/data';
+import {
+  type TicketSearchInfo,
+  useShoppingCart,
+} from '../store/useShoppingCart';
 
 export default function Home() {
+  const [ticketSearchInfo, setTicketSearchInfo] =
+    useState<TicketSearchInfo | null>(null);
+  const selectTicket = useShoppingCart(state => state.selectTicket);
+  const navigate = useNavigate();
+
   return (
     <div className="bg-white">
       <NavBar />
 
-      <div className="pb-80 pt-16 sm:pb-40 sm:pt-24 lg:pb-48 lg:pt-40 relative overflow-hidden sm:overflow-visible">
-        <div className="relative mx-auto max-w-7xl px-4 sm:static sm:px-6 lg:px-8">
-          <div className="sm:max-w-lg">
-            <h1 className="text-4xl font-bold tracking-tight text-decathlon sm:text-6xl">
-              Decathlon Sports Shop
-            </h1>
-            <p className="mt-4 text-xl text-gray-500">
-              The retailer stocks a wide range of sporting goods, from tennis
-              rackets to advanced scuba diving equipment...
-            </p>
-          </div>
-          <div>
-            <div className="mt-10 ">
-              {/* Decorative image grid */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none lg:absolute lg:inset-y-0 lg:mx-auto lg:w-full lg:max-w-7xl"
-              >
-                <div className="absolute transform sm:left-1/2 sm:top-0 sm:translate-x-8 lg:left-1/2 lg:top-1/2 lg:-translate-y-1/2 lg:translate-x-8">
-                  <div className="flex items-center space-x-6 lg:space-x-8">
-                    <div className="grid flex-shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
-                      <div className="w-44 overflow-hidden rounded-lg sm:opacity-0 lg:opacity-100">
-                        <img
-                          src="https://www.decathlon.eg/img/cms/2023/10-OCT/NEW%20WEBSITE/website%20new-14.jpg"
-                          alt=""
-                          className="h-full w-full object-cover object-center "
-                        />
-                      </div>
-                      <div className="w-44 overflow-hidden rounded-lg">
-                        <img
-                          src="https://www.decathlon.eg/img/cms/2023/10-OCT/NEW%20WEBSITE/website%20new-11.jpg"
-                          alt=""
-                          className="h-full w-full object-cover object-center"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid flex-shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
-                      <div className="w-44 overflow-hidden rounded-lg">
-                        <img
-                          src="https://www.decathlon.eg/img/cms/2023/10-OCT/NEW%20WEBSITE/website%20new-13.jpg"
-                          alt=""
-                          className="h-full w-full object-cover object-center scale-x-[-1]"
-                        />
-                      </div>
-                      <div className="w-44 overflow-hidden rounded-lg">
-                        <img
-                          src="https://www.decathlon.eg/img/cms/2023/10-OCT/NEW%20WEBSITE/website%20new-15.jpg"
-                          alt=""
-                          className="h-full w-full object-cover object-center"
-                        />
-                      </div>
-                      <div className="w-44 overflow-hidden rounded-lg">
-                        <img
-                          src="https://www.decathlon.eg/img/cms/2023/10-OCT/NEW%20WEBSITE/1617-16.jpg"
-                          alt=""
-                          className="h-full w-full object-cover object-center"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid flex-shrink-0 grid-cols-1 gap-y-6 lg:gap-y-8">
-                      <div className="w-44 overflow-hidden rounded-lg">
-                        <img
-                          src="https://www.decathlon.eg/img/cms/2023/12-DEC/Winter%20OPECO/football%20(1).jpg"
-                          alt=""
-                          className="h-full w-full object-cover object-center"
-                        />
-                      </div>
-                      <div className="w-44 overflow-hidden rounded-lg">
-                        <img
-                          src="https://www.decathlon.eg/img/cms/2023/10-OCT/NEW%20WEBSITE/website%20new-13.jpg"
-                          alt=""
-                          className="h-full w-full object-cover object-center"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      <div className="h-[460px] relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={CoverImage} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/20 z-0" />
+        </div>
 
-              <a
-                href="#shop-sections"
-                className="inline-block rounded-md border border-transparent bg-decathlon px-8 py-3 text-center font-medium text-white hover:bg-decathlon-dark"
-              >
-                Shop Collection
-              </a>
-            </div>
-          </div>
+        <div className="relative max-w-7xl mx-auto text-left px-4 sm:px-6 lg:px-8 text-white flex flex-col h-full justify-center">
+          <p className="relative text-2xl pl-5 font-serif italic drop-shadow-lg">
+            Stretch out in
+          </p>
+          <p className="relative italic text-7xl uppercase drop-shadow-md tracking-tight font-oswald -mt-1">
+            premium economy
+          </p>
+          <img
+            src={FlyBetterImage}
+            alt=""
+            className="h-12 absolute right-16 top-8"
+          />
         </div>
       </div>
 
       <main
         id="shop-sections"
-        className="max-w-7xl mx-auto  px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8 space-y-20"
+        className="max-w-7xl mx-auto  px-4 pb-16 sm:px-6 sm:pb-24 lg:max-w-7xl lg:px-8 space-y-20 relative"
       >
-        {productSections.map(section => (
-          <section
-            key={section.category}
-            id={section.category}
-            className="scroll-mt-20"
-          >
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-              {section.category}
-            </h2>
+        <TicketForm onSearch={setTicketSearchInfo} />
 
-            <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-              {section.products.map(product => (
-                <ProductItem key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
-        ))}
+        {ticketSearchInfo ? (
+          <div className="mt-10 space-y-4 max-w-2xl mx-auto">
+            {tickets.map(ticket => (
+              <button
+                type="button"
+                key={ticket.id}
+                className="block w-full focus:outline-none hover:-translate-y-1 transition-transform duration-300 rounded-2xl focus-visible:ring focus-visible:ring-ring/30"
+                onClick={() => {
+                  selectTicket({ ...ticket, ...ticketSearchInfo });
+                  navigate('/checkout');
+                }}
+              >
+                <Ticket
+                  {...ticket}
+                  {...ticketSearchInfo}
+                  date={ticketSearchInfo.dates.from!}
+                />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-600">
+            Search for flights to see available tickets...
+          </p>
+        )}
       </main>
     </div>
+  );
+}
+
+function TicketForm({
+  onSearch,
+}: {
+  onSearch: (info: TicketSearchInfo) => void;
+}) {
+  const { control, handleSubmit } = useForm<TicketSearchInfo>({
+    mode: 'onTouched',
+    defaultValues: {
+      departureAirport: '',
+      arrivalAirport: '',
+      passengers: '1',
+      classOption: 'economy',
+    },
+    shouldFocusError: true,
+  });
+  const { arrivalAirport, departureAirport } = useWatch({ control });
+
+  return (
+    <section
+      id="#book"
+      className="bg-white shadow-lg rounded-md -mt-20 overflow-hidden"
+    >
+      <div className="flex divide-x-2  text-center">
+        <div className="flex-1 flex items-center justify-center space-x-2 border-b-2 p-4 border-b-primary">
+          <PlaneIcon className="h-6 rotate-45" />
+          <p className="text-lg font-medium">Search flights</p>
+        </div>
+        <div className="hidden flex-1 text-slate-500 md:flex items-center justify-center space-x-2 border-b p-4">
+          <PriceTagIcon className="h-6 -rotate-90" />
+          <p className="text-lg font-thin">Manage booking / Check in</p>
+        </div>
+        <div className="hidden  flex-1 text-slate-500 md:flex items-center justify-center space-x-2 border-b p-4">
+          <PlaneWing className="h-6 " />
+          <p className="text-lg font-thin">What&apos;s on your flight</p>
+        </div>
+        <div className="hidden  flex-1 text-slate-500 md:flex items-center justify-center space-x-2 border-b p-4">
+          <ClockIcon className="h-6 " />
+          <p className="text-lg font-thin">Flight status</p>
+        </div>
+      </div>
+      <form onSubmit={handleSubmit(onSearch)} className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Controller
+            control={control}
+            rules={{ required: true }}
+            name="departureAirport"
+            render={({ field }) => (
+              <Combobox
+                label="Departure airport"
+                options={airportOptions.filter(o => o.value !== arrivalAirport)}
+                format={option =>
+                  `${option.label} (${option.value.toUpperCase()})`
+                }
+                {...field}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            rules={{ required: true }}
+            name="arrivalAirport"
+            render={({ field }) => (
+              <Combobox
+                label="Arrival airport"
+                options={airportOptions.filter(
+                  o => o.value !== departureAirport,
+                )}
+                format={option =>
+                  `${option.label} (${option.value.toUpperCase()})`
+                }
+                {...field}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            rules={{
+              required: true,
+              validate: v => Boolean(v.from && v.to) || 'required',
+            }}
+            name="dates"
+            render={({ field }) => (
+              <DatePickerWithRange label="Departure date" {...field} />
+            )}
+          />
+
+          <Controller
+            control={control}
+            rules={{ required: true }}
+            name="passengers"
+            render={({ field }) => <NumberInput min={1} max={12} {...field} />}
+          />
+
+          <Controller
+            control={control}
+            rules={{ required: true }}
+            name="classOption"
+            render={({ field }) => (
+              <Combobox label="Class" options={classOptions} {...field} />
+            )}
+          />
+
+          <Button type="submit">Search flights</Button>
+        </div>
+      </form>
+    </section>
   );
 }

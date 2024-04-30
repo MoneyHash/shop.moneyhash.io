@@ -9,9 +9,9 @@ import CompleteOrderImage from '../assets/guide/CompleteOrder.png';
 export default function IntegrationGuide() {
   return (
     <>
-      <NavBar hideCart hideCurrency />
+      <NavBar hideCurrency />
 
-      <div className="prose mx-auto pt-4 pb-24 max-w-4xl prose-a:text-decathlon prose-a:hover:decoration-decathlon-dark">
+      <div className="prose mx-auto pt-4 pb-24 max-w-4xl prose-a:text-primary prose-a:hover:decoration-primary-dark">
         <h1 className="text-center">
           MoneyHash JavaScript SDK integration guide
         </h1>

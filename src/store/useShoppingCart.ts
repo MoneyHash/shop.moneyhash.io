@@ -1,62 +1,33 @@
 import { create } from 'zustand';
-import productSections, { type Product } from '../utils/productSections';
+import { type DateRange } from 'react-day-picker';
+import { type ClassOption } from '../utils/data';
+import { type Currency } from './useCurrency';
+
+export type TicketSearchInfo = {
+  departureAirport: string;
+  arrivalAirport: string;
+  dates: DateRange;
+  passengers: string;
+  classOption: ClassOption;
+  arriveTime: string;
+  boardingTime: string;
+  departureTime: string;
+  price: Record<Currency, number>;
+};
 
 type State = {
-  cart: (Product & { quantity: number })[];
+  selectedTicket: TicketSearchInfo | null;
 };
 
 type Action = {
-  addProductToCart: (product: Product) => void;
-  incrementProductQuantity: (productId: string) => void;
-  decrementProductQuantity: (productId: string) => void;
-  removeProductFromCart: (productId: string) => void;
-  resetCart: () => void;
+  selectTicket: (ticket: TicketSearchInfo) => void;
   emptyCart: () => void;
 };
 
-const initialCart: State['cart'] = [
-  ...productSections[0].products.slice(0, 2).map(p => ({ ...p, quantity: 1 })),
-  ...productSections[1].products.slice(0, 1).map(p => ({ ...p, quantity: 1 })),
-];
+const initialCart: TicketSearchInfo | null = null;
 
-const useShoppingCart = create<State & Action>(set => ({
-  cart: initialCart,
-  addProductToCart: product => {
-    set(state => {
-      const productInCart = state.cart.find(p => p.id === product.id);
-      if (productInCart) {
-        return {
-          cart: state.cart.map(p =>
-            p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p,
-          ),
-        };
-      }
-      return {
-        cart: [...state.cart, { ...product, quantity: 1 }],
-      };
-    });
-  },
-  incrementProductQuantity: productId => {
-    set(state => ({
-      cart: state.cart.map(p =>
-        p.id === productId ? { ...p, quantity: p.quantity + 1 } : p,
-      ),
-    }));
-  },
-  decrementProductQuantity: productId => {
-    set(state => ({
-      cart: state.cart.map(p =>
-        p.id === productId ? { ...p, quantity: p.quantity - 1 } : p,
-      ),
-    }));
-  },
-  removeProductFromCart: productId => {
-    set(state => ({
-      cart: state.cart.filter(p => p.id !== productId),
-    }));
-  },
-  resetCart: () => set({ cart: initialCart }),
-  emptyCart: () => set({ cart: [] }),
+export const useShoppingCart = create<State & Action>(set => ({
+  selectedTicket: initialCart,
+  selectTicket: ticket => set({ selectedTicket: ticket }),
+  emptyCart: () => set({ selectedTicket: null }),
 }));
-
-export default useShoppingCart;

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ChevronDownIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
-import { Link } from 'react-router-dom';
 import usePaymentExperience from '../store/usePaymentExperience';
 
 export default function PaymentExperiencePanel() {
@@ -11,7 +10,7 @@ export default function PaymentExperiencePanel() {
     <div
       className={clsx(
         'fixed bottom-0 right-5 max-w-xs w-full flex flex-col rounded-md bg-slate-800 text-white text-sm z-20 transition-transform',
-        isOpen ? 'translate-y-0' : 'translate-y-[190px]',
+        isOpen ? 'translate-y-0' : 'translate-y-[140px]',
       )}
     >
       <button
@@ -29,30 +28,13 @@ export default function PaymentExperiencePanel() {
         />
       </button>
       <div className="p-4 flex flex-col">
-        <div className="flex space-x-2 items-center">
-          <input
-            type="radio"
-            id="redirect"
-            name="payment-experience"
-            value="redirect"
-            className="text-decathlon focus:ring-0 focus:outline-none focus:ring-offset-0"
-            checked={experience === 'redirect'}
-            onChange={e => {
-              setExperience(e.target.value as any);
-              setTimeout(() => {
-                setIsOpen(false);
-              }, 300);
-            }}
-          />
-          <label htmlFor="redirect">Redirect to External checkout</label>
-        </div>
-        <div className="flex space-x-2 items-center mt-2">
+        <div className="flex space-x-2 items-center ">
           <input
             type="radio"
             id="in-app"
             name="payment-experience"
             value="in-app"
-            className="text-decathlon focus:ring-0 focus:outline-none focus:ring-offset-0"
+            className="text-primary focus:ring-0 focus:outline-none focus:ring-offset-0"
             checked={experience === 'in-app'}
             onChange={e => {
               setExperience(e.target.value as any);
@@ -64,21 +46,39 @@ export default function PaymentExperiencePanel() {
           <label htmlFor="in-app">In App Checkout</label>
         </div>
 
+        <div className="flex space-x-2 items-center mt-2">
+          <input
+            type="radio"
+            id="redirect"
+            name="payment-experience"
+            value="redirect"
+            className="text-primary focus:ring-0 focus:outline-none focus:ring-offset-0"
+            checked={experience === 'redirect'}
+            onChange={e => {
+              setExperience(e.target.value as any);
+              setTimeout(() => {
+                setIsOpen(false);
+              }, 300);
+            }}
+          />
+          <label htmlFor="redirect">Redirect to External checkout</label>
+        </div>
+
         <a
-          className="mt-5 text-center bg-decathlon rounded-md hover:bg-decathlon-dark py-2"
+          className="mt-5 text-center bg-primary rounded-md hover:bg-primary-dark py-2"
           href="https://docs.stripe.com/testing?testing-method=card-numbers#cards"
           target="_blank"
           rel="noopener noreferrer"
         >
           Test Cards
         </a>
-        <Link
+        {/* <Link
           className="mt-5 text-center bg-green-500 rounded-md hover:bg-green-600 py-2"
           to="/integration-guide"
           target="_blank"
         >
           Integration Guide
-        </Link>
+        </Link> */}
       </div>
     </div>
   );

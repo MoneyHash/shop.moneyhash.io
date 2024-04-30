@@ -28,25 +28,25 @@ export default function useMoneyHash({
         styles: {
           input: {
             focus: {
-              borderColor: '#1A82C3',
-              boxShadow: '0 0 0 1px #1A82C378',
+              borderColor: '#D71A21',
+              boxShadow: '0 0 0 1px #D71A2178',
             },
           },
           submitButton: {
             base: {
-              background: '#1A82C3',
+              background: '#D71A21',
               color: '#fff',
             },
             hover: {
-              background: '#15699e',
+              background: '#c7181e',
             },
             focus: {
-              background: '#15699e',
+              background: '#c7181e',
             },
           },
           loader: {
             backgroundColor: 'white',
-            color: '#1A82C3',
+            color: '#D71A21',
           },
         },
       }),

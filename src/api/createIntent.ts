@@ -17,7 +17,6 @@ export default function createIntent({
   amount: number;
   currency: string;
   billing_data: Record<string, string>;
-  shipping_data: Record<string, string>;
   product_items: ProductItem[];
   [key: string]: unknown;
 }): Promise<{ data: { id: string } }> {
@@ -25,7 +24,6 @@ export default function createIntent({
     amount,
     amount_currency: currency,
     billing_data,
-    shipping_data,
     product_items,
     hide_form_header_message: true,
     operation: 'purchase',

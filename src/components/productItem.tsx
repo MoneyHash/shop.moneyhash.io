@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import useCurrency from '../store/useCurrency';
-import type { Product } from '../utils/productSections';
 import ProductModal from './productModal';
 import formatCurrency from '../utils/formatCurrency';
 
 type ProductItemProps = {
-  product: Product;
+  product: any;
 };
 
 export default function ProductItem({ product }: ProductItemProps) {

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { Currency } from '../utils/productSections';
+
+export type Currency = 'AED' | 'USD' | 'EGP';
 
 type State = {
   currency: Currency;
@@ -10,7 +11,7 @@ type Action = {
 };
 
 const useCurrency = create<State & Action>(set => ({
-  currency: 'ZAR',
+  currency: 'AED',
   setCurrency: currency => set({ currency }),
 }));
 

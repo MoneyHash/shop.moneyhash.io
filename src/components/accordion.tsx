@@ -42,13 +42,13 @@ function AccordionStep({
         <AccordionPrimitive.Trigger
           disabled={stepIndex > activeStep}
           className={clsx(
-            'flex items-center py-6 text-lg font-medium w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:ring-decathlon rounded-md',
+            'flex items-center py-6 text-lg font-medium w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:ring-primary rounded-md',
             isCompleted ? 'space-x-3' : 'space-x-4',
           )}
         >
           {isCompleted ? (
-            <div className="border rounded-full border-decathlon w-7 h-7 flex items-center justify-center">
-              <CheckIcon className="w-5 h-5 text-decathlon" />
+            <div className="border rounded-full border-primary w-7 h-7 flex items-center justify-center">
+              <CheckIcon className="w-5 h-5 text-primary" />
             </div>
           ) : (
             <span>{`${stepIndex + 1}`.padStart(2, '0')}.</span>

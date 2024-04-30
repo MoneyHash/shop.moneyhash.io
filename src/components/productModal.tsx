@@ -134,7 +134,7 @@ export default function ProductModal({
                           <div className="mt-6">
                             <button
                               type="submit"
-                              className="flex w-full items-center justify-center rounded-md border border-transparent bg-decathlon px-8 py-3 text-base font-medium text-white hover:bg-decathlon-dark focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50"
+                              className="flex w-full items-center justify-center rounded-md border border-transparent bg-primary px-8 py-3 text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-gray-50"
                               onClick={() => {
                                 addProductToCart(product);
                                 onClose();
