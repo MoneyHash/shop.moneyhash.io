@@ -68,13 +68,12 @@ export default function Checkout() {
       ],
       hide_amount_sidebar: true,
       hide_navigation_to_payment_methods: true,
-      ...((paymentExperience === 'redirect' ||
-        selectedMethodId === 'SAMSUNG_PAY') && {
+      ...{
         successful_redirect_url: `${window.location.origin}/checkout/order`,
         failed_redirect_url: `${window.location.origin}/checkout/order`,
         pending_external_action_redirect_url: `${window.location.origin}/checkout/order`,
         back_url: `${window.location.origin}/checkout/order`,
-      }),
+      },
     });
     const { paymentMethods, expressMethods } = await moneyHash.getIntentMethods(
       intent.data.id,
@@ -534,6 +533,7 @@ function CheckoutForm({ intentId }: { intentId: string }) {
     onComplete: async ({ intent, redirect }) => {
       if (redirect?.redirectUrl) {
         window.location.href = redirect.redirectUrl;
+        return;
       }
       navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
     },
