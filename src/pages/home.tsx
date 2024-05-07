@@ -134,7 +134,7 @@ function TicketForm({
             name="departureAirport"
             render={({ field }) => (
               <Combobox
-                label="Departure airport"
+                label="Departing - Returning"
                 options={airportOptions.filter(o => o.value !== arrivalAirport)}
                 format={option =>
                   `${option.label} (${option.value.toUpperCase()})`

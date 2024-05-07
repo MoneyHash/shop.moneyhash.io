@@ -3,8 +3,10 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { type Method } from '@moneyhash/js-sdk/headless';
 import { Dialog, RadioGroup, Transition } from '@headlessui/react';
-
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
+import GooglePayButton from '@google-pay/button-react';
+
 import NavBar from '../components/navbar';
 import { useShoppingCart } from '../store/useShoppingCart';
 import useMoneyHash from '../hooks/useMoneyHash';
@@ -128,11 +130,16 @@ export default function Checkout() {
                 selectedMethodId={selectedMethodId}
                 onChange={async methodId => {
                   setSelectedMethodId(methodId);
-                  await moneyHash.proceedWith({
-                    type: 'method',
-                    id: methodId,
-                    intentId,
-                  });
+                  await moneyHash
+                    .proceedWith({
+                      type: 'method',
+                      id: methodId,
+                      intentId,
+                    })
+                    .catch(() => {
+                      toast.error('Something went wrong, please try again');
+                      setSelectedMethodId(null);
+                    });
                 }}
                 expressMethods={expressMethods}
                 onApplePayClick={async () => {
@@ -163,11 +170,16 @@ export default function Checkout() {
                 selectedMethodId={selectedMethodId}
                 onChange={async methodId => {
                   setSelectedMethodId(methodId);
-                  await moneyHash.proceedWith({
-                    type: 'method',
-                    id: methodId,
-                    intentId,
-                  });
+                  await moneyHash
+                    .proceedWith({
+                      type: 'method',
+                      id: methodId,
+                      intentId,
+                    })
+                    .catch(() => {
+                      toast.error('Something went wrong, please try again');
+                      setSelectedMethodId(null);
+                    });
                 }}
                 expressMethods={expressMethods}
                 onApplePayClick={async () => {
@@ -339,20 +351,14 @@ function PaymentFormInAppExperience({
           }}
         >
           <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
-          <div className="gap-3 flex flex-wrap">
+          <div className="gap-3 grid grid-cols-1">
             {expressMethods?.map(method => (
-              <button
-                type="button"
+              <ExpressButton
                 key={method.id}
-                className={cn(
-                  'flex justify-center rounded-lg hover:opacity-90 border h-[45px] focus:outline-none focus-visible:ring-2 focus-visible:border-primary focus-visible:ring-primary/30 overflow-hidden',
-                  method.id === 'APPLE_PAY'
-                    ? 'bg-black'
-                    : 'hover:bg-gray-50/50',
-                  selectedMethodId === method.id &&
-                    'border-primary ring-1 ring-primary',
-                )}
+                method={method}
+                isSelected={selectedMethodId === method.id}
                 onClick={async () => {
+                  setIsChangingMethod(true);
                   try {
                     method.id === 'APPLE_PAY'
                       ? onApplePayClick()
@@ -362,15 +368,7 @@ function PaymentFormInAppExperience({
                     setIsChangingMethod(false);
                   }
                 }}
-              >
-                <img
-                  src={method.icons[0]}
-                  alt=""
-                  className="h-full"
-                  draggable={false}
-                />
-                <p className="sr-only">{method.title}</p>
-              </button>
+              />
             ))}
 
             {methods.map(method => (
@@ -380,17 +378,17 @@ function PaymentFormInAppExperience({
                 className={({ active }) =>
                   cn(
                     active && 'border-primary ring-2 ring-primary/30',
-                    'relative block cursor-pointer rounded-lg border bg-white px-5 py-1.5 shadow-sm focus:outline-none',
+                    'relative block cursor-pointer rounded-lg border bg-white px-4 py-1.5 shadow-sm focus:outline-none',
                   )
                 }
               >
                 {({ active, checked }) => (
                   <>
-                    <div className="flex items-center gap-2 ">
+                    <div className="flex items-center gap-2">
                       <input
                         id={method.id}
                         type="radio"
-                        className="text-primary focus:ring-primary w-4 h-4 invisible opacity-0 hidden"
+                        className="text-primary focus:ring-primary w-4 h-4"
                         checked={method.id === selectedMethodId}
                         onChange={() => {}}
                       />
@@ -404,7 +402,7 @@ function PaymentFormInAppExperience({
                       <img
                         src={method.icons[0]}
                         alt=""
-                        className="object-contain h-8 w-8"
+                        className="object-contain h-8 w-8 ml-auto"
                         draggable={false}
                       />
                     </div>
@@ -587,32 +585,25 @@ function PaymentFormRedirectExperience({
         }}
       >
         <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
-        <div className="flex flex-wrap gap-3">
+        <div className="grid grid-cols-1 gap-3">
           {expressMethods?.map(method => (
-            <button
-              type="button"
+            <ExpressButton
               key={method.id}
-              className={cn(
-                'flex justify-center rounded-lg hover:opacity-90 border h-[45px] focus:outline-none focus-visible:ring-2 focus-visible:border-primary focus-visible:ring-primary/30 overflow-hidden',
-                method.id === 'APPLE_PAY' ? 'bg-black' : 'hover:bg-gray-50/50',
-                selectedMethodId === method.id &&
-                  'border-primary ring-1 ring-primary',
-              )}
-              onClick={() => {
-                method.id === 'APPLE_PAY'
-                  ? onApplePayClick()
-                  : onChange(method.id);
+              method={method}
+              isSelected={selectedMethodId === method.id}
+              onClick={async () => {
+                try {
+                  method.id === 'APPLE_PAY'
+                    ? onApplePayClick()
+                    : await onChange(method.id);
+                  setIsChangingMethod(false);
+                } catch (error) {
+                  setIsChangingMethod(false);
+                }
               }}
-            >
-              <img
-                src={method.icons[0]}
-                alt=""
-                className="h-full"
-                draggable={false}
-              />
-              <p className="sr-only">{method.title}</p>
-            </button>
+            />
           ))}
+
           {methods.map(method => (
             <RadioGroup.Option
               key={method.title}
@@ -620,7 +611,7 @@ function PaymentFormRedirectExperience({
               className={({ active }) =>
                 cn(
                   active && 'border-primary ring-2 ring-primary/30',
-                  'relative block cursor-pointer rounded-lg border bg-white px-5 py-1.5 shadow-sm focus:outline-none',
+                  'relative block cursor-pointer rounded-lg border bg-white px-4 py-1.5 shadow-sm focus:outline-none',
                 )
               }
             >
@@ -630,7 +621,7 @@ function PaymentFormRedirectExperience({
                     <input
                       id={method.id}
                       type="radio"
-                      className="text-primary focus:ring-primary w-4 h-4 invisible opacity-0 hidden"
+                      className="text-primary focus:ring-primary w-4 h-4"
                       checked={method.id === selectedMethodId}
                       onChange={() => {}}
                     />
@@ -644,7 +635,7 @@ function PaymentFormRedirectExperience({
                     <img
                       src={method.icons[0]}
                       alt=""
-                      className="object-contain h-8 w-8"
+                      className="object-contain h-8 w-8 ml-auto"
                       draggable={false}
                     />
                   </div>
@@ -677,5 +668,91 @@ function PaymentFormRedirectExperience({
         </Button>
       </div>
     </div>
+  );
+}
+
+function ExpressButton({
+  isSelected,
+  method,
+  onClick,
+}: {
+  isSelected: boolean;
+  method: Method;
+  onClick: () => void;
+}) {
+  if (method.id === 'GOOGLE_PAY') {
+    return (
+      <GooglePayButton
+        environment="TEST"
+        buttonType="pay"
+        buttonColor="black"
+        paymentRequest={{
+          apiVersion: 2,
+          apiVersionMinor: 0,
+          allowedPaymentMethods: [
+            {
+              type: 'CARD',
+              parameters: {
+                allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                allowedCardNetworks: ['MASTERCARD', 'VISA'],
+              },
+              tokenizationSpecification: {
+                type: 'PAYMENT_GATEWAY',
+                parameters: {
+                  gateway: 'example',
+                  gatewayMerchantId: 'exampleGatewayMerchantId',
+                },
+              },
+            },
+          ],
+          merchantInfo: {
+            merchantId: '12345678901234567890',
+            merchantName: 'Emirates Merchant',
+          },
+          transactionInfo: {
+            totalPriceStatus: 'FINAL',
+            totalPriceLabel: 'Total',
+            totalPrice: '100.00',
+            currencyCode: 'USD',
+            countryCode: 'US',
+          },
+        }}
+        buttonSizeMode="fill"
+        style={{ height: 46 }}
+        className={cn(
+          '[&_.gpay-card-info-container]:!border [&_.gpay-card-info-container.focus]:!ring-2 [&_.gpay-card-info-container.focus]:!border-primary [&_.gpay-card-info-container.focus]:!ring-primary/30 [&_.gpay-card-info-container]:!rounded-lg',
+          isSelected &&
+            '[&_.gpay-card-info-container]:!border-primary [&_.gpay-card-info-container]:!ring-2 [&_.gpay-card-info-container]:!ring-primary [&_.gpay-card-info-container]:!outline-none ',
+        )}
+        onClick={e => {
+          e.preventDefault();
+          onClick();
+        }}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={cn(
+        'flex justify-center items-center rounded-lg hover:opacity-90 border h-[46px] focus:outline-none:ring-2 focus-visible:border-primary focus-visible:ring-primary/30 overflow-hidden bg-black text-white',
+        isSelected && 'border-primary ring-2 ring-primary',
+      )}
+      onClick={onClick}
+    >
+      {method.id === 'APPLE_PAY' ? (
+        <img
+          src={method.icons[0]}
+          alt=""
+          className="h-full"
+          draggable={false}
+        />
+      ) : (
+        <p>
+          Pay with <span className="font-medium">{method.title}</span>
+        </p>
+      )}
+    </button>
   );
 }
