@@ -34,6 +34,7 @@ export default function Checkout() {
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
   const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
+  const [personalInfo, setPersonalInfo] = useState<FormValues | null>(null);
   const currency = useCurrency(state => state.currency);
   // const ticketInfo = useShoppingCart(state => state.selectedTicket);
   const ticketInfo = {
@@ -73,7 +74,6 @@ export default function Checkout() {
   });
 
   const handleCreateIntent = async (data: FormValues) => {
-    console.log(data);
     // const intent = await createIntent({
     //   amount: totalPrice,
     //   currency,
@@ -112,6 +112,7 @@ export default function Checkout() {
     setIntentId(intent.data.id);
     setExpressMethods(expressMethods);
     setPaymentMethods(paymentMethods);
+    setPersonalInfo(data);
   };
 
   return (
@@ -189,6 +190,7 @@ export default function Checkout() {
                         replace: true,
                       });
                     },
+                    billingData: personalInfo!,
                   });
                 }}
               />
@@ -229,6 +231,7 @@ export default function Checkout() {
                         replace: true,
                       });
                     },
+                    billingData: personalInfo!,
                   });
                 }}
               />
