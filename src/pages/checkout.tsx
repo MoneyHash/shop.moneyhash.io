@@ -12,7 +12,7 @@ import GooglePayButton from '@google-pay/button-react';
 import NavBar from '../components/navbar';
 import { useShoppingCart } from '../store/useShoppingCart';
 import useMoneyHash from '../hooks/useMoneyHash';
-import createIntent from '../api/createIntent';
+// import createIntent from '../api/createIntent';
 import useCurrency from '../store/useCurrency';
 import PaymentExperiencePanel from '../components/paymentExperiencePanel';
 import usePaymentExperience from '../store/usePaymentExperience';
@@ -73,6 +73,7 @@ export default function Checkout() {
   });
 
   const handleCreateIntent = async (data: FormValues) => {
+    console.log(data);
     // const intent = await createIntent({
     //   amount: totalPrice,
     //   currency,
