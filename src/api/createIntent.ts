@@ -26,8 +26,9 @@ export default function createIntent({
     billing_data,
     product_items,
     hide_form_header_message: true,
-    operation: 'purchase',
     webhook_url: 'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
+    // operation: 'purchase',
+    flow_id: 'A9ejXLm', // TODO: production flow_id
     ...rest,
   });
 }
