@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { Fragment, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -33,7 +35,27 @@ export default function Checkout() {
   const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
   const currency = useCurrency(state => state.currency);
-  const ticketInfo = useShoppingCart(state => state.selectedTicket);
+  // const ticketInfo = useShoppingCart(state => state.selectedTicket);
+  const ticketInfo = {
+    id: '-QaZyc0jZsL_XHAQDXjpC',
+    boardingTime: '02:00 AM',
+    departureTime: '04:30 AM',
+    arriveTime: '06:55 AM',
+    price: {
+      EGP: 8000,
+      USD: 500,
+      AED: 2000,
+    },
+    departureAirport: 'dxb',
+    arrivalAirport: 'cai',
+    passengers: '1',
+    classOption: 'economy',
+    dates: {
+      from: '2024-05-17T21:00:00.000Z',
+      to: '2024-06-09T21:00:00.000Z',
+    },
+  } as const;
+
   const paymentExperience = usePaymentExperience(state => state.experience);
   const emptyCart = useShoppingCart(state => state.emptyCart);
   const navigate = useNavigate();
@@ -51,32 +73,38 @@ export default function Checkout() {
   });
 
   const handleCreateIntent = async (data: FormValues) => {
-    const intent = await createIntent({
-      amount: totalPrice,
-      currency,
-      billing_data: {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        phone_number: data.phone_number,
+    // const intent = await createIntent({
+    //   amount: totalPrice,
+    //   currency,
+    //   billing_data: {
+    //     first_name: data.first_name,
+    //     last_name: data.last_name,
+    //     email: data.email,
+    //     phone_number: data.phone_number,
+    //   },
+    //   product_items: [
+    //     {
+    //       name: ticketInfo.classOption,
+    //       amount: totalPrice,
+    //       quantity: 1,
+    //       description: JSON.stringify(ticketInfo),
+    //     },
+    //   ],
+    //   hide_amount_sidebar: true,
+    //   hide_navigation_to_payment_methods: true,
+    //   ...{
+    //     successful_redirect_url: `${window.location.origin}/checkout/order`,
+    //     failed_redirect_url: `${window.location.origin}/checkout/order`,
+    //     pending_external_action_redirect_url: `${window.location.origin}/checkout/order`,
+    //     back_url: `${window.location.origin}/checkout/order`,
+    //   },
+    // });
+    const intent = {
+      data: {
+        id: '9RwmMeL',
       },
-      product_items: [
-        {
-          name: ticketInfo.classOption,
-          amount: totalPrice,
-          quantity: 1,
-          description: JSON.stringify(ticketInfo),
-        },
-      ],
-      hide_amount_sidebar: true,
-      hide_navigation_to_payment_methods: true,
-      ...{
-        successful_redirect_url: `${window.location.origin}/checkout/order`,
-        failed_redirect_url: `${window.location.origin}/checkout/order`,
-        pending_external_action_redirect_url: `${window.location.origin}/checkout/order`,
-        back_url: `${window.location.origin}/checkout/order`,
-      },
-    });
+    };
+
     const { paymentMethods, expressMethods } = await moneyHash.getIntentMethods(
       intent.data.id,
     );
@@ -111,7 +139,7 @@ export default function Checkout() {
               <h2 id="summary-heading" className="sr-only">
                 Order summary
               </h2>
-
+              {/* @ts-ignore */}
               <Ticket {...ticketInfo} date={ticketInfo.dates.from!} />
             </div>
           </section>
