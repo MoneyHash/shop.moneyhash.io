@@ -38,7 +38,6 @@ export default function Checkout() {
   const currency = useCurrency(state => state.currency);
   const ticketInfo = useShoppingCart(state => state.selectedTicket);
   const paymentExperience = usePaymentExperience(state => state.experience);
-  const emptyCart = useShoppingCart(state => state.emptyCart);
   const navigate = useNavigate();
 
   const moneyHash = useMoneyHash();
@@ -153,7 +152,6 @@ export default function Checkout() {
                     countryCode: 'AE',
                     onCancel: () => {},
                     onComplete: () => {
-                      emptyCart();
                       navigate(`/checkout/order?intent_id=${intentId}`, {
                         replace: true,
                       });
@@ -194,7 +192,6 @@ export default function Checkout() {
                     countryCode: 'AE',
                     onCancel: () => {},
                     onComplete: () => {
-                      emptyCart();
                       navigate(`/checkout/order?intent_id=${intentId}`, {
                         replace: true,
                       });
@@ -462,11 +459,9 @@ function PaymentFormInAppExperience({
 function PayFlexModal({ intentId }: { intentId: string }) {
   const [isOpen, setIsOpen] = useState(true);
   const navigate = useNavigate();
-  const emptyCart = useShoppingCart(state => state.emptyCart);
 
   const moneyHash = useMoneyHash({
     onComplete: ({ intent }) => {
-      emptyCart();
       navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
     },
     onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
