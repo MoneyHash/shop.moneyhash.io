@@ -366,6 +366,10 @@ function PaymentFormInAppExperience({
                       ? onApplePayClick()
                       : await onChange(method.id);
                     setIsChangingMethod(false);
+
+                    if (method.id !== 'APPLE_PAY') {
+                      setView('checkout-form');
+                    }
                   } catch (error) {
                     setIsChangingMethod(false);
                   }
@@ -597,6 +601,9 @@ function PaymentFormRedirectExperience({
                     ? onApplePayClick()
                     : await onChange(method.id);
                   setIsChangingMethod(false);
+                  if (method.id !== 'APPLE_PAY') {
+                    window.location.href = `https://embed.moneyhash.io/embed/payment/${intentId}`;
+                  }
                 } catch (error) {
                   setIsChangingMethod(false);
                 }
