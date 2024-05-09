@@ -55,11 +55,6 @@
   dependencies:
     regenerator-runtime "^0.14.0"
 
-"@braintree/browser-detection@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@braintree/browser-detection/-/browser-detection-2.0.0.tgz#29334c6dae346473735caf912405834db477051c"
-  integrity sha512-nfKu9d4l5/uNdU4p2Tpc3cv5tJ005LT9hpY5hJxcyHwPICJ73Hy0XONsqjmZNO6WBE1JnmHzDeKO0rqnzcYq9Q==
-
 "@commitlint/cli@^16.1.0":
   version "16.3.0"
   resolved "https://registry.yarnpkg.com/@commitlint/cli/-/cli-16.3.0.tgz#5689f5c2abbb7880d5ff13329251e5648a784b16"
