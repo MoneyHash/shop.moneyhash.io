@@ -656,7 +656,7 @@ function PaymentFormRedirectExperience({
       <div className="mt-10">
         <Button asChild>
           <a
-            href={`https://stg-embed.moneyhash.io/embed/payment/${intentId}`}
+            href={`https://embed.moneyhash.io/embed/payment/${intentId}`}
             className={cn(
               'w-full',
               (!selectedMethodId || isChangingMethod) &&
