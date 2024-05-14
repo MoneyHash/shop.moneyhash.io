@@ -12,12 +12,14 @@ export default function createIntent({
   billing_data,
   shipping_data,
   product_items,
+  flowId,
 }: {
   amount: number;
   currency: string;
   billing_data: Record<string, string>;
   shipping_data: Record<string, string>;
   product_items: ProductItem[];
+  flowId?: string;
 }): Promise<{ data: { id: string } }> {
   return axiosInstance.post('/payments/intent/', {
     amount,
@@ -28,5 +30,6 @@ export default function createIntent({
     hide_form_header_message: true,
     operation: 'purchase',
     webhook_url: 'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
+    ...(flowId && { flow_id: flowId }),
   });
 }

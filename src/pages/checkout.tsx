@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
 import { type Method } from '@moneyhash/js-sdk/headless';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
+import toast from 'react-hot-toast';
 import NavBar from '../components/navbar';
 import useShoppingCart from '../store/useShoppingCart';
 import twoFixedDigit from '../utils/twoFixedDigits';
@@ -12,6 +13,7 @@ import createIntent from '../api/createIntent';
 import useCurrency from '../store/useCurrency';
 import formatCurrency from '../utils/formatCurrency';
 import TestCardsPanel from '../components/testCardsPanel';
+import useFlowId from '../store/useFlowId';
 
 export default function Checkout() {
   const [intentId, setIntentId] = useState('');
@@ -22,6 +24,7 @@ export default function Checkout() {
   const currency = useCurrency(state => state.currency);
   const cart = useShoppingCart(state => state.cart);
   const emptyCart = useShoppingCart(state => state.emptyCart);
+  const flowId = useFlowId(state => state.flowId);
   const moneyHash = useMoneyHash({
     onComplete: ({ intent }) => {
       emptyCart();
@@ -39,8 +42,8 @@ export default function Checkout() {
     [cart, currency],
   );
 
-  const handleSubmit = async (data: FormValues) => {
-    const intent = await createIntent({
+  const handleSubmit = async (data: FormValues) =>
+    createIntent({
       amount: totalPrice,
       currency,
       billing_data: {
@@ -67,11 +70,24 @@ export default function Checkout() {
         subcategory: 'Audio',
         type: 'Digital',
       })),
-    });
-    const { paymentMethods } = await moneyHash.getIntentMethods(intent.data.id);
-    setIntentId(intent.data.id);
-    setPaymentMethods(paymentMethods);
-  };
+      flowId,
+    })
+      .then(async intent => {
+        const { paymentMethods } = await moneyHash.getIntentMethods(
+          intent.data.id,
+        );
+        setIntentId(intent.data.id);
+        setPaymentMethods(paymentMethods);
+      })
+      .catch(err => {
+        const [key, message] =
+          Object.entries(err.response.data.status.errors[0] || {})[0] || [];
+        if (key) {
+          toast.error(`${key}: ${message}`);
+        } else {
+          toast.error((message as string) || 'Something went wrong');
+        }
+      });
 
   useEffect(() => {
     if (!selectedMethod) return;
@@ -169,21 +185,25 @@ export default function Checkout() {
                       aria-label={`Pay with ${method.title}`}
                       onClick={async () => {
                         setIsPaying(true);
-                        const { state } = await moneyHash.proceedWith({
-                          type: 'method',
-                          intentId,
-                          id: method.id,
-                        });
-
-                        if (state !== 'INTENT_FORM') {
-                          emptyCart();
-                          navigate(`/checkout/order/${intentId}`, {
-                            replace: true,
+                        try {
+                          const { state } = await moneyHash.proceedWith({
+                            type: 'method',
+                            intentId,
+                            id: method.id,
                           });
-                          return;
+
+                          if (state !== 'INTENT_FORM') {
+                            emptyCart();
+                            navigate(`/checkout/order/${intentId}`, {
+                              replace: true,
+                            });
+                            return;
+                          }
+                          setSelectedMethod(method);
+                        } catch (error) {
+                          toast.error('Something went wrong, please try again');
                         }
                         setIsPaying(false);
-                        setSelectedMethod(method);
                       }}
                     >
                       <div className="relative flex items-center gap-3 bg-white py-2 px-3 rounded-md group-hover:bg-slate-50">

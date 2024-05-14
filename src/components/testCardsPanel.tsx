@@ -5,15 +5,17 @@ import { ShieldCheckIcon } from '@heroicons/react/20/solid';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';
+import useFlowId from '../store/useFlowId';
 
 export default function TestCardsPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const { copy } = useCopyToClipboard();
+  const { flowId, setFlowId } = useFlowId();
   return (
     <div
       className={clsx(
         'fixed bottom-0 right-5 max-w-xs w-full flex flex-col rounded-md bg-slate-800 text-white text-sm z-20 transition-transform',
-        isOpen ? 'translate-y-0' : 'translate-y-[268px]',
+        isOpen ? 'translate-y-0' : 'translate-y-[355px]',
       )}
     >
       <button
@@ -90,6 +92,22 @@ export default function TestCardsPanel() {
           Click to copy the card number. Use any future expiration date and
           three-number CVC.
         </p>
+
+        <div className="pt-3 border-t mt-3 border-t-slate-400/40">
+          <label htmlFor="flow_id" className="block text-sm font-medium">
+            Flow ID
+          </label>
+          <div className="mt-1">
+            <input
+              id="flow_id"
+              autoComplete="given-name"
+              className="block w-full rounded-md bg-transparent border-slate-400/40 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              placeholder="ZXPVbZ3"
+              value={flowId}
+              onChange={e => setFlowId(e.target.value)}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
