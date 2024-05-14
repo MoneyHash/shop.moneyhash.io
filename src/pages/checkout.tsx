@@ -26,11 +26,15 @@ export default function Checkout() {
   const emptyCart = useShoppingCart(state => state.emptyCart);
   const flowId = useFlowId(state => state.flowId);
   const moneyHash = useMoneyHash({
-    onComplete: ({ intent }) => {
+    onComplete: ({ intent, redirect }) => {
       emptyCart();
-      navigate(`/checkout/order/${intent.id}`, { replace: true });
+      if (redirect?.redirectUrl) {
+        window.location.href = redirect.redirectUrl;
+        return;
+      }
+      navigate(`/checkout/order?intent_id${intent.id}`, { replace: true });
     },
-    onFail: ({ intent }) => navigate(`/checkout/order/${intent.id}`),
+    onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
   });
   const totalPrice = useMemo(
     () =>

@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import { LinkItUrl } from 'react-linkify-it';
@@ -14,7 +14,8 @@ export default function Order() {
   const [intentDetails, setIntentDetails] =
     useState<IntentDetails<'payment'> | null>(null);
   const [error, setError] = useState();
-  const { orderId } = useParams<{ orderId: string }>();
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get('intent_id');
   const moneyHash = useMoneyHash();
 
   useEffect(() => {
