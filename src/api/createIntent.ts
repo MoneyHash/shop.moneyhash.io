@@ -30,6 +30,6 @@ export default function createIntent({
     hide_form_header_message: true,
     operation: 'purchase',
     webhook_url: 'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
-    ...(flowId && { flow_id: flowId }),
+    ...(flowId && { flow_id: flowId, operation: undefined }),
   });
 }
