@@ -233,18 +233,13 @@ export default function Checkout() {
                 activeStep={+activeStep}
                 title="Payment"
               >
-                {expressMethods?.map(method => (
-                  <button
-                    type="button"
-                    key={method.id}
-                    className={`${
-                      method.id === 'APPLE_PAY'
-                        ? 'bg-black'
-                        : 'border border-gray-300 py-2'
-                    } 
-                    w-full flex justify-center rounded-md hover:opacity-90 my-4`}
-                    onClick={() => {
-                      if (method.id === 'APPLE_PAY') {
+                {expressMethods?.map(method =>
+                  method.id === 'APPLE_PAY' ? (
+                    <button
+                      type="button"
+                      key={method.id}
+                      className="bg-black w-full flex justify-center rounded-md hover:opacity-90 my-4"
+                      onClick={() => {
                         moneyHash.payWithApplePay({
                           intentId,
                           amount: totalPrice,
@@ -263,23 +258,18 @@ export default function Checkout() {
                             });
                           },
                         });
-                      } else {
-                        moneyHash.proceedWith({
-                          intentId,
-                          type: 'method',
-                          id: method.id,
-                        });
-                      }
-                    }}
-                  >
-                    <img src={method.icons[0]} alt="" className="h-10 w-10" />
-                    <p className="sr-only">{method.title}</p>
-                  </button>
-                ))}
+                      }}
+                    >
+                      <img src={method.icons[0]} alt="" className="h-10 w-10" />
+                      <p className="sr-only">{method.title}</p>
+                    </button>
+                  ) : null,
+                )}
                 {paymentExperience === 'redirect' ? (
                   <PaymentFormRedirectExperience
                     intentId={intentId}
                     methods={paymentMethods!}
+                    expressMethods={expressMethods!}
                     selectedMethodId={selectedMethodId}
                     onChange={async methodId => {
                       setSelectedMethodId(methodId);
@@ -294,6 +284,7 @@ export default function Checkout() {
                   <PaymentFormInAppExperience
                     intentId={intentId}
                     methods={paymentMethods!}
+                    expressMethods={expressMethods!}
                     selectedMethodId={selectedMethodId}
                     onChange={async methodId => {
                       setSelectedMethodId(methodId);
@@ -592,10 +583,12 @@ function ShippingMethodForm({
 function PaymentFormInAppExperience({
   intentId,
   methods,
+  expressMethods,
   selectedMethodId,
   onChange,
 }: {
   methods: Method[];
+  expressMethods: Method[];
   intentId: string;
   selectedMethodId: string | null;
   onChange: (methodId: string) => void;
@@ -604,11 +597,38 @@ function PaymentFormInAppExperience({
     'select-method',
   );
   const [isChangingMethod, setIsChangingMethod] = useState(false);
+  const [isLoadingExpressMethod, setIsLoadingExpressMethod] = useState(false);
   const currency = useCurrency(state => state.currency);
 
   if (view === 'select-method') {
     return (
       <>
+        {expressMethods?.map(method =>
+          method.id !== 'APPLE_PAY' ? (
+            <button
+              type="button"
+              key={method.id}
+              disabled={isLoadingExpressMethod}
+              className={`${
+                isLoadingExpressMethod ? 'cursor-wait' : ''
+              } border border-gray-300 py-2 w-full flex justify-center rounded-md hover:opacity-90 my-4 disabled:opacity-50`}
+              onClick={async () => {
+                setIsLoadingExpressMethod(true);
+                try {
+                  await onChange(method.id);
+                  setView('checkout-form');
+                  setIsLoadingExpressMethod(false);
+                } catch (error) {
+                  setIsLoadingExpressMethod(false);
+                }
+              }}
+            >
+              <img src={method.icons[0]} alt="" className="h-10 w-10" />
+              <p className="sr-only">{method.title}</p>
+            </button>
+          ) : null,
+        )}
+
         <RadioGroup
           dir={currency === 'EGP' ? 'rtl' : 'ltr'}
           value={selectedMethodId}
@@ -805,19 +825,52 @@ function CheckoutForm({ intentId }: { intentId: string }) {
 function PaymentFormRedirectExperience({
   intentId,
   methods,
+  expressMethods,
   selectedMethodId,
   onChange,
 }: {
   methods: Method[];
+  expressMethods: Method[];
   intentId: string;
   selectedMethodId: string | null;
   onChange: (methodId: string) => void;
 }) {
   const [isChangingMethod, setIsChangingMethod] = useState(false);
+  const [isLoadingExpressMethod, setIsLoadingExpressMethod] = useState(false);
   const currency = useCurrency(state => state.currency);
+
+  const navigate = useNavigate();
 
   return (
     <div className="py-4">
+      {expressMethods?.map(method =>
+        method.id !== 'APPLE_PAY' ? (
+          <button
+            type="button"
+            key={method.id}
+            disabled={isLoadingExpressMethod}
+            className={`${
+              isLoadingExpressMethod ? 'cursor-wait' : ''
+            } border border-gray-300 py-2 w-full flex justify-center rounded-md hover:opacity-90 my-4 disabled:opacity-50`}
+            onClick={async () => {
+              setIsLoadingExpressMethod(true);
+              try {
+                await onChange(method.id);
+                navigate(
+                  `https://stg-embed.moneyhash.io/embed/payment/${intentId}`,
+                );
+                setIsLoadingExpressMethod(false);
+              } catch (error) {
+                setIsLoadingExpressMethod(false);
+              }
+            }}
+          >
+            <img src={method.icons[0]} alt="" className="h-10 w-10" />
+            <p className="sr-only">{method.title}</p>
+          </button>
+        ) : null,
+      )}
+
       <RadioGroup
         dir={currency === 'EGP' ? 'rtl' : 'ltr'}
         value={selectedMethodId}
