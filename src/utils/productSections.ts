@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 
-export type Currency = 'EUR' | 'EGP' | 'ZAR';
+export type Currency = 'EUR' | 'EGP' | 'ZAR' | 'AED' | 'SAR';
 
 export type Product = {
   id: string;
@@ -23,6 +23,8 @@ export const products: Product[] = [
     imageAlt: 'Hiking Fleece Jacket - MH520 Hood.',
     price: {
       EUR: 20,
+      AED: 50,
+      SAR: 50,
       EGP: 660,
       ZAR: 400,
     },
@@ -38,6 +40,8 @@ export const products: Product[] = [
     imageAlt: 'Hiking Fleece Vest - MH120',
     price: {
       EUR: 15,
+      AED: 45,
+      SAR: 45,
       EGP: 495,
       ZAR: 300,
     },
@@ -54,6 +58,8 @@ export const products: Product[] = [
     imageAlt: 'Reversible Hunting Fleece',
     price: {
       EUR: 45,
+      AED: 75,
+      SAR: 75,
       EGP: 1485,
       ZAR: 900,
     },
@@ -69,6 +75,8 @@ export const products: Product[] = [
     imageAlt: "Men's warm sailing fleece SAILING",
     price: {
       EUR: 40,
+      AED: 70,
+      SAR: 70,
       EGP: 1320,
       ZAR: 800,
     },
@@ -82,6 +90,8 @@ export const products: Product[] = [
     name: 'Adult fitness roller FIT500 Blue Red',
     price: {
       EUR: 85,
+      AED: 115,
+      SAR: 115,
       EGP: 2805,
       ZAR: 1700,
     },
@@ -97,6 +107,8 @@ export const products: Product[] = [
     name: "Children's fitness roller FIT 5 Jr",
     price: {
       EUR: 70,
+      AED: 100,
+      SAR: 100,
       EGP: 2310,
       ZAR: 1400,
     },
@@ -113,6 +125,8 @@ export const products: Product[] = [
     name: 'Adult fitness roller FIT500 Ice Gray',
     price: {
       EUR: 85,
+      AED: 115,
+      SAR: 115,
       EGP: 2805,
       ZAR: 1700,
     },
@@ -128,6 +142,8 @@ export const products: Product[] = [
     name: 'Adult Freeride Roller MF500',
     price: {
       EUR: 95,
+      AED: 125,
+      SAR: 125,
       EGP: 3135,
       ZAR: 1900,
     },

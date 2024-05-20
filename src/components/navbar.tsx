@@ -57,8 +57,8 @@ export default function NavBar({
                 className="border-none rounded-md bg-transparent"
                 onChange={e => setCurrency(e.target.value as Currency)}
               >
-                <option value="ZAR">ZAR</option>
-                <option value="EUR">EUR</option>
+                <option value="AED">AED</option>
+                <option value="SAR">SAR</option>
                 <option value="EGP">EGP</option>
               </select>
             </>
