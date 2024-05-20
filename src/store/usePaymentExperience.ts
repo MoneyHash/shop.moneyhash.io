@@ -11,7 +11,7 @@ type Action = {
 };
 
 const usePaymentExperience = create<State & Action>(set => ({
-  experience: 'redirect',
+  experience: 'in-app',
   setExperience: experience => set({ experience }),
 }));
 

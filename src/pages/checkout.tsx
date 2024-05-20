@@ -15,6 +15,7 @@ import formatCurrency from '../utils/formatCurrency';
 import PaymentExperiencePanel from '../components/paymentExperiencePanel';
 import AccordionSteps from '../components/accordion';
 import usePaymentExperience from '../store/usePaymentExperience';
+import usePaymentOperation from '../store/usePaymentOperation';
 
 type FormValues = {
   first_name: string;
@@ -51,6 +52,7 @@ export default function Checkout() {
   const currency = useCurrency(state => state.currency);
   const cart = useShoppingCart(state => state.cart);
   const paymentExperience = usePaymentExperience(state => state.experience);
+  const paymentOperation = usePaymentOperation(state => state.operation);
   const emptyCart = useShoppingCart(state => state.emptyCart);
   const navigate = useNavigate();
 
@@ -68,6 +70,7 @@ export default function Checkout() {
 
   const handleCreateIntent = async (data: FormValues) => {
     const intent = await createIntent({
+      operation: paymentOperation,
       amount: totalPrice,
       currency,
       billing_data: {
@@ -234,7 +237,12 @@ export default function Checkout() {
                   <button
                     type="button"
                     key={method.id}
-                    className="bg-black w-full flex justify-center rounded-md hover:opacity-90"
+                    className={`${
+                      method.id === 'APPLE_PAY'
+                        ? 'bg-black'
+                        : 'border border-gray-300 py-2'
+                    } 
+                    w-full flex justify-center rounded-md hover:opacity-90 my-4`}
                     onClick={() => {
                       moneyHash.payWithApplePay({
                         intentId,
@@ -256,7 +264,7 @@ export default function Checkout() {
                       });
                     }}
                   >
-                    <img src={method.icons[0]} alt="" className="" />
+                    <img src={method.icons[0]} alt="" className="h-10 w-10" />
                     <p className="sr-only">{method.title}</p>
                   </button>
                 ))}
