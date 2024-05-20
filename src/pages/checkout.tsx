@@ -244,24 +244,32 @@ export default function Checkout() {
                     } 
                     w-full flex justify-center rounded-md hover:opacity-90 my-4`}
                     onClick={() => {
-                      moneyHash.payWithApplePay({
-                        intentId,
-                        amount: totalPrice,
-                        currency,
-                        countryCode: 'AE',
-                        onCancel: () => {},
-                        onComplete: () => {
-                          emptyCart();
-                          navigate(`/checkout/order?intent_id=${intentId}`, {
-                            replace: true,
-                          });
-                        },
-                        onError: () => {
-                          navigate(`/checkout/order?intent_id=${intentId}`, {
-                            replace: true,
-                          });
-                        },
-                      });
+                      if (method.id === 'APPLE_PAY') {
+                        moneyHash.payWithApplePay({
+                          intentId,
+                          amount: totalPrice,
+                          currency,
+                          countryCode: 'AE',
+                          onCancel: () => {},
+                          onComplete: () => {
+                            emptyCart();
+                            navigate(`/checkout/order?intent_id=${intentId}`, {
+                              replace: true,
+                            });
+                          },
+                          onError: () => {
+                            navigate(`/checkout/order?intent_id=${intentId}`, {
+                              replace: true,
+                            });
+                          },
+                        });
+                      } else {
+                        moneyHash.proceedWith({
+                          intentId,
+                          type: 'method',
+                          id: method.id,
+                        });
+                      }
                     }}
                   >
                     <img src={method.icons[0]} alt="" className="h-10 w-10" />
