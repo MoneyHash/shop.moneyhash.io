@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { type Method } from '@moneyhash/js-sdk/headless';
 import { Dialog, RadioGroup, Transition } from '@headlessui/react';
 
+import toast from 'react-hot-toast';
 import NavBar from '../components/navbar';
 import useShoppingCart from '../store/useShoppingCart';
 import twoFixedDigit from '../utils/twoFixedDigits';
@@ -102,6 +103,10 @@ export default function Checkout() {
         pending_external_action_redirect_url: `${window.location.origin}/checkout/order`,
         back_url: `${window.location.origin}/checkout/order`,
       }),
+      hidden_methods: [
+        totalPrice < 100 && 'TAMARA',
+        totalPrice < 10 && 'TABBY',
+      ].filter(Boolean),
     });
     const { paymentMethods, expressMethods } = await moneyHash.getIntentMethods(
       intent.data.id,
@@ -221,6 +226,16 @@ export default function Checkout() {
                 <ShippingMethodForm
                   defaultValues={{ shippingMethod }}
                   onSubmit={async ({ shippingMethod }) => {
+                    if (
+                      currency !== 'SAR' &&
+                      paymentOperation === 'authorize'
+                    ) {
+                      toast.error(
+                        'Authorize operation is only available for SAR currency',
+                      );
+                      return;
+                    }
+
                     setShippingMethod(shippingMethod);
                     await handleCreateIntent(formValues);
                     setActiveStep('3');
