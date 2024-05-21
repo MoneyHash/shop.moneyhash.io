@@ -76,6 +76,8 @@ export default function Checkout() {
         category: 'Electronics',
         subcategory: 'Audio',
         type: 'Digital',
+        tax: 1,
+        sku: '00000',
       })),
       extraConfig,
     })
