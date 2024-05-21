@@ -24,7 +24,7 @@ export const products: Product[] = [
     price: {
       USD: 35,
       EGP: 1000,
-      SAR: 120,
+      SAR: 90,
       AED: 90,
     },
     description: 'Black',
@@ -40,7 +40,7 @@ export const products: Product[] = [
     price: {
       USD: 35,
       EGP: 1000,
-      SAR: 120,
+      SAR: 85,
       AED: 80,
     },
     description: 'Aspen White',
@@ -56,7 +56,7 @@ export const products: Product[] = [
     price: {
       USD: 35,
       EGP: 1000,
-      SAR: 120,
+      SAR: 95,
       AED: 100,
     },
     description: 'Charcoal',
@@ -73,7 +73,7 @@ export const products: Product[] = [
     price: {
       USD: 35,
       EGP: 1000,
-      SAR: 120,
+      SAR: 70,
       AED: 65,
     },
     description: 'Charcoal',
@@ -87,7 +87,7 @@ export const products: Product[] = [
     price: {
       USD: 50,
       EGP: 1500,
-      SAR: 180,
+      SAR: 95,
       AED: 100,
     },
     description: 'White and Black',
@@ -104,7 +104,7 @@ export const products: Product[] = [
     price: {
       USD: 140,
       EGP: 4000,
-      SAR: 520,
+      SAR: 75,
       AED: 80,
     },
     description: 'Washed Black',
@@ -121,7 +121,7 @@ export const products: Product[] = [
     price: {
       USD: 220,
       EGP: 6400,
-      SAR: 825,
+      SAR: 65,
       AED: 70,
     },
     description: 'Blue',
@@ -138,7 +138,7 @@ export const products: Product[] = [
     price: {
       USD: 210,
       EGP: 6200,
-      SAR: 780,
+      SAR: 82,
       AED: 50,
     },
     description: 'Black and Orange',
