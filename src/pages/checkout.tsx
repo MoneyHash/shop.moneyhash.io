@@ -13,7 +13,7 @@ import createIntent from '../api/createIntent';
 import useCurrency from '../store/useCurrency';
 import formatCurrency from '../utils/formatCurrency';
 import TestCardsPanel from '../components/testCardsPanel';
-import useFlowId from '../store/useFlowId';
+import useJsonConfig from '../store/useJsonConfig';
 
 export default function Checkout() {
   const [intentId, setIntentId] = useState('');
@@ -24,7 +24,7 @@ export default function Checkout() {
   const currency = useCurrency(state => state.currency);
   const cart = useShoppingCart(state => state.cart);
   const emptyCart = useShoppingCart(state => state.emptyCart);
-  const flowId = useFlowId(state => state.flowId);
+  const jsonConfig = useJsonConfig(state => state.jsonConfig);
   const moneyHash = useMoneyHash({
     onComplete: ({ intent, redirect }) => {
       emptyCart();
@@ -46,8 +46,10 @@ export default function Checkout() {
     [cart, currency],
   );
 
-  const handleSubmit = async (data: FormValues) =>
-    createIntent({
+  const handleSubmit = async (data: FormValues) => {
+    const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
+
+    return createIntent({
       amount: totalPrice,
       currency,
       billing_data: {
@@ -74,7 +76,7 @@ export default function Checkout() {
         subcategory: 'Audio',
         type: 'Digital',
       })),
-      flowId,
+      extraConfig,
     })
       .then(async intent => {
         const { paymentMethods } = await moneyHash.getIntentMethods(
@@ -92,6 +94,7 @@ export default function Checkout() {
           toast.error((message as string) || 'Something went wrong');
         }
       });
+  };
 
   useEffect(() => {
     if (!selectedMethod) return;

@@ -12,14 +12,14 @@ export default function createIntent({
   billing_data,
   shipping_data,
   product_items,
-  flowId,
+  extraConfig,
 }: {
   amount: number;
   currency: string;
   billing_data: Record<string, string>;
   shipping_data: Record<string, string>;
   product_items: ProductItem[];
-  flowId?: string;
+  extraConfig?: Record<string, any>;
 }): Promise<{ data: { id: string } }> {
   return axiosInstance.post('/payments/intent/', {
     amount,
@@ -34,6 +34,6 @@ export default function createIntent({
     failed_redirect_url: `${window.location.origin}/checkout/order`,
     pending_external_action_redirect_url: `${window.location.origin}/checkout/order`,
     back_url: `${window.location.origin}/checkout/order`,
-    ...(flowId && { flow_id: flowId, operation: undefined }),
+    ...extraConfig,
   });
 }

@@ -1,21 +1,46 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ChevronDownIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { ShieldCheckIcon } from '@heroicons/react/20/solid';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';
-import useFlowId from '../store/useFlowId';
+import useJsonConfig from '../store/useJsonConfig';
+import JsonEditor from './JsonEditor';
+import safeLocalStorage from '../utils/safeLocalStorage';
+
+function isJsonValid(str: string) {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
 
 export default function TestCardsPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const { copy } = useCopyToClipboard();
-  const { flowId, setFlowId } = useFlowId();
+  const { jsonConfig, setJsonConfig } = useJsonConfig();
+
+  const saveConfig = useCallback(() => {
+    if (!jsonConfig) {
+      toast.error('No configuration to save.');
+      return;
+    }
+    if (isJsonValid(jsonConfig)) {
+      safeLocalStorage.setItem('jsonConfig', jsonConfig);
+      toast.success('Configuration saved successfully.');
+    } else {
+      toast.error("Invalid JSON. Please check the configuration's syntax.");
+    }
+  }, [jsonConfig]);
+
   return (
     <div
       className={clsx(
         'fixed bottom-0 right-5 max-w-xs w-full flex flex-col rounded-md bg-slate-800 text-white text-sm z-20 transition-transform',
-        isOpen ? 'translate-y-0' : 'translate-y-[355px]',
+        isOpen ? 'translate-y-0' : 'translate-y-[688px]',
       )}
     >
       <button
@@ -24,7 +49,7 @@ export default function TestCardsPanel() {
         onClick={() => setIsOpen(o => !o)}
       >
         <CreditCardIcon className="w-5 h-5" />
-        <p className="uppercase ml-2">test cards</p>
+        <p className="uppercase ml-2">Configuration & Test cards</p>
         <ChevronDownIcon
           className={clsx(
             'w-5 h-5 ml-auto transition-transform',
@@ -33,6 +58,24 @@ export default function TestCardsPanel() {
         />
       </button>
       <div className="p-4">
+        <div>
+          <h3 className="text-base mb-1">Configurations</h3>
+          <JsonEditor value={jsonConfig} onChange={setJsonConfig} />
+          <div className="mt-2 flex gap-1">
+            <p>Want to save configuration?</p>
+            <button
+              type="button"
+              className="select-none cursor-pointer underline hover:text-blue-500"
+              onClick={saveConfig}
+            >
+              click here.
+            </button>
+          </div>
+        </div>
+
+        <hr className="my-4" />
+
+        <h3 className="text-base mb-1">Test cards</h3>
         <div className="flex flex-col space-y-3">
           <button
             type="button"
@@ -93,7 +136,7 @@ export default function TestCardsPanel() {
           three-number CVC.
         </p>
 
-        <div className="pt-3 border-t mt-3 border-t-slate-400/40">
+        {/* <div className="pt-3 border-t mt-3 border-t-slate-400/40">
           <label htmlFor="flow_id" className="block text-sm font-medium">
             Flow ID
           </label>
@@ -107,7 +150,7 @@ export default function TestCardsPanel() {
               onChange={e => setFlowId(e.target.value)}
             />
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
