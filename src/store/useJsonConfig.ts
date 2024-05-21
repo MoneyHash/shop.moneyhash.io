@@ -21,7 +21,7 @@ const useJsonConfig = create<State & Action>(set => {
   const savedConfig = getSavedConfig();
 
   return {
-    jsonConfig: savedConfig || JSON.stringify({ flow_id: '' }, null, 2),
+    jsonConfig: savedConfig || '{}',
     setJsonConfig: jsonConfig => set({ jsonConfig }),
   };
 });
