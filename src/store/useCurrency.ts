@@ -10,7 +10,7 @@ type Action = {
 };
 
 const useCurrency = create<State & Action>(set => ({
-  currency: 'EGP',
+  currency: 'AED',
   setCurrency: currency => set({ currency }),
 }));
 

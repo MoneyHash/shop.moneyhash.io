@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 
-export type Currency = 'USD' | 'EGP' | 'SAR';
+export type Currency = 'USD' | 'EGP' | 'SAR' | 'AED';
 
 export type Product = {
   id: string;
@@ -25,6 +25,7 @@ export const products: Product[] = [
       USD: 35,
       EGP: 1000,
       SAR: 120,
+      AED: 90,
     },
     description: 'Black',
     rating: 5,
@@ -40,6 +41,7 @@ export const products: Product[] = [
       USD: 35,
       EGP: 1000,
       SAR: 120,
+      AED: 80,
     },
     description: 'Aspen White',
     rating: 5,
@@ -55,6 +57,7 @@ export const products: Product[] = [
       USD: 35,
       EGP: 1000,
       SAR: 120,
+      AED: 100,
     },
     description: 'Charcoal',
     rating: 3,
@@ -71,6 +74,7 @@ export const products: Product[] = [
       USD: 35,
       EGP: 1000,
       SAR: 120,
+      AED: 65,
     },
     description: 'Charcoal',
     rating: 4,
@@ -84,6 +88,7 @@ export const products: Product[] = [
       USD: 50,
       EGP: 1500,
       SAR: 180,
+      AED: 100,
     },
     description: 'White and Black',
     imageSrc:
@@ -100,6 +105,7 @@ export const products: Product[] = [
       USD: 140,
       EGP: 4000,
       SAR: 520,
+      AED: 80,
     },
     description: 'Washed Black',
     imageSrc:
@@ -116,6 +122,7 @@ export const products: Product[] = [
       USD: 220,
       EGP: 6400,
       SAR: 825,
+      AED: 70,
     },
     description: 'Blue',
     imageSrc:
@@ -132,6 +139,7 @@ export const products: Product[] = [
       USD: 210,
       EGP: 6200,
       SAR: 780,
+      AED: 50,
     },
     description: 'Black and Orange',
     imageSrc:
