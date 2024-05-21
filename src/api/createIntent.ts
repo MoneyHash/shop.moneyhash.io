@@ -33,9 +33,9 @@ export default function createIntent({
     failed_redirect_url: `${window.location.origin}/checkout/order`,
     pending_external_action_redirect_url: `${window.location.origin}/checkout/order`,
     back_url: `${window.location.origin}/checkout/order`,
-    hidden_methods: ['APPLE_PAY'],
     ...(!extraConfig?.flow_id && {
       operation: 'purchase',
+      hidden_methods: ['APPLE_PAY'],
     }),
     ...extraConfig,
   });
