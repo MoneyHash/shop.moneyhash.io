@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://staging-web.moneyhash.io/api/v1.1',
+  baseURL: 'https://web.moneyhash.io/api/v1.1',
 });
 
 axiosInstance.interceptors.response.use(res => res.data);
 
-const ACCOUNT_API_KEY = 'vagcX7CJ.QudFGY45hgkiZx1W5zF0OVP4gYZZD49L';
+const ACCOUNT_API_KEY = 'EfCaIrqh.zRPMYJB01QZWttvRjJWEEh87xiiY6HbS';
 
 axiosInstance.interceptors.request.use(config => {
   // eslint-disable-next-line no-param-reassign
