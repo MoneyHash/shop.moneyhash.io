@@ -56,7 +56,8 @@
           "some": ["nesting", "id"]
         }
       }
-    ]
+    ],
+    "@typescript-eslint/no-unused-expressions": "off"
   },
   "overrides": [
     {

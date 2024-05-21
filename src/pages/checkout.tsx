@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { type Method } from '@moneyhash/js-sdk/headless';
 import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
+import { RadioGroup } from '@headlessui/react';
+import GooglePayButton from '@google-pay/button-react';
 import NavBar from '../components/navbar';
 import useShoppingCart from '../store/useShoppingCart';
 import twoFixedDigit from '../utils/twoFixedDigits';
@@ -17,9 +19,8 @@ import useJsonConfig from '../store/useJsonConfig';
 
 export default function Checkout() {
   const [intentId, setIntentId] = useState('');
-  const [isPaying, setIsPaying] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<Method | null>(null);
+  const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
   const navigate = useNavigate();
   const currency = useCurrency(state => state.currency);
   const cart = useShoppingCart(state => state.cart);
@@ -79,11 +80,11 @@ export default function Checkout() {
       extraConfig,
     })
       .then(async intent => {
-        const { paymentMethods } = await moneyHash.getIntentMethods(
-          intent.data.id,
-        );
+        const { paymentMethods, expressMethods } =
+          await moneyHash.getIntentMethods(intent.data.id);
         setIntentId(intent.data.id);
         setPaymentMethods(paymentMethods);
+        setExpressMethods(expressMethods);
       })
       .catch(err => {
         const [key, message] =
@@ -95,14 +96,6 @@ export default function Checkout() {
         }
       });
   };
-
-  useEffect(() => {
-    if (!selectedMethod) return;
-    moneyHash.renderForm({
-      intentId,
-      selector: '#moneyhash-iframe',
-    });
-  }, [selectedMethod, intentId, moneyHash]);
 
   return (
     <div className="min-h-full flex flex-col">
@@ -177,74 +170,42 @@ export default function Checkout() {
             className="py-16 pb-36 px-4 lg:px-0 lg:col-start-1 lg:row-start-1 lg:mx-auto lg:w-full lg:max-w-lg lg:pb-24 lg:pt-0"
           >
             {!paymentMethods && <InfoForm onSubmit={handleSubmit} />}
-            {paymentMethods && !selectedMethod && (
-              <>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Payment method
-                </h3>
-                <div className="flex flex-wrap gap-4 mt-4">
-                  {paymentMethods.map(method => (
-                    <button
-                      key={method.id}
-                      type="button"
-                      disabled={isPaying}
-                      className="group rounded-lg bg-slate-200/50 hover:bg-gradient-to-r hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 p-0.5 focus:bg-gradient-to-r focus:from-indigo-500 focus:via-purple-500 focus:to-pink-500 focus:outline-none disabled:opacity-50 disabled:pointer-events-none"
-                      aria-label={`Pay with ${method.title}`}
-                      onClick={async () => {
-                        setIsPaying(true);
-                        try {
-                          const { state } = await moneyHash.proceedWith({
-                            type: 'method',
-                            intentId,
-                            id: method.id,
-                          });
-
-                          if (state !== 'INTENT_FORM') {
-                            emptyCart();
-                            navigate(`/checkout/order/${intentId}`, {
-                              replace: true,
-                            });
-                            return;
-                          }
-                          setSelectedMethod(method);
-                        } catch (error) {
-                          toast.error('Something went wrong, please try again');
-                        }
-                        setIsPaying(false);
-                      }}
-                    >
-                      <div className="relative flex items-center gap-3 bg-white py-2 px-3 rounded-md group-hover:bg-slate-50">
-                        <span className="font-medium text-slate-800">
-                          {method.title}
-                        </span>
-                        <img
-                          src={method.icons[0]}
-                          alt={method.title}
-                          className="w-[34px] h-6"
-                        />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-            {paymentMethods && selectedMethod && (
-              <div className="h-full">
-                <button
-                  type="button"
-                  className="relative z-10 flex items-center space-x-1 text-sm font-medium text-indigo-600 underline underline-offset-2 hover:text-indigo-500"
-                  onClick={() => {
-                    setSelectedMethod(null);
-                  }}
-                >
-                  <ArrowLeftIcon className="w-4 h-4" />
-                  <span>Select different payment method</span>
-                </button>
-                <div
-                  id="moneyhash-iframe"
-                  className="w-full h-full min-h-[800px] [&_iframe]:bg-white relative -top-10"
-                />
-              </div>
+            {paymentMethods && (
+              <PaymentFormInAppExperience
+                intentId={intentId}
+                methods={paymentMethods!}
+                onChange={async methodId => {
+                  await moneyHash
+                    .proceedWith({
+                      type: 'method',
+                      id: methodId,
+                      intentId,
+                    })
+                    .catch(() => {
+                      toast.error('Something went wrong, please try again');
+                    });
+                }}
+                expressMethods={expressMethods}
+                onApplePayClick={async ({ onCancel }) => {
+                  moneyHash.payWithApplePay({
+                    intentId,
+                    amount: totalPrice,
+                    currency,
+                    countryCode: 'AE',
+                    onCancel,
+                    onComplete: () => {
+                      navigate(`/checkout/order?intent_id=${intentId}`, {
+                        replace: true,
+                      });
+                    },
+                    onError: () => {
+                      navigate(`/checkout/order?intent_id=${intentId}`, {
+                        replace: true,
+                      });
+                    },
+                  });
+                }}
+              />
             )}
           </section>
         </div>
@@ -466,5 +427,247 @@ function InfoForm({ onSubmit }: { onSubmit: (data: FormValues) => void }) {
         </div>
       </form>
     </>
+  );
+}
+
+function PaymentFormInAppExperience({
+  intentId,
+  methods,
+  expressMethods,
+  onChange,
+  onApplePayClick,
+}: {
+  methods: Method[];
+  expressMethods?: Method[] | null;
+  intentId: string;
+  onChange: (methodId: string) => Promise<void>;
+  onApplePayClick: ({ onCancel }: { onCancel: () => void }) => void;
+}) {
+  const [isPaying, setIsPaying] = useState(false);
+  const [view, setView] = useState<'select-method' | 'checkout-form'>(
+    'select-method',
+  );
+  const currency = useCurrency(state => state.currency);
+
+  if (view === 'select-method') {
+    return (
+      <RadioGroup
+        dir={currency === 'EGP' ? 'rtl' : 'ltr'}
+        onChange={async methodId => {
+          if (!methodId || isPaying) return;
+          setIsPaying(true);
+          try {
+            await onChange(methodId);
+            setView('checkout-form');
+          } catch (error) {
+            toast.error('Something went wrong, please try again');
+          }
+        }}
+      >
+        <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
+        <div className="gap-3 grid grid-cols-1">
+          {expressMethods?.map(method => (
+            <ExpressButton
+              key={method.id}
+              method={method}
+              isSelected={false}
+              onClick={async () => {
+                if (isPaying) return;
+                setIsPaying(true);
+                try {
+                  method.id === 'APPLE_PAY'
+                    ? onApplePayClick({ onCancel: () => setIsPaying(false) })
+                    : await onChange(method.id);
+
+                  if (method.id !== 'APPLE_PAY') {
+                    setView('checkout-form');
+                  }
+                } catch (error) {
+                  toast.error('Something went wrong, please try again');
+                }
+              }}
+            />
+          ))}
+
+          {methods.map(method => (
+            <RadioGroup.Option
+              key={method.title}
+              value={method.id}
+              className={({ active }) =>
+                clsx(
+                  active && 'border-indigo-500 ring-2 ring-indigo-500/30',
+                  'relative block cursor-pointer rounded-lg border bg-white px-4 py-1.5 shadow-sm focus:outline-none',
+                )
+              }
+            >
+              {({ active, checked }) => (
+                <>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id={method.id}
+                      type="radio"
+                      className="text-indigo-500 focus:ring-indigo-500 w-4 h-4"
+                      checked={false}
+                      onChange={() => {}}
+                    />
+
+                    <RadioGroup.Label
+                      as="span"
+                      className="font-medium text-gray-900 text-sm"
+                    >
+                      {method.title}
+                    </RadioGroup.Label>
+                    <img
+                      src={method.icons[0]}
+                      alt=""
+                      className="object-contain h-8 w-8 ml-auto"
+                      draggable={false}
+                    />
+                  </div>
+                  <span
+                    className={clsx(
+                      active ? 'border' : 'border-2',
+                      checked ? 'border-indigo-500' : 'border-transparent',
+                      'pointer-events-none absolute -inset-px rounded-lg',
+                    )}
+                    aria-hidden="true"
+                  />
+                </>
+              )}
+            </RadioGroup.Option>
+          ))}
+        </div>
+      </RadioGroup>
+    );
+  }
+
+  return (
+    <div className="">
+      <button
+        type="button"
+        className="relative z-10 flex items-center space-x-1 text-sm font-medium text-indigo-600 underline underline-offset-2 hover:text-indigo-500"
+        onClick={() => {
+          setView('select-method');
+          setIsPaying(false);
+        }}
+      >
+        <ArrowLeftIcon className="w-4 h-4 mr-1" />
+        <span>Select different payment method</span>
+      </button>
+
+      <CheckoutForm intentId={intentId} />
+    </div>
+  );
+}
+
+function CheckoutForm({ intentId }: { intentId: string }) {
+  const navigate = useNavigate();
+
+  const moneyHash = useMoneyHash({
+    onComplete: async ({ intent, redirect }) => {
+      if (redirect?.redirectUrl) {
+        window.location.href = redirect.redirectUrl;
+        return;
+      }
+      navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
+    },
+    onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
+  });
+
+  useEffect(() => {
+    moneyHash.renderForm({ selector: '#moneyHash-iframe', intentId });
+  }, [moneyHash, intentId]);
+
+  return (
+    <div
+      id="moneyHash-iframe"
+      className="w-full h-[800px] [&_iframe]:bg-white relative"
+    />
+  );
+}
+
+function ExpressButton({
+  isSelected,
+  method,
+  onClick,
+}: {
+  isSelected: boolean;
+  method: Method;
+  onClick: () => void;
+}) {
+  if (method.id === 'GOOGLE_PAY') {
+    return (
+      <GooglePayButton
+        environment="TEST"
+        buttonType="pay"
+        buttonColor="black"
+        paymentRequest={{
+          apiVersion: 2,
+          apiVersionMinor: 0,
+          allowedPaymentMethods: [
+            {
+              type: 'CARD',
+              parameters: {
+                allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                allowedCardNetworks: ['MASTERCARD', 'VISA'],
+              },
+              tokenizationSpecification: {
+                type: 'PAYMENT_GATEWAY',
+                parameters: {
+                  gateway: 'example',
+                  gatewayMerchantId: 'exampleGatewayMerchantId',
+                },
+              },
+            },
+          ],
+          merchantInfo: {
+            merchantId: '12345678901234567890',
+            merchantName: 'Emirates Merchant',
+          },
+          transactionInfo: {
+            totalPriceStatus: 'FINAL',
+            totalPriceLabel: 'Total',
+            totalPrice: '100.00',
+            currencyCode: 'USD',
+            countryCode: 'US',
+          },
+        }}
+        buttonSizeMode="fill"
+        style={{ height: 46 }}
+        className={clsx(
+          '[&_.gpay-card-info-container]:!border [&_.gpay-card-info-container.focus]:!ring-2 [&_.gpay-card-info-container.focus]:!border-indigo-500 [&_.gpay-card-info-container.focus]:!ring-indigo-500/30 [&_.gpay-card-info-container]:!rounded-lg',
+          isSelected &&
+            '[&_.gpay-card-info-container]:!border-indigo-500 [&_.gpay-card-info-container]:!ring-2 [&_.gpay-card-info-container]:!ring-indigo-500 [&_.gpay-card-info-container]:!outline-none ',
+        )}
+        onClick={e => {
+          e.preventDefault();
+          onClick();
+        }}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={clsx(
+        'flex justify-center items-center rounded-lg hover:opacity-90 border h-[46px] focus:outline-none:ring-2 focus-visible:border-indigo-500 focus-visible:ring-indigo-500/30 overflow-hidden bg-black text-white',
+        isSelected && 'border-indigo-500 ring-2 ring-indigo-500',
+      )}
+      onClick={onClick}
+    >
+      {method.id === 'APPLE_PAY' ? (
+        <img
+          src={method.icons[0]}
+          alt=""
+          className="h-full"
+          draggable={false}
+        />
+      ) : (
+        <p>
+          Pay with <span className="font-medium">{method.title}</span>
+        </p>
+      )}
+    </button>
   );
 }
