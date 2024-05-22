@@ -64,6 +64,15 @@ export default function Order() {
     );
   }
 
+  if (intentDetails?.state === 'CLOSED') {
+    return (
+      <div>
+        <NavBar hideCurrency hideCart />
+        <TransactionFailed message="Your payment was closed" />
+      </div>
+    );
+  }
+
   return (
     <div>
       <NavBar hideCurrency hideCart />
