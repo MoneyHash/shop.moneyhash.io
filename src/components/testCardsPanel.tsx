@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { ShieldCheckIcon } from '@heroicons/react/20/solid';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 import useCopyToClipboard from '../hooks/useCopyToClipboard';
 import useJsonConfig from '../store/useJsonConfig';
 import JsonEditor from './JsonEditor';
@@ -40,7 +41,7 @@ export default function TestCardsPanel() {
     <div
       className={clsx(
         'fixed bottom-0 right-5 max-w-xs w-full flex flex-col rounded-md bg-slate-800 text-white text-sm z-20 transition-transform',
-        isOpen ? 'translate-y-0' : 'translate-y-[688px]',
+        isOpen ? 'translate-y-0' : 'translate-y-[740px]',
       )}
     >
       <button
@@ -135,6 +136,13 @@ export default function TestCardsPanel() {
           Click to copy the card number. Use any future expiration date and
           three-number CVC.
         </p>
+        <Link
+          className="mt-5 text-center bg-indigo-600 rounded-md hover:bg-indigo-700 py-2 block"
+          to="/integration-guide"
+          target="_blank"
+        >
+          Integration Guide
+        </Link>
 
         {/* <div className="pt-3 border-t mt-3 border-t-slate-400/40">
           <label htmlFor="flow_id" className="block text-sm font-medium">
