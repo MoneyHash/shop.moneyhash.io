@@ -28,7 +28,7 @@
     "react-hot-toast": "^2.4.1",
     "react-linkify-it": "^1.0.8",
     "react-router-dom": "^6.19.0",
-    "react-syntax-highlighter": "^15.5.0",
+    "shiki": "^1.6.0",
     "zustand": "^4.4.6"
   },
   "devDependencies": {

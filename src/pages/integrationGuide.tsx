@@ -1,10 +1,9 @@
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import nightOwlTheme from 'react-syntax-highlighter/dist/esm/styles/hljs/night-owl';
 import NavBar from '../components/navbar';
 import UserDataImage from '../assets/guide/UserData.png';
 import CreateIntentImage from '../assets/guide/CreateIntent.png';
 import PaymentMethodsImage from '../assets/guide/PaymentMethods.png';
 import CompleteOrderImage from '../assets/guide/CompleteOrder.png';
+import CodeBlock from '../components/CodeBlock';
 
 export default function IntegrationGuide() {
   return (
@@ -16,9 +15,7 @@ export default function IntegrationGuide() {
           MoneyHash JavaScript SDK integration guide
         </h1>
         <h2>Installing</h2>
-        <CodeBlock language="powershell">
-          npm install @moneyhash/js-sdk
-        </CodeBlock>
+        <CodeBlock lang="shell" code="npm install @moneyhash/js-sdk" />
         <hr />
         <h2>Collecting User Info</h2>
         <img src={UserDataImage} alt="" />
@@ -47,8 +44,8 @@ export default function IntegrationGuide() {
         </p>
 
         <img src={CreateIntentImage} alt="" />
-        <CodeBlock language="javascript">
-          {`const intent = await createIntent({
+        <CodeBlock
+          code={`const intent = await createIntent({
       amount: totalPrice,
       currency,
       billing_data: {
@@ -79,7 +76,7 @@ export default function IntegrationGuide() {
       pending_external_action_redirect_url: \`${window.location.origin}/checkout/order\`,
       back_url: \`${window.location.origin}/checkout/order\`,
     });`}
-        </CodeBlock>
+        />
 
         <h2>Checkout</h2>
         <p>
@@ -97,8 +94,8 @@ export default function IntegrationGuide() {
         <ol>
           <li>
             Create moneyHash sdk instance in your application
-            <CodeBlock language="javascript">
-              {`import MoneyHash from "@moneyhash/js-sdk/headless";
+            <CodeBlock
+              code={`import MoneyHash from "@moneyhash/js-sdk/headless";
 const moneyHash = new MoneyHash({
     type: 'payment',
     styles: { // customize the checkout UI
@@ -126,13 +123,11 @@ const moneyHash = new MoneyHash({
       },
     },
   })`}
-            </CodeBlock>
+            />
           </li>
           <li>
             Get intent payment methods
-            <CodeBlock language="javascript">
-              {`const { paymentMethods } = await moneyHash.getIntentMethods(intentId);`}
-            </CodeBlock>
+            <CodeBlock code="const { paymentMethods } = await moneyHash.getIntentMethods(intentId);" />
           </li>
           <li>
             Render your custom UI for the payment methods
@@ -140,20 +135,20 @@ const moneyHash = new MoneyHash({
           </li>
           <li>
             Selecting a payment method using moneyHash sdk
-            <CodeBlock language="javascript">
-              {`await moneyHash.proceedWith({
+            <CodeBlock
+              code={`await moneyHash.proceedWith({
   type: 'method',
   id: methodId,
   intentId,
 })`}
-            </CodeBlock>
+            />
           </li>
           <li>
             Complete order navigates to MoneyHash Checkout
             <img src={CompleteOrderImage} alt="" />
-            <CodeBlock language="javascript">
-              {`<a href={\`https://embed.moneyhash.io/embed/payment/\${intentId}\`}>Complete Order</a>`}
-            </CodeBlock>
+            <CodeBlock
+              code={`<a href={\`https://embed.moneyhash.io/embed/payment/\${intentId}\`}>Complete Order</a>`}
+            />
           </li>
           <li>
             After Checkout is done, MoneyHash will redirect to one of the
@@ -178,9 +173,9 @@ const moneyHash = new MoneyHash({
           external checkout app, you can use the MoneyHash SDK to render the
           checkout as part of the application with
         </p>
-        <CodeBlock language="javascript">
-          {`moneyHash.renderForm({ selector: '<css-selector>', intentId });`}
-        </CodeBlock>
+        <CodeBlock
+          code={`moneyHash.renderForm({ selector: '<css-selector>', intentId });`}
+        />
         <blockquote>
           <p>
             <strong>Note:</strong> Make sure dom node with {`<css-selector>`} is
@@ -196,8 +191,8 @@ const moneyHash = new MoneyHash({
           To stay up to date with the process, you can use the onComplete and/or
           onFail callback methods when creating the MoneyHash instance.
         </p>
-        <CodeBlock language="javascript">
-          {`const moneyHash = new MoneyHash({
+        <CodeBlock
+          code={`const moneyHash = new MoneyHash({
   onComplete: ({ intent, transaction, selectedMethod, redirect, state }) => {
     // redirect to /checkout/order
     console.log("onComplete", {
@@ -219,24 +214,8 @@ const moneyHash = new MoneyHash({
     });
   },
 })`}
-        </CodeBlock>
+        />
       </div>
     </>
-  );
-}
-
-function CodeBlock({
-  children,
-  language,
-}: {
-  children: string;
-  language: string;
-}) {
-  return (
-    <div className="not-prose rounded overflow-hidden">
-      <SyntaxHighlighter language={language} style={nightOwlTheme}>
-        {children}
-      </SyntaxHighlighter>
-    </div>
   );
 }
