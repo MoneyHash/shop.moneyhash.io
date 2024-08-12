@@ -17,6 +17,7 @@ import PaymentExperiencePanel from '../components/paymentExperiencePanel';
 import AccordionSteps from '../components/accordion';
 import usePaymentExperience from '../store/usePaymentExperience';
 import usePaymentOperation from '../store/usePaymentOperation';
+import CardForm from '../components/CardForm';
 
 type FormValues = {
   first_name: string;
@@ -724,6 +725,17 @@ function PaymentFormInAppExperience({
     );
   }
 
+  const getSelectedMethodView = () => {
+    switch (selectedMethodId) {
+      case 'PAY_FLEX':
+        return <PayFlexModal intentId={intentId} />;
+      case 'CARD':
+        return <CardForm intentId={intentId} />;
+      default:
+        return <CheckoutForm intentId={intentId} />;
+    }
+  };
+
   return (
     <div className="py-4">
       <button
@@ -734,11 +746,7 @@ function PaymentFormInAppExperience({
         <span>Select different payment method</span>
       </button>
 
-      {selectedMethodId === 'PAY_FLEX' ? (
-        <PayFlexModal intentId={intentId} />
-      ) : (
-        <CheckoutForm intentId={intentId} />
-      )}
+      {getSelectedMethodView()}
     </div>
   );
 }
