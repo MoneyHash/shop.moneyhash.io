@@ -77,7 +77,7 @@ export default function CardForm({ intentId }: { intentId: string }) {
     try {
       setIsSubmitting(true);
       const intentDetails = await moneyHash.getIntentDetails(intentId);
-      // console.log(intentDetails);
+
       await moneyHash.submitForm({
         intentId,
         accessToken: (
@@ -107,7 +107,7 @@ export default function CardForm({ intentId }: { intentId: string }) {
         <div className="md:col-span-2">
           <div
             id="card-holder-name"
-            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.moneyhash-element\_focus]:border-decathlon [&.moneyhash-element\_focus]:ring-decathlon sm:text-sm"
+            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.MoneyHashElement--focus]:border-decathlon [&.MoneyHashElement--focus]:ring-decathlon sm:text-sm"
           />
           {formErrors.card_holder_name && (
             <span className="text-xs text-red-500">
@@ -119,7 +119,7 @@ export default function CardForm({ intentId }: { intentId: string }) {
         <div className="md:col-span-2">
           <div
             id="card-number"
-            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.moneyhash-element\_focus]:border-decathlon [&.moneyhash-element\_focus]:ring-decathlon sm:text-sm"
+            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.MoneyHashElement--focus]:border-decathlon [&.MoneyHashElement--focus]:ring-decathlon sm:text-sm"
           />
           {formErrors.card_number && (
             <span className="text-xs text-red-500">
@@ -131,7 +131,7 @@ export default function CardForm({ intentId }: { intentId: string }) {
         <div className="">
           <div
             id="card-expiry-month"
-            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.moneyhash-element\_focus]:border-decathlon [&.moneyhash-element\_focus]:ring-decathlon sm:text-sm"
+            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.MoneyHashElement--focus]:border-decathlon [&.MoneyHashElement--focus]:ring-decathlon sm:text-sm"
           />
           {formErrors.expiry_month && (
             <span className="text-xs text-red-500">
@@ -143,7 +143,7 @@ export default function CardForm({ intentId }: { intentId: string }) {
         <div className="">
           <div
             id="card-expiry-year"
-            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.moneyhash-element\_focus]:border-decathlon [&.moneyhash-element\_focus]:ring-decathlon sm:text-sm"
+            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.MoneyHashElement--focus]:border-decathlon [&.MoneyHashElement--focus]:ring-decathlon sm:text-sm"
           />
           {formErrors.expiry_year && (
             <span className="text-xs text-red-500">
@@ -155,7 +155,7 @@ export default function CardForm({ intentId }: { intentId: string }) {
         <div className="md:col-span-2">
           <div
             id="card-cvv"
-            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.moneyhash-element\_focus]:border-decathlon [&.moneyhash-element\_focus]:ring-decathlon sm:text-sm"
+            className="rounded-md border border-gray-300 shadow-sm overflow-hidden [&.MoneyHashElement--focus]:border-decathlon [&.MoneyHashElement--focus]:ring-decathlon sm:text-sm"
           />
           {formErrors.cvv && (
             <span className="text-xs text-red-500">{formErrors.cvv}</span>
