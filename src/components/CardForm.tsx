@@ -15,7 +15,13 @@ type FormErrors = {
   general_error?: string;
 };
 
-export default function CardForm({ intentId }: { intentId: string }) {
+export default function CardForm({
+  intentId,
+  fetchIntentDetails,
+}: {
+  intentId: string;
+  fetchIntentDetails: (intentId: string) => void;
+}) {
   const navigate = useNavigate();
   const emptyCart = useShoppingCart(state => state.emptyCart);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,8 +83,8 @@ export default function CardForm({ intentId }: { intentId: string }) {
     try {
       setIsSubmitting(true);
       const intentDetails = await moneyHash.getIntentDetails(intentId);
-
-      await moneyHash.submitForm({
+      // console.log(intentDetails);
+      const response = await moneyHash.submitForm({
         intentId,
         accessToken: (
           intentDetails?.stateDetails as IntentStateDetails<'FORM_FIELDS'>
@@ -86,14 +92,25 @@ export default function CardForm({ intentId }: { intentId: string }) {
         // billingData,
         // shippingData,
       });
-      emptyCart();
-      navigate(`/checkout/order?intent_id=${intentId}`, { replace: true });
+      if (response?.state !== 'TRANSACTION_FAILED') {
+        emptyCart();
+        navigate(`/checkout/order?intent_id=${intentId}`, { replace: true });
+      } else {
+        // eslint-disable-next-line no-console
+        console.log({ response });
+      }
     } catch (error) {
       setFormErrors(error as FormErrors);
-      // console.error('MoneyHash submitForm error', error);
+      // eslint-disable-next-line no-console
+      console.error('MoneyHash submitForm error', error);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const resetSelected = async () => {
+    await moneyHash.resetSelectedMethod(intentId);
+    await fetchIntentDetails(intentId);
   };
 
   return (
@@ -174,6 +191,17 @@ export default function CardForm({ intentId }: { intentId: string }) {
           onClick={submitCardData}
         >
           Submit
+        </button>
+
+        <button
+          type="button"
+          className={clsx(
+            'rounded-md border border-transparent bg-gray-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-decathlon focus:ring-offset-2 focus:ring-offset-gray-50 ml-4',
+          )}
+          disabled={isSubmitting}
+          onClick={resetSelected}
+        >
+          Retry
         </button>
       </div>
     </>

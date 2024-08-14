@@ -118,6 +118,17 @@ export default function Checkout() {
     setPaymentMethods(paymentMethods);
   };
 
+  const fetchIntentDetails = async (intentId: string) => {
+    const { paymentMethods, expressMethods } = await moneyHash.getIntentMethods(
+      intentId,
+    );
+
+    setSelectedMethodId(null);
+    setIntentId(intentId);
+    setExpressMethods(expressMethods);
+    setPaymentMethods(paymentMethods);
+  };
+
   return (
     <div className="min-h-full flex flex-col">
       <NavBar hideCurrency hideCart />
@@ -301,6 +312,7 @@ export default function Checkout() {
                     intentId={intentId}
                     methods={paymentMethods!}
                     expressMethods={expressMethods!}
+                    fetchIntentDetails={fetchIntentDetails}
                     selectedMethodId={selectedMethodId}
                     onChange={async methodId => {
                       setSelectedMethodId(methodId);
@@ -601,6 +613,7 @@ function PaymentFormInAppExperience({
   methods,
   expressMethods,
   selectedMethodId,
+  fetchIntentDetails,
   onChange,
 }: {
   methods: Method[];
@@ -608,6 +621,7 @@ function PaymentFormInAppExperience({
   intentId: string;
   selectedMethodId: string | null;
   onChange: (methodId: string) => void;
+  fetchIntentDetails: (intentId: string) => void;
 }) {
   const [view, setView] = useState<'select-method' | 'checkout-form'>(
     'select-method',
@@ -730,7 +744,16 @@ function PaymentFormInAppExperience({
       case 'PAY_FLEX':
         return <PayFlexModal intentId={intentId} />;
       case 'CARD':
-        return <CardForm intentId={intentId} />;
+        return (
+          <CardForm
+            intentId={intentId}
+            key={intentId}
+            fetchIntentDetails={async (intentId: string) => {
+              await fetchIntentDetails(intentId);
+              setView('select-method');
+            }}
+          />
+        );
       default:
         return <CheckoutForm intentId={intentId} />;
     }
