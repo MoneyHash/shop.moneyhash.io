@@ -16,27 +16,18 @@ import useCurrency from '../store/useCurrency';
 import formatCurrency from '../utils/formatCurrency';
 import TestCardsPanel from '../components/testCardsPanel';
 import useJsonConfig from '../store/useJsonConfig';
+import CardForm from '../components/cardForm';
 
 export default function Checkout() {
   const [intentId, setIntentId] = useState('');
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
   const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
+
   const navigate = useNavigate();
   const currency = useCurrency(state => state.currency);
   const cart = useShoppingCart(state => state.cart);
-  const emptyCart = useShoppingCart(state => state.emptyCart);
   const jsonConfig = useJsonConfig(state => state.jsonConfig);
-  const moneyHash = useMoneyHash({
-    onComplete: ({ intent, redirect }) => {
-      emptyCart();
-      if (redirect?.redirectUrl) {
-        window.location.href = redirect.redirectUrl;
-        return;
-      }
-      navigate(`/checkout/order?intent_id${intent.id}`, { replace: true });
-    },
-    onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
-  });
+  const moneyHash = useMoneyHash();
   const totalPrice = useMemo(
     () =>
       cart.reduce(
@@ -183,9 +174,7 @@ export default function Checkout() {
                       id: methodId,
                       intentId,
                     })
-                    .catch(() => {
-                      toast.error('Something went wrong, please try again');
-                    });
+                    .catch(error => Promise.reject(error));
                 }}
                 expressMethods={expressMethods}
                 onApplePayClick={async ({ onCancel }) => {
@@ -449,6 +438,7 @@ function PaymentFormInAppExperience({
   const [view, setView] = useState<'select-method' | 'checkout-form'>(
     'select-method',
   );
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const currency = useCurrency(state => state.currency);
 
   if (view === 'select-method') {
@@ -461,9 +451,12 @@ function PaymentFormInAppExperience({
           try {
             await onChange(methodId);
             setView('checkout-form');
+            setSelectedMethod(methodId);
           } catch (error) {
             toast.error('Something went wrong, please try again');
+            setSelectedMethod(null);
           }
+          setIsPaying(false);
         }}
       >
         <RadioGroup.Label className="sr-only">Server size</RadioGroup.Label>
@@ -557,7 +550,11 @@ function PaymentFormInAppExperience({
         <span>Select different payment method</span>
       </button>
 
-      <CheckoutForm intentId={intentId} />
+      {selectedMethod === 'CARD' ? (
+        <CardForm intentId={intentId} />
+      ) : (
+        <CheckoutForm intentId={intentId} />
+      )}
     </div>
   );
 }
@@ -566,11 +563,7 @@ function CheckoutForm({ intentId }: { intentId: string }) {
   const navigate = useNavigate();
 
   const moneyHash = useMoneyHash({
-    onComplete: async ({ intent, redirect }) => {
-      if (redirect?.redirectUrl) {
-        window.location.href = redirect.redirectUrl;
-        return;
-      }
+    onComplete: async ({ intent }) => {
       navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
     },
     onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),

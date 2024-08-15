@@ -28,6 +28,7 @@ export default function createIntent({
     shipping_data,
     product_items,
     hide_form_header_message: true,
+    hide_navigation_to_payment_methods: true,
     webhook_url: 'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
     successful_redirect_url: `${window.location.origin}/checkout/order`,
     failed_redirect_url: `${window.location.origin}/checkout/order`,

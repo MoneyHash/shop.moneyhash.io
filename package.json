@@ -20,7 +20,7 @@
     "@heroicons/react": "^2.0.18",
     "@monaco-editor/loader": "^1.4.0",
     "@monaco-editor/react": "^4.6.0",
-    "@moneyhash/js-sdk": "^0.2.2",
+    "@moneyhash/js-sdk": "^1.0.4",
     "axios": "^1.6.2",
     "clsx": "^2.0.0",
     "monaco-editor": "^0.48.0",
