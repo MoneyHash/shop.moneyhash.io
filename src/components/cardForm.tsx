@@ -25,7 +25,14 @@ export default function CardForm({ intentId }: { intentId: string }) {
   const moneyHash = useMoneyHash();
 
   useEffect(() => {
-    const elements = moneyHash.elements({});
+    const elements = moneyHash.elements({
+      styles: {
+        color: {
+          base: 'black',
+          error: 'red',
+        },
+      },
+    });
 
     const cardHolderName = elements.create({
       elementType: 'cardHolderName',
