@@ -1,6 +1,6 @@
 import { Outlet, ScrollRestoration } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Banner from './components/banner';
+import Banner from '@/components/banner';
 
 function App() {
   return (

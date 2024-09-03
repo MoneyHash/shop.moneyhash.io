@@ -1,19 +1,20 @@
+import { Button } from '@/components/ui/button';
 import NavBar from '../components/navbar';
 import ProductItem from '../components/productItem';
 import productSections from '../utils/productSections';
 
 export default function Home() {
   return (
-    <div className="bg-white">
+    <div>
       <NavBar />
 
       <div className="pb-80 pt-16 sm:pb-40 sm:pt-24 lg:pb-48 lg:pt-40 relative overflow-hidden sm:overflow-visible">
         <div className="relative mx-auto max-w-7xl px-4 sm:static sm:px-6 lg:px-8">
           <div className="sm:max-w-lg">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
               Summer styles are finally here
             </h1>
-            <p className="mt-4 text-xl text-gray-500">
+            <p className="mt-4 text-xl text-subtle">
               This year, our new summer collection will shelter you from the
               harsh elements of a world that doesn&apos;t care if you live or
               die.
@@ -87,12 +88,9 @@ export default function Home() {
                 </div>
               </div>
 
-              <a
-                href="#shop-sections"
-                className="inline-block rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-center font-medium text-white hover:bg-indigo-700"
-              >
-                Shop Collection
-              </a>
+              <Button asChild size="lg">
+                <a href="#shop-sections">Shop Collection</a>
+              </Button>
             </div>
           </div>
         </div>

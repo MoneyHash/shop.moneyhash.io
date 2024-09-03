@@ -2,11 +2,12 @@ import { Fragment, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBagIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { Popover, Transition } from '@headlessui/react';
-import clsx from 'clsx';
 import useShoppingCart from '../store/useShoppingCart';
 import useCurrency from '../store/useCurrency';
 import twoFixedDigit from '../utils/twoFixedDigits';
 import formatCurrency from '../utils/formatCurrency';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/utils/cn';
 
 export default function ShoppingCart() {
   const currency = useCurrency(state => state.currency);
@@ -119,15 +120,15 @@ export default function ShoppingCart() {
             </ul>
           </div>
           <div className="pt-4 -mx-2 px-4 -mb-2 border-t border-t-slate-100">
-            <Link
-              to="/checkout"
-              className={clsx(
-                'block text-center w-full rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50',
+            <Button
+              asChild
+              className={cn(
+                'w-full',
                 cart.length === 0 && 'pointer-events-none opacity-50',
               )}
             >
-              Checkout
-            </Link>
+              <Link to="/checkout">Checkout</Link>
+            </Button>
           </div>
         </Popover.Panel>
       </Transition>

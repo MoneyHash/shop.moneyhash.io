@@ -40,7 +40,7 @@ export default function NavBar({
                 clipRule="evenodd"
               />
             </svg>
-            <span className="font-semibold text-lg text-[#101E3B]">| Shop</span>
+            <span className="font-semibold text-lg"> Shop</span>
           </Link>
 
           <ul className="flex space-x-1 sm:space-x-3 px-px sm:px-4">
@@ -51,7 +51,7 @@ export default function NavBar({
               >
                 <Link
                   to={`/${navItem.href}`}
-                  className="px-1 py-4 align-middle focus:outline-none focus:underline focus:text-blue-600"
+                  className="px-1 py-4 align-middle outline-none hover:underline hover:text-primary focus-visible:underline focus-visible:text-primary"
                 >
                   {navItem.name}
                 </Link>
