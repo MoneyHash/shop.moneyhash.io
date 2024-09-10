@@ -10,7 +10,7 @@ npm install @moneyhash/js-sdk
 
 ![Filling user data](./src/assets/guide/userData.png)
 
-This step has no thing to do with moneyHash checkout integration
+This step has nothing to do with moneyHash checkout integration
 
 Personal information & Shipping address is collected by the merchant and sent to MoneyHash (<small><span style="color: rgb(229, 231, 235);">this is optional and not blocker to create a payment intent</span></small>)
 
@@ -58,65 +58,71 @@ After successfully creating a payment intent, you can use the payment intent ID 
 
 1. Create moneyHash sdk instance in your application
 
-```js
-import MoneyHash from '@moneyhash/js-sdk/headless';
-const moneyHash = new MoneyHash({
-  type: 'payment',
-  styles: {
-    // customize the checkout UI
-    input: {
-      focus: {
-        borderColor: '#1A82C3',
-        boxShadow: '0 0 0 1px #1A82C378',
-      },
-    },
-    submitButton: {
-      base: {
-        background: '#1A82C3',
-        color: '#fff',
-      },
-      hover: {
-        background: '#15699e',
-      },
-      focus: {
-        background: '#15699e',
-      },
-    },
-    loader: {
-      backgroundColor: 'white',
-      color: '#1A82C3',
-    },
-  },
-});
-```
+   ```js
+   import MoneyHash from '@moneyhash/js-sdk/headless';
+   const moneyHash = new MoneyHash({
+     type: 'payment',
+     styles: {
+       // customize the checkout UI
+       input: {
+         focus: {
+           borderColor: '#1A82C3',
+           boxShadow: '0 0 0 1px #1A82C378',
+         },
+       },
+       submitButton: {
+         base: {
+           background: '#1A82C3',
+           color: '#fff',
+         },
+         hover: {
+           background: '#15699e',
+         },
+         focus: {
+           background: '#15699e',
+         },
+       },
+       loader: {
+         backgroundColor: 'white',
+         color: '#1A82C3',
+       },
+     },
+   });
+   ```
 
 2. Get intent payment methods
 
-```js
-const { paymentMethods } = await moneyHash.getIntentMethods(intentId);
-```
+   ```js
+   const { paymentMethods } = await moneyHash.getIntentMethods(intentId);
+   ```
 
 3. Render your custom UI for the payment methods
 
-![Payment method](./src/assets/guide/paymentMethods.png)
+   ![Payment method](./src/assets/guide/paymentMethods.png)
 
 4. Selecting a payment method using moneyHash sdk
 
-```js
-await moneyHash.proceedWith({
-  type: 'method',
-  id: methodId,
-  intentId,
-});
-```
+   ```js
+   await moneyHash.proceedWith({
+     type: 'method',
+     id: methodId,
+     intentId,
+   });
+   ```
 
-5. Use MoneyHash SDK to render the checkout as part of the application with
+5. At this point, based on your method selection, you can either render the MoneyHash embed to handle the payment, or to render the custom card fields if you selected `CARD` method to proceed with.
 
-```js
-moneyHash.renderForm({ selector: '<css-selector>', intentId });
-```
+- Use MoneyHash SDK to render the checkout as part of the application with
 
-> Note: Make sure dom node with <css-selector> is rendered in the dom before calling this method
+  ```js
+  moneyHash.renderForm({ selector: '<css-selector>', intentId });
+  ```
+
+  > Note: Make sure dom node with <css-selector> is rendered in the dom before calling this method
+
+- Use custom card elements to collect card information from the user. A detailed explanation of how to do this can be found in the [docs](https://docs.moneyhash.io/docs/javascript-sdk#form-fields).
+
+  ![Custom card fields](./src/assets/guide/cardFields.png)
 
 ## Event Listeners
 

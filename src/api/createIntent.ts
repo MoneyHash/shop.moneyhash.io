@@ -6,6 +6,11 @@ type ProductItem = {
   amount: number;
   quantity: number;
 };
+
+/**
+ * Creating a payment intent here is just for demoing purposes only.
+ * In a real-world scenario, you should create a payment intent via backend apis.
+ */
 export default function createIntent({
   amount,
   currency,
