@@ -8,7 +8,7 @@ npm install @moneyhash/js-sdk
 
 ## Collecting User Info
 
-![Filling user data](./src/assets/guide/UserData.png)
+![Filling user data](./src/assets/guide/userData.png)
 
 This step has no thing to do with moneyHash checkout integration
 
@@ -98,7 +98,7 @@ const { paymentMethods } = await moneyHash.getIntentMethods(intentId);
 
 3. Render your custom UI for the payment methods
 
-![](./src/assets/guide/PaymentMethods.png)
+![Payment method](./src/assets/guide/paymentMethods.png)
 
 4. Selecting a payment method using moneyHash sdk
 
