@@ -156,12 +156,7 @@ const moneyHash = new MoneyHash({
             </blockquote>
           </li>
           <li>
-            <a
-              className="text-xl"
-              href="To stay up to date with the process, you can use the onComplete and/or onFail callback methods when creating the MoneyHash instance."
-            >
-              Event Listeners
-            </a>
+            Event Listeners
             <p>
               To stay up to date with the process, you can use the onComplete
               and/or onFail callback methods when creating the MoneyHash
