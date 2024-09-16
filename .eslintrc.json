@@ -25,6 +25,7 @@
     "import/prefer-default-export": "off",
     "import/extensions": "off",
     "prettier/prettier": "error",
+
     "import/no-extraneous-dependencies": [
       "error",
       {
@@ -33,21 +34,15 @@
     ],
     "@typescript-eslint/no-use-before-define": [
       "error",
-      { "functions": false, "classes": false }
+      { "functions": false, "classes": false, "variables": false }
     ],
     "@typescript-eslint/no-shadow": "off",
     "react/jsx-props-no-spreading": "off",
     "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
     "react-refresh/only-export-components": "off",
     "react/require-default-props": "off",
-    "jsx-a11y/label-has-associated-control": [
-      "error",
-      {
-        "required": {
-          "some": ["nesting", "id"]
-        }
-      }
-    ],
+    "jsx-a11y/label-has-associated-control": "off",
     "jsx-a11y/label-has-for": [
       "error",
       {
@@ -56,7 +51,8 @@
         }
       }
     ],
-    "@typescript-eslint/no-unused-expressions": "off"
+    "@typescript-eslint/no-unused-expressions": "off",
+    "consistent-return": "off"
   },
   "overrides": [
     {

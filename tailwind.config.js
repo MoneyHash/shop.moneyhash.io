@@ -1,4 +1,3 @@
-import tailwindFormsPlugin from '@tailwindcss/forms';
 import tailwindTypographyPlugin from '@tailwindcss/typography';
 import tailwindcssAnimatePlugin from 'tailwindcss-animate';
 
@@ -57,13 +56,10 @@ export default {
       },
       textColor: {
         subtle: 'hsl(var(--text-subtle))',
+        subtler: 'hsl(var(--text-subtler))',
         bolder: 'hsl(var(--text-bolder))',
       },
     },
   },
-  plugins: [
-    tailwindFormsPlugin,
-    tailwindTypographyPlugin,
-    tailwindcssAnimatePlugin,
-  ],
+  plugins: [tailwindTypographyPlugin, tailwindcssAnimatePlugin],
 };

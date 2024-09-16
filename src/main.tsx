@@ -1,12 +1,12 @@
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import App from './App';
-import './index.css';
+import App from '@/App';
+import '@/index.css';
 
-import Home from './pages/home';
-import Checkout from './pages/checkout';
-import Order from './pages/order';
-import IntegrationGuide from './pages/integrationGuide';
+import Home from '@/pages/home';
+import Checkout from '@/pages/checkout';
+import Order from '@/pages/order';
+import IntegrationGuide from '@/pages/integrationGuide';
 
 const router = createBrowserRouter([
   {

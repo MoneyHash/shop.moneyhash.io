@@ -15,21 +15,26 @@ export default function ProductItem({ product }: ProductItemProps) {
 
   return (
     <>
-      <button type="button" onClick={() => setIsOpen(true)}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className="focus:outline-none focus:ring-2 focus:ring-offset-4 focus:ring-offset-background rounded-md"
+      >
         <div className="group relative">
-          <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none lg:h-80">
+          <div className="aspect-square w-full overflow-hidden rounded-md bg-muted/20 lg:aspect-none lg:h-80">
             <img
               src={imageSrc}
               alt={imageAlt}
               className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+              draggable="false"
             />
           </div>
           <div className="mt-4 flex justify-between">
             <div className="text-left">
-              <h3 className="text-sm text-gray-700">{name}</h3>
-              <p className="mt-1 text-sm text-gray-500">{description}</p>
+              <h3 className="text-sm font-medium">{name}</h3>
+              <p className="mt-1 text-sm text-subtle">{description}</p>
             </div>
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium">
               {formatCurrency({ amount: price[currency], currency })}
             </p>
           </div>

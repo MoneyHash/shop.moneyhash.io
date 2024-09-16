@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
-import NavBar from '../components/navbar';
-import ProductItem from '../components/productItem';
-import productSections from '../utils/productSections';
+import NavBar from '@/components/navbar';
+import ProductItem from '@/components/productItem';
+import productSections from '@/utils/productSections';
 
 export default function Home() {
   return (
@@ -106,7 +106,7 @@ export default function Home() {
             id={section.category}
             className="scroll-mt-20"
           >
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+            <h2 className="text-2xl font-bold tracking-tight text-bolder">
               {section.category}
             </h2>
 

@@ -1,12 +1,18 @@
-import { Fragment, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBagIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
-import { Popover, Transition } from '@headlessui/react';
-import useShoppingCart from '../store/useShoppingCart';
-import useCurrency from '../store/useCurrency';
-import twoFixedDigit from '../utils/twoFixedDigits';
-import formatCurrency from '../utils/formatCurrency';
+
+import useShoppingCart from '@/store/useShoppingCart';
+import useCurrency from '@/store/useCurrency';
+import twoFixedDigit from '@/utils/twoFixedDigits';
+import formatCurrency from '@/utils/formatCurrency';
 import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover';
+
 import { cn } from '@/utils/cn';
 
 export default function ShoppingCart() {
@@ -24,40 +30,30 @@ export default function ShoppingCart() {
   );
 
   return (
-    <Popover className="ml-4 flow-root text-sm lg:relative lg:ml-3">
-      <Popover.Button className="group -m-2 flex items-center p-2">
-        <ShoppingBagIcon
-          className="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
-          aria-hidden="true"
-        />
-        <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800 tabular-nums">
+    <Popover>
+      <PopoverTrigger className="group ml-4 text-sm lg:relative lg:ml-3 flex items-center p-2 text-subtle hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring rounded">
+        <ShoppingBagIcon className="h-6 w-6 flex-shrink-0" aria-hidden="true" />
+        <span className="ml-2 text-sm font-medium tabular-nums">
           {totalProductsCount}
         </span>
         <span className="sr-only">items in cart, view bag</span>
-      </Popover.Button>
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-200"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="transition ease-in duration-150"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
-        <Popover.Panel className="absolute inset-x-0 top-16 mt-px bg-white pb-6 shadow-lg sm:px-2 lg:left-auto lg:right-0 lg:top-full lg:-mr-1.5 lg:mt-3 lg:w-96 lg:rounded-lg lg:ring-1 lg:ring-black lg:ring-opacity-5 ">
-          <h2 className="sr-only">Shopping Cart</h2>
+      </PopoverTrigger>
 
-          <div className="mx-auto max-w-2xl max-h-96 overflow-y-auto px-4">
+      <PopoverContent align="end" className="w-96 p-0">
+        <h2 className="sr-only">Shopping Cart</h2>
+
+        <div className="mx-auto max-w-2xl max-h-96 overflow-y-auto">
+          <div className="px-4">
             {cart.length === 0 && (
               <div className="flex flex-col items-center space-y-1 py-6">
-                <ShoppingCartIcon className="w-10 h-10 text-gray-700" />
-                <p className="mt-1 text-sm text-gray-600">Your Cart is Empty</p>
+                <ShoppingCartIcon className="w-10 h-10" />
+                <p className="mt-1 text-sm text-subtle">Your Cart is Empty</p>
               </div>
             )}
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y">
               {cart.map(product => (
                 <li key={product.id} className="flex py-6">
-                  <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                  <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border">
                     <img
                       src={product.imageSrc}
                       alt={product.imageAlt}
@@ -67,7 +63,7 @@ export default function ShoppingCart() {
 
                   <div className="ml-4 flex flex-1 flex-col">
                     <div>
-                      <div className="flex justify-between text-base font-medium text-gray-900">
+                      <div className="flex justify-between text-base font-medium">
                         <h3>{product.name}</h3>
                         <p className="ml-4">
                           {formatCurrency({
@@ -78,40 +74,41 @@ export default function ShoppingCart() {
                           })}
                         </p>
                       </div>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-sm text-subtle">
                         {product.description}
                       </p>
                     </div>
                     <div className="flex flex-1 items-end justify-between text-sm">
-                      <div className="text-gray-500 flex items-center space-x-1 border border-gray-200 rounded-md overflow-hidden">
+                      <div className="flex items-center space-x-1 border rounded-md text-foreground">
                         <button
                           type="button"
                           onClick={() => decrementProductQuantity(product.id)}
                           disabled={product.quantity === 1}
-                          className="disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 enabled:hover:bg-gray-100 text-gray-800"
+                          className="disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 enabled:hover:bg-muted"
                         >
                           -
                         </button>
-                        <span className="tabular-nums">
+                        <span className="tabular-nums text-subtle">
                           Qty {product.quantity}
                         </span>
                         <button
                           type="button"
                           onClick={() => incrementProductQuantity(product.id)}
-                          className="px-2 py-1 hover:bg-gray-100 text-gray-800"
+                          className="px-2 py-1 hover:bg-muted"
                         >
                           +
                         </button>
                       </div>
 
                       <div className="flex">
-                        <button
+                        <Button
                           type="button"
-                          className="font-medium text-indigo-600 hover:text-indigo-500"
                           onClick={() => removeProductFromCart(product.id)}
+                          variant="ghost"
+                          size="sm"
                         >
                           Remove
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -119,19 +116,20 @@ export default function ShoppingCart() {
               ))}
             </ul>
           </div>
-          <div className="pt-4 -mx-2 px-4 -mb-2 border-t border-t-slate-100">
-            <Button
-              asChild
-              className={cn(
-                'w-full',
-                cart.length === 0 && 'pointer-events-none opacity-50',
-              )}
-            >
-              <Link to="/checkout">Checkout</Link>
-            </Button>
-          </div>
-        </Popover.Panel>
-      </Transition>
+        </div>
+        <div className="border-t p-4">
+          <Button
+            asChild
+            className={cn(
+              'w-full',
+              cart.length === 0 && 'pointer-events-none opacity-50',
+            )}
+            size="lg"
+          >
+            <Link to="/checkout">Checkout</Link>
+          </Button>
+        </div>
+      </PopoverContent>
     </Popover>
   );
 }

@@ -1,5 +1,8 @@
 import { create } from 'zustand';
+import { useMemo } from 'react';
 import productSections, { type Product } from '../utils/productSections';
+import useCurrency from './useCurrency';
+import twoFixedDigit from '@/utils/twoFixedDigits';
 
 type State = {
   cart: (Product & { quantity: number })[];
@@ -15,8 +18,8 @@ type Action = {
 };
 
 const initialCart: State['cart'] = [
-  ...productSections[0].products.slice(0, 2).map(p => ({ ...p, quantity: 1 })),
-  ...productSections[1].products.slice(0, 1).map(p => ({ ...p, quantity: 1 })),
+  ...productSections[0].products.slice(0, 1).map(p => ({ ...p, quantity: 1 })),
+  ...productSections[1].products.slice(0, 2).map(p => ({ ...p, quantity: 1 })),
 ];
 
 const useShoppingCart = create<State & Action>(set => ({
@@ -60,3 +63,18 @@ const useShoppingCart = create<State & Action>(set => ({
 }));
 
 export default useShoppingCart;
+
+export function useTotalPrice() {
+  const currency = useCurrency(state => state.currency);
+  const cart = useShoppingCart(state => state.cart);
+
+  return useMemo(
+    () =>
+      cart.reduce(
+        (acc, product) =>
+          acc + twoFixedDigit(product.quantity * product.price[currency]),
+        0,
+      ),
+    [cart, currency],
+  );
+}
