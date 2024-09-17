@@ -8,7 +8,7 @@ export default function IntegrationGuide() {
     <>
       <NavBar hideCart hideCurrency />
 
-      <div className="prose mx-auto pt-4 pb-24 max-w-4xl prose-a:text-decathlon prose-a:hover:decoration-decathlon-dark">
+      <div className="prose dark:prose-invert mx-auto pt-4 pb-24 max-w-4xl prose-a:text-decathlon prose-a:hover:decoration-decathlon-dark">
         <h1 className="text-center">
           MoneyHash JavaScript SDK integration guide
         </h1>

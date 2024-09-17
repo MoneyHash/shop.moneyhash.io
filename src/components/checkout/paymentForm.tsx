@@ -128,6 +128,7 @@ function TabsPaymentForm({
               state={state}
               stateDetails={stateDetails}
               onIntentDetailsChange={onIntentDetailsChange}
+              paymentMethod={selectedMethod}
             />
           </div>
         )}
@@ -164,65 +165,93 @@ function AccordionPaymentForm({
   };
 
   return (
-    <RadioGroup
-      className="gap-0 border border-input rounded-md divide-y divide-input"
-      value={selectedMethod || ''}
-      onValueChange={handleMethodSelection}
-    >
-      {expressMethods?.map(method => (
-        <ExpressButton
-          key={method.id}
-          method={method}
-          isSelected={false}
-          onClick={async () => {
-            if (method.id === 'APPLE_PAY') {
-              setIsSelectingMethod(method.id);
-              onApplePayClick({ onCancel: () => setIsSelectingMethod(null) });
-            } else {
-              handleMethodSelection(method.id);
-            }
-          }}
-        />
-      ))}
-
-      {methods.map(method => (
-        <Fragment key={method.id}>
-          <label
-            htmlFor={method.id}
-            className={cn(
-              'p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed',
-              isSelectingMethod &&
-                method.id === isSelectingMethod &&
-                'animate-pulse',
-            )}
-          >
-            <RadioGroupItem
-              id={method.id}
-              value={method.id}
-              disabled={
-                !!(isSelectingMethod && isSelectingMethod !== method.id)
-              }
-            />
-            <div className="text-bolder flex items-center gap-3">
-              <img
-                src={method.icons[0]}
-                alt=""
-                className="w-[34px] h-[24px] object-contain"
+    <>
+      {!!expressMethods?.length && (
+        <div className="mb-8">
+          <p className="text-sm text-center font-medium">Express checkout</p>
+          <div className="grid grid-cols-1 gap-3 mt-2">
+            {expressMethods.map(method => (
+              <Fragment key={method.id}>
+                <ExpressButton
+                  key={method.id}
+                  method={method}
+                  isSelected={false}
+                  onClick={async () => {
+                    if (method.id === 'APPLE_PAY') {
+                      setIsSelectingMethod(method.id);
+                      onApplePayClick({
+                        onCancel: () => setIsSelectingMethod(null),
+                      });
+                    } else {
+                      handleMethodSelection(method.id);
+                    }
+                  }}
+                />
+                {selectedMethod === method.id && (
+                  <IntentStateRenderer
+                    intentId={intent.id}
+                    state={state}
+                    stateDetails={stateDetails}
+                    onIntentDetailsChange={onIntentDetailsChange}
+                    paymentMethod={selectedMethod}
+                  />
+                )}
+              </Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+      <div>
+        <h2 className="font-medium">Payment</h2>
+        <p className="text-subtler text-sm">
+          All transactions are secure and encrypted.
+        </p>
+      </div>
+      <RadioGroup
+        className="gap-0 border border-input rounded-md divide-y divide-input mt-2"
+        value={selectedMethod || ''}
+        onValueChange={handleMethodSelection}
+      >
+        {methods.map(method => (
+          <Fragment key={method.id}>
+            <label
+              htmlFor={method.id}
+              className={cn(
+                'p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed',
+                isSelectingMethod &&
+                  method.id === isSelectingMethod &&
+                  'animate-pulse',
+              )}
+            >
+              <RadioGroupItem
+                id={method.id}
+                value={method.id}
+                disabled={
+                  !!(isSelectingMethod && isSelectingMethod !== method.id)
+                }
               />
-              <span>{method.title}</span>
-            </div>
-          </label>
-          {selectedMethod === method.id && (
-            <IntentStateRenderer
-              intentId={intent.id}
-              state={state}
-              stateDetails={stateDetails}
-              onIntentDetailsChange={onIntentDetailsChange}
-            />
-          )}
-        </Fragment>
-      ))}
-    </RadioGroup>
+              <div className="text-bolder flex items-center gap-3">
+                <img
+                  src={method.icons[0]}
+                  alt=""
+                  className="w-[34px] h-[24px] object-contain"
+                />
+                <span>{method.title}</span>
+              </div>
+            </label>
+            {selectedMethod === method.id && (
+              <IntentStateRenderer
+                intentId={intent.id}
+                state={state}
+                stateDetails={stateDetails}
+                onIntentDetailsChange={onIntentDetailsChange}
+                paymentMethod={selectedMethod}
+              />
+            )}
+          </Fragment>
+        ))}
+      </RadioGroup>
+    </>
   );
 }
 

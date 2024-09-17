@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import safeLocalStorage from '../utils/safeLocalStorage';
+import safeLocalStorage from '@/utils/safeLocalStorage';
 
 type State = {
   jsonConfig: string;

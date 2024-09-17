@@ -21,6 +21,16 @@ export function OrderSummaryPanel({
           Order summary
         </h2>
 
+        <dl className="flex items-center justify-between border-b border-white/10 pb-6 text-white">
+          <dt className="text-base">Total</dt>
+          <dd className="text-base">
+            {formatCurrency({
+              currency,
+              amount: totalPrice,
+            })}
+          </dd>
+        </dl>
+
         <ul className="divide-y divide-border/20 text-sm font-medium">
           {cart.map(product => (
             <li key={product.id} className="flex items-start space-x-4 py-6">
@@ -45,16 +55,6 @@ export function OrderSummaryPanel({
             </li>
           ))}
         </ul>
-
-        <div className="flex items-center justify-between border-t border-white border-opacity-10 pt-6 text-white">
-          <dt className="text-base">Total</dt>
-          <dd className="text-base">
-            {formatCurrency({
-              currency,
-              amount: totalPrice,
-            })}
-          </dd>
-        </div>
       </div>
     </section>
   );

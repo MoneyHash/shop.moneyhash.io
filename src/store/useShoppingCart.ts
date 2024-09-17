@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { useMemo } from 'react';
-import productSections, { type Product } from '../utils/productSections';
-import useCurrency from './useCurrency';
+import productSections, { type Product } from '@/utils/productSections';
 import twoFixedDigit from '@/utils/twoFixedDigits';
+import useCurrency from '@/store/useCurrency';
 
 type State = {
   cart: (Product & { quantity: number })[];

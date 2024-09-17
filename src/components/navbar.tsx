@@ -25,7 +25,10 @@ export default function NavBar({
       <nav aria-label="Top" className="z-20  bg-background  border-b shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center">
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center space-x-1">
+            <Link
+              to="/"
+              className="flex-shrink-0 flex items-center space-x-1 mr-3"
+            >
               <MoneyHashLogo />
               <span className="font-semibold text-lg"> Shop</span>
             </Link>
@@ -58,11 +61,11 @@ export default function NavBar({
                   value={currency}
                   onChange={value => setCurrency(value)}
                 >
-                  <option value="AED">AED</option>
-                  <option value="USD">USD</option>
                   <option value="EGP">EGP</option>
-                  <option value="SAR">SAR</option>
+                  <option value="USD">USD</option>
+                  <option value="AED">AED</option>
                   <option value="KWD">KWD</option>
+                  <option value="SAR">SAR</option>
                 </Select>
               </>
             )}
