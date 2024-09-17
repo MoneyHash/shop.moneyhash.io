@@ -128,7 +128,7 @@ export default function Checkout() {
                 onIntentDetailsChange={setIntentDetails}
                 methods={paymentMethods}
                 expressMethods={expressMethods}
-                onApplePayClick={async ({ onCancel }) => {
+                onApplePayClick={async ({ onCancel, onError }) => {
                   moneyHash.payWithApplePay({
                     intentId: intentDetails.intent.id,
                     amount: totalPrice,
@@ -145,6 +145,7 @@ export default function Checkout() {
                     },
                     onError: () => {
                       toast.error('Something went wrong, please try again!');
+                      onError();
                     },
                   });
                 }}
