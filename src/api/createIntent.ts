@@ -42,7 +42,6 @@ export default function createIntent({
     back_url: `${window.location.origin}/checkout/order`,
     ...(!extraConfig?.flow_id && {
       operation: 'purchase',
-      hidden_methods: ['APPLE_PAY'],
     }),
     ...extraConfig,
   });
