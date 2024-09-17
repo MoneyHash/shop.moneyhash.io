@@ -12,7 +12,10 @@ import useConfiguration from '@/store/useConfiguration';
 type PaymentFormProps = {
   methods: Method[];
   expressMethods?: Method[] | null;
-  onApplePayClick: ({ onCancel }: { onCancel: () => void }) => void;
+  onApplePayClick: (options: {
+    onCancel: () => void;
+    onError: () => void;
+  }) => void;
   intentDetails: IntentDetails<'payment'>;
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
 };
@@ -69,6 +72,7 @@ function TabsPaymentForm({
                   setIsSelectingMethod(method.id);
                   onApplePayClick({
                     onCancel: () => setIsSelectingMethod(null),
+                    onError: () => setIsSelectingMethod(null),
                   });
                 } else {
                   handleMethodSelection(method.id);
@@ -181,6 +185,7 @@ function AccordionPaymentForm({
                       setIsSelectingMethod(method.id);
                       onApplePayClick({
                         onCancel: () => setIsSelectingMethod(null),
+                        onError: () => setIsSelectingMethod(null),
                       });
                     } else {
                       handleMethodSelection(method.id);
