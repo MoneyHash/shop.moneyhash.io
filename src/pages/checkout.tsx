@@ -144,12 +144,7 @@ export default function Checkout() {
                       );
                     },
                     onError: () => {
-                      navigate(
-                        `/checkout/order?intent_id=${intentDetails.intent.id}`,
-                        {
-                          replace: true,
-                        },
-                      );
+                      toast.error('Something went wrong, please try again!');
                     },
                   });
                 }}
