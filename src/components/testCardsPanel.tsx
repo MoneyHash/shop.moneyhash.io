@@ -22,17 +22,18 @@ export default function TestCardsPanel() {
   useLayoutEffect(() => {
     if (!contentRef.current) return;
     setContentHeight(contentRef.current.getBoundingClientRect().height);
-  }, []);
+    setCanTransition(false);
+  }, [cards]);
 
   useEffect(() => {
     setCanTransition(true);
-  }, [contentHeight]);
+  }, [cards]);
 
   return (
     <div
       className={cn(
         'fixed bottom-0 right-5 flex flex-col rounded-t-md max-w-xs bg-background shadow-lg text-sm z-20 border',
-        cantTransition && 'transition-transform',
+        cantTransition && 'transition-transform ease-in-out duration-300',
       )}
       style={{
         transform: isOpen ? 'translateY(0)' : `translateY(${contentHeight}px)`,
