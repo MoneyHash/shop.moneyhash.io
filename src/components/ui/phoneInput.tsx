@@ -31,6 +31,7 @@ const InputComponent = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, ...props }, ref) => (
     <Input
       className={cn('rounded-e-sm rounded-s-none', className)}
+      containerClassName="w-full flex-1"
       {...props}
       label="Phone number"
       ref={ref}

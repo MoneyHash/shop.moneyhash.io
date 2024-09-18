@@ -31,7 +31,7 @@ export default function TestCardsPanel() {
   return (
     <div
       className={cn(
-        'fixed bottom-0 right-5 flex flex-col rounded-t-md max-w-xs bg-background shadow-sm text-sm z-20',
+        'fixed bottom-0 right-5 flex flex-col rounded-t-md max-w-xs bg-background shadow-lg text-sm z-20 border',
         cantTransition && 'transition-transform',
       )}
       style={{

@@ -1,8 +1,14 @@
 import { Link } from 'react-router-dom';
+import { SelectValue } from '@radix-ui/react-select';
 import useCurrency from '@/store/useCurrency';
 import ShoppingCart from '@/components/shoppingCart';
 import { MoneyHashLogo } from '@/components/moneyHashLogo';
-import { Select } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '@/components/ui/select';
 import { ThemeToggleMenu } from '@/components/themeToggleMenu';
 import { Configuration } from '@/components/configuration';
 
@@ -57,15 +63,19 @@ export default function NavBar({
                   Currency
                 </label>
                 <Select
-                  id="currency"
                   value={currency}
-                  onChange={value => setCurrency(value)}
+                  onValueChange={value => setCurrency(value as any)}
                 >
-                  <option value="EGP">EGP</option>
-                  <option value="USD">USD</option>
-                  <option value="AED">AED</option>
-                  <option value="KWD">KWD</option>
-                  <option value="SAR">SAR</option>
+                  <SelectTrigger id="currency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value="EGP">EGP</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="AED">AED</SelectItem>
+                    <SelectItem value="KWD">KWD</SelectItem>
+                    <SelectItem value="SAR">SAR</SelectItem>
+                  </SelectContent>
                 </Select>
               </>
             )}

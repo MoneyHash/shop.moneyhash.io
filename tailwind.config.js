@@ -1,5 +1,6 @@
 import tailwindTypographyPlugin from '@tailwindcss/typography';
 import tailwindcssAnimatePlugin from 'tailwindcss-animate';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -7,6 +8,9 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['DM Sans', ...defaultTheme.fontFamily.sans],
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

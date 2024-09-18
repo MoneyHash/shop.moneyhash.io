@@ -4,7 +4,7 @@ type State = {
   layout: 'accordion' | 'tabs';
   theme: 'light' | 'dark';
   cardForm: 'compact' | 'expanded';
-  fontFamily: string;
+  fontFamily: 'Default' | (string & {});
 };
 
 type Action = {
@@ -15,7 +15,7 @@ const useConfiguration = create<State & Action>(set => ({
   layout: 'accordion',
   theme: 'light',
   cardForm: 'compact',
-  fontFamily: '',
+  fontFamily: 'Default',
   setConfiguration: state => set(state),
 }));
 
