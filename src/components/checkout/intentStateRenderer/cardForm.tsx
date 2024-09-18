@@ -353,7 +353,7 @@ function CompactCardForm() {
     elementType: 'cardNumber',
     placeholder: 'Card number',
     styles: {
-      padding: '0px 40px',
+      padding: '0px 5px 0px 40px',
     },
     onCardBrandChange: setCardInfo,
   });
@@ -422,11 +422,11 @@ function CompactCardForm() {
 
       <div
         className={cn(
-          'h-10 peer border border-input rounded-sm grid grid-cols-10',
+          'h-10 peer border border-input rounded-sm grid grid-cols-11 sm:grid-cols-10',
           isFocused && 'MoneyHashElement MoneyHashElement--focus',
         )}
       >
-        <div className="relative col-span-7">
+        <div className="relative col-span-6 sm:col-span-7">
           <div id="cardNumber" className="!ring-0 !border-none" />
           <div className="absolute top-1/2 -translate-y-1/2 left-2 ">
             {!cardInfo || cardInfo.brand === 'Unknown' ? (
@@ -437,7 +437,7 @@ function CompactCardForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 col-span-3">
+        <div className="grid grid-cols-2 col-span-5 sm:col-span-3">
           <div className="flex items-center *:shrink-0">
             <div
               id="cardExpiryMonth"
