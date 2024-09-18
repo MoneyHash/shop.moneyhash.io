@@ -24,7 +24,7 @@ interface JsonEditorProps {
   onAnimationEnd?: () => void;
 }
 
-function JsonEditor({
+export function JsonEditor({
   value,
   onChange,
   readOnly,
@@ -108,5 +108,3 @@ function JsonEditor({
     </div>
   );
 }
-
-export default JsonEditor;
