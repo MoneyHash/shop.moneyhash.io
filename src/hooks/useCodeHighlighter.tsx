@@ -1,4 +1,3 @@
-/* eslint-disable import/extensions */
 import { getHighlighterCore } from 'shiki/core';
 
 // `shiki/wasm` contains the wasm binary inlined as base64 string.
