@@ -532,11 +532,7 @@ function CheckoutForm({ intentId }: { intentId: string }) {
   const navigate = useNavigate();
 
   const moneyHash = useMoneyHash({
-    onComplete: async ({ intent, redirect }) => {
-      if (redirect?.redirectUrl) {
-        window.location.href = redirect.redirectUrl;
-        return;
-      }
+    onComplete: async ({ intent }) => {
       navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
     },
     onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
