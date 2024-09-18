@@ -54,7 +54,7 @@ export default function Order() {
     );
   }
 
-  if (intentDetails?.state === 'TRANSACTION_FAILED') {
+  if (intentDetails?.transaction.status === 'purchase.failed') {
     return (
       <div>
         <NavBar hideCurrency hideCart />
