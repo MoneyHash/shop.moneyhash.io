@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useTheme } from '@/context/themeProvider';
+import { JsonConfiguration } from '@/components/jsonConfiguration';
 
 function Divide() {
   return (
@@ -145,6 +146,7 @@ export function Configuration() {
               </SelectContent>
             </Select>
           </div>
+          <JsonConfiguration />
         </div>
       </div>
     </div>

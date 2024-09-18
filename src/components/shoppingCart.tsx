@@ -31,12 +31,17 @@ export default function ShoppingCart() {
 
   return (
     <Popover>
-      <PopoverTrigger className="group ml-4 text-sm lg:relative lg:ml-3 flex items-center p-2 text-subtle hover:text-foreground outline-none focus-visible:ring-1 focus-visible:ring-ring rounded">
-        <ShoppingBagIcon className="h-6 w-6 flex-shrink-0" aria-hidden="true" />
-        <span className="ml-2 text-sm font-medium tabular-nums">
-          {totalProductsCount}
-        </span>
-        <span className="sr-only">items in cart, view bag</span>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="shrink-0 px-2 py-1">
+          <ShoppingBagIcon
+            className="h-[1.2rem] w-[1.2rem] flex-shrink-0"
+            aria-hidden="true"
+          />
+          <span className="ml-2 text-sm font-medium tabular-nums">
+            {totalProductsCount}
+          </span>
+          <span className="sr-only">items in cart, view bag</span>
+        </Button>
       </PopoverTrigger>
 
       <PopoverContent align="end" className="w-96 p-0">

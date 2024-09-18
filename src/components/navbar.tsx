@@ -28,7 +28,10 @@ export default function NavBar({
   return (
     <div className="fixed top-0 w-full z-30">
       <Configuration />
-      <nav aria-label="Top" className="z-20  bg-background  border-b shadow-sm">
+      <nav
+        aria-label="Top"
+        className="z-20  bg-background  border-b shadow-sm -mt-1"
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center">
           <div className="flex items-center">
             <Link
@@ -36,7 +39,10 @@ export default function NavBar({
               className="flex-shrink-0 flex items-center space-x-1 mr-3"
             >
               <MoneyHashLogo />
-              <span className="font-semibold text-lg"> Shop</span>
+              <span className="font-semibold text-lg hidden sm:block">
+                {' '}
+                Shop
+              </span>
             </Link>
 
             <ul className="flex space-x-1 sm:space-x-3 px-px sm:px-4">
