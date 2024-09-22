@@ -596,7 +596,7 @@ function DynamicFields({
         {title}
       </p>
 
-      <div className="grid grid-cols-2 gap-4 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
         {fields.map(field => (
           <DynamicField key={field.name} control={control} field={field} />
         ))}

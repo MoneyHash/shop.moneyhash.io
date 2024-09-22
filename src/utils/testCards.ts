@@ -40,5 +40,5 @@ export const testCards: Record<Currency, TestCards> = {
   USD: stripeTestCards,
   AED: checkoutTestCards,
   KWD: tapTestCards,
-  SAR: tapTestCards,
+  SAR: checkoutTestCards,
 } as const;
