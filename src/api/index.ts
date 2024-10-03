@@ -1,4 +1,5 @@
 import axios from 'axios';
+import safeLocalStorage from '@/utils/safeLocalStorage';
 
 const axiosInstance = axios.create({
   baseURL: 'https://web.moneyhash.io/api/v1.1',
@@ -15,7 +16,8 @@ const ACCOUNT_API_KEY = 'NMyQeKCE.PE1ibNHTXepIxg0hyYrmU4LzK4sNdUS1';
 
 axiosInstance.interceptors.request.use(config => {
   // eslint-disable-next-line no-param-reassign
-  config.headers['x-api-key'] = ACCOUNT_API_KEY;
+  config.headers['x-api-key'] =
+    safeLocalStorage.getItem('apiKey') || ACCOUNT_API_KEY;
   return config;
 });
 
