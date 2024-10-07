@@ -20,7 +20,7 @@ export default function createIntent({
   product_items,
   extraConfig,
 }: {
-  methodId: string;
+  methodId?: string;
   amount: number;
   currency: string;
   userInfo: InfoFormValues;

@@ -81,7 +81,9 @@ export default function Checkout() {
       .then(({ paymentMethods, expressMethods }) => {
         setUserInfo(data);
         setPaymentMethods(paymentMethods);
-        setExpressMethods(expressMethods);
+        setExpressMethods(
+          expressMethods.filter(method => method.id !== 'GOOGLE_PAY'),
+        );
       })
       .catch(err => {
         const [key, message] =
@@ -134,19 +136,30 @@ export default function Checkout() {
                 onSelectMethod={handleSelectMethod}
                 onApplePayClick={async ({ onCancel, onError }) => {
                   if (!intentDetails) return;
+                  const {
+                    data: { id: intentId },
+                  } = await createIntent({
+                    amount: totalPrice,
+                    currency,
+                    userInfo,
+                    product_items: cart.map(product => ({
+                      name: product.name,
+                      description: product.description,
+                      quantity: product.quantity,
+                      amount: product.price[currency],
+                    })),
+                  });
+
                   moneyHash.payWithApplePay({
-                    intentId: intentDetails.intent.id,
+                    intentId,
                     amount: totalPrice,
                     currency,
                     countryCode: 'AE',
                     onCancel,
                     onComplete: () => {
-                      navigate(
-                        `/checkout/order?intent_id=${intentDetails.intent.id}`,
-                        {
-                          replace: true,
-                        },
-                      );
+                      navigate(`/checkout/order?intent_id=${intentId}`, {
+                        replace: true,
+                      });
                     },
                     onError: () => {
                       toast.error('Something went wrong, please try again!');
