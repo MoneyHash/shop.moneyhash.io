@@ -17,6 +17,7 @@ import {
   OrderSummaryPanel,
 } from '@/components/checkout';
 import { PaymentForm } from '@/components/checkout/paymentForm';
+import { logJSON } from '@/utils/logJSON';
 
 export default function Checkout() {
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
@@ -31,42 +32,79 @@ export default function Checkout() {
   const cart = useShoppingCart(state => state.cart);
   const totalPrice = useTotalPrice();
 
-  const handleSelectMethod = async (methodId: string) => {
+  const handleCreateIntent = async ({
+    methodId,
+    userInfo,
+  }: {
+    userInfo: InfoFormValues;
+    methodId: string;
+  }) => {
+    const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
+
+    let intentId;
     try {
-      if (!userInfo) return;
-      const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
-
-      // Create a new intent if it doesn't exist
-      if (!intentDetails) {
-        const {
-          data: { id: intentId },
-        } = await createIntent({
-          methodId,
-          amount: totalPrice,
-          currency,
-          userInfo,
-          product_items: cart.map(product => ({
-            name: product.name,
-            description: product.description,
-            quantity: product.quantity,
-            amount: product.price[currency],
-          })),
-          extraConfig,
-        });
-
-        setIntentDetails(await moneyHash.getIntentDetails(intentId));
+      const response = await createIntent({
+        methodId,
+        amount: totalPrice,
+        currency,
+        userInfo,
+        product_items: cart.map(product => ({
+          name: product.name,
+          description: product.description,
+          quantity: product.quantity,
+          amount: product.price[currency],
+        })),
+        extraConfig,
+      });
+      intentId = response.data.id;
+      logJSON.BE('Create Intent', response);
+    } catch (error: any) {
+      const [key, message] =
+        Object.entries(error.response.data.status.errors[0] || {})[0] || [];
+      if (key) {
+        toast.error(`${key}: ${message}`);
       } else {
-        setIntentDetails(
-          await moneyHash.proceedWith({
-            intentId: intentDetails.intent.id,
-            id: methodId,
-            type: 'method',
-          }),
-        );
+        toast.error((message as string) || 'Something went wrong');
       }
-    } catch (error) {
-      toast.error('Something went wrong, please try again');
+
+      return Promise.reject(error);
     }
+
+    return moneyHash
+      .getIntentDetails(intentId)
+      .then(response => {
+        logJSON.response('getIntentDetails', response);
+        setIntentDetails(response);
+        return response.intent.id;
+      })
+      .catch(err => {
+        logJSON.error('getIntentDetails', err);
+        toast.error('Something went wrong, please try again');
+        return Promise.reject(err);
+      });
+  };
+
+  const handleSelectMethod = async (methodId: string) => {
+    if (!userInfo) return;
+    // Create a new intent if it doesn't exist
+    if (!intentDetails) {
+      return handleCreateIntent({ methodId, userInfo });
+    }
+
+    return moneyHash
+      .proceedWith({
+        intentId: intentDetails.intent.id,
+        id: methodId,
+        type: 'method',
+      })
+      .then(response => {
+        setIntentDetails(response);
+        logJSON.response('proceedWith', response);
+      })
+      .catch(error => {
+        logJSON.error('proceedWith', error);
+        toast.error('Something went wrong, please try again');
+      });
   };
 
   const handleSubmit = async (data: InfoFormValues) => {
@@ -77,7 +115,9 @@ export default function Checkout() {
         amount: totalPrice,
         flowId: extraConfig.flow_id,
       })
-      .then(({ paymentMethods, expressMethods }) => {
+      .then(response => {
+        logJSON.response('getMethods', response);
+        const { paymentMethods, expressMethods } = response;
         setUserInfo(data);
         setPaymentMethods(paymentMethods);
         setExpressMethods(
@@ -85,6 +125,7 @@ export default function Checkout() {
         );
       })
       .catch(err => {
+        logJSON.error('getMethods', err);
         const [key, message] =
           Object.entries(err.response.data.status.errors[0] || {})[0] || [];
         if (key) {
@@ -136,18 +177,10 @@ export default function Checkout() {
                 onApplePayClick={async ({ onCancel, onError }) => {
                   let intentId: string;
                   if (!intentDetails) {
-                    const { data } = await createIntent({
-                      amount: totalPrice,
-                      currency,
+                    intentId = await handleCreateIntent({
                       userInfo,
-                      product_items: cart.map(product => ({
-                        name: product.name,
-                        description: product.description,
-                        quantity: product.quantity,
-                        amount: product.price[currency],
-                      })),
+                      methodId: 'APPLE_PAY',
                     });
-                    intentId = data.id;
                   } else {
                     intentId = intentDetails.intent.id;
                   }

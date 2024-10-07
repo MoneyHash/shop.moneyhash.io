@@ -9,7 +9,7 @@ import useConfiguration from '@/store/useConfiguration';
 type PaymentFormProps = {
   methods: Method[];
   expressMethods?: Method[] | null;
-  onSelectMethod: (methodId: string) => Promise<void>;
+  onSelectMethod: (methodId: string) => Promise<any>;
   onApplePayClick: (options: {
     onCancel: () => void;
     onError: () => void;

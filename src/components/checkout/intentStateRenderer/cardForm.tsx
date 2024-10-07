@@ -35,6 +35,7 @@ import { useTheme } from '@/context/themeProvider';
 import useConfiguration from '@/store/useConfiguration';
 import { PhoneInput } from '@/components/ui/phoneInput';
 import { Input } from '@/components/ui/input';
+import { logJSON } from '@/utils/logJSON';
 
 const CardFormContext = createContext<Elements | null>(null);
 
@@ -523,19 +524,46 @@ export function CardForm({
     let apiMethod;
 
     if (paymentMethod === 'CARD') {
-      apiMethod = moneyHash.cardForm.collect().then(cardData =>
-        moneyHash.cardForm.pay({
-          cardData,
+      apiMethod = moneyHash.cardForm
+        .collect()
+        .then(cardData => {
+          logJSON.response('cardForm.collect', cardData);
+          return cardData;
+        })
+        .catch(error => {
+          logJSON.error('cardForm.collect', error);
+          return Promise.reject(error);
+        })
+        .then(cardData =>
+          moneyHash.cardForm.pay({
+            cardData,
+            intentId,
+            billingData: getBillingValues(),
+          }),
+        )
+        .then(response => {
+          logJSON.response('cardForm.pay', response);
+          return response;
+        })
+        .catch(error => {
+          logJSON.error('cardForm.pay', error);
+          return Promise.reject(error);
+        });
+    } else {
+      apiMethod = moneyHash
+        .submitForm({
+          paymentMethod,
           intentId,
           billingData: getBillingValues(),
-        }),
-      );
-    } else {
-      apiMethod = moneyHash.submitForm({
-        paymentMethod,
-        intentId,
-        billingData: getBillingValues(),
-      });
+        })
+        .then(response => {
+          logJSON.response('submitForm', response);
+          return response;
+        })
+        .catch(error => {
+          logJSON.error('submitForm', error);
+          return Promise.reject(error);
+        });
     }
 
     apiMethod
