@@ -37,7 +37,7 @@ export default function Checkout() {
     userInfo,
   }: {
     userInfo: InfoFormValues;
-    methodId: string;
+    methodId?: string;
   }) => {
     const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
 
@@ -179,7 +179,6 @@ export default function Checkout() {
                   if (!intentDetails) {
                     intentId = await handleCreateIntent({
                       userInfo,
-                      methodId: 'APPLE_PAY',
                     });
                   } else {
                     intentId = intentDetails.intent.id;
