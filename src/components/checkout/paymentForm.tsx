@@ -1,6 +1,5 @@
 import { Fragment, useState } from 'react';
 import { type IntentDetails, type Method } from '@moneyhash/js-sdk/headless';
-import GooglePayButton from '@google-pay/button-react';
 
 import { cn } from '@/utils/cn';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radioGroup';
@@ -251,55 +250,8 @@ function ExpressButton({
   onClick: () => void;
 }) {
   if (method.id === 'GOOGLE_PAY') {
-    return (
-      <GooglePayButton
-        environment="TEST"
-        buttonType="pay"
-        buttonColor="black"
-        paymentRequest={{
-          apiVersion: 2,
-          apiVersionMinor: 0,
-          allowedPaymentMethods: [
-            {
-              type: 'CARD',
-              parameters: {
-                allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-                allowedCardNetworks: ['MASTERCARD', 'VISA'],
-              },
-              tokenizationSpecification: {
-                type: 'PAYMENT_GATEWAY',
-                parameters: {
-                  gateway: 'example',
-                  gatewayMerchantId: 'exampleGatewayMerchantId',
-                },
-              },
-            },
-          ],
-          merchantInfo: {
-            merchantId: '12345678901234567890',
-            merchantName: 'Emirates Merchant',
-          },
-          transactionInfo: {
-            totalPriceStatus: 'FINAL',
-            totalPriceLabel: 'Total',
-            totalPrice: '100.00',
-            currencyCode: 'USD',
-            countryCode: 'US',
-          },
-        }}
-        buttonSizeMode="fill"
-        style={{ height: 40 }}
-        className={cn(
-          '[&_.gpay-card-info-container]:!outline-none [&_.gpay-card-info-container]:!rounded-sm',
-          isSelected &&
-            '[&_.gpay-card-info-container]:!border-indigo-500 [&_.gpay-card-info-container]:!ring-2 [&_.gpay-card-info-container]:!ring-indigo-500 [&_.gpay-card-info-container]:!outline-none ',
-        )}
-        onClick={e => {
-          e.preventDefault();
-          onClick();
-        }}
-      />
-    );
+    // TODO: Implement Google Pay button
+    return null;
   }
 
   return (
