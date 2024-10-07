@@ -1,6 +1,6 @@
-import { Settings, XIcon } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import {
   Popover,
   PopoverContent,
@@ -24,25 +24,6 @@ function isJsonValid(str: string) {
 
 export function JsonConfiguration() {
   const [isOpen, setIsOpen] = useState(false);
-  const { jsonConfig, setJsonConfig } = useJsonConfig();
-  const [apiKey, setApiKey] = useState(
-    () => safeLocalStorage.getItem('apiKey') || '',
-  );
-
-  const saveConfig = useCallback(() => {
-    if (!jsonConfig) {
-      toast.error('No configuration to save.');
-      return;
-    }
-    if (isJsonValid(jsonConfig)) {
-      safeLocalStorage.setItem('jsonConfig', jsonConfig);
-      safeLocalStorage.setItem('apiKey', apiKey);
-      toast.success('Configuration saved successfully.');
-      setIsOpen(false);
-    } else {
-      toast.error("Invalid JSON. Please check the configuration's syntax.");
-    }
-  }, [jsonConfig, apiKey]);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -53,33 +34,91 @@ export function JsonConfiguration() {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 space-y-4">
-        <div className="flex items-center gap-2">
-          <Input
-            label="Account API Key"
-            value={apiKey}
-            onChange={e => setApiKey(e.target.value)}
-            containerClassName="flex-1"
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setApiKey('');
-              safeLocalStorage.removeItem('apiKey');
-            }}
-          >
-            <XIcon className="w-5 h-5" />
-          </Button>
-        </div>
-
-        <div>
-          <p className="text-sm mb-2 text-subtle">Intent configuration</p>
-          <JsonEditor value={jsonConfig} onChange={setJsonConfig} />
-        </div>
-        <Button className="mt-4 w-full" size="sm" onClick={saveConfig}>
-          Save Configuration
-        </Button>
+        <ConfigurationContent onClose={() => setIsOpen(false)} />
       </PopoverContent>
     </Popover>
+  );
+}
+
+function ConfigurationContent({ onClose }: { onClose: () => void }) {
+  const { jsonConfig, setJsonConfig } = useJsonConfig();
+  const [apiKey, setApiKey] = useState(
+    () => safeLocalStorage.getItem('apiKey') || '',
+  );
+  const [publicApiKey, setPublicApiKey] = useState(
+    () => safeLocalStorage.getItem('publicApiKey') || '',
+  );
+
+  const saveConfig = () => {
+    if (!jsonConfig) {
+      toast.error('No configuration to save.');
+      return;
+    }
+
+    // public api key and api key needs to be set together
+    if (apiKey && !publicApiKey) {
+      toast.error('Please set the public API key.');
+      return;
+    }
+
+    if (!apiKey && publicApiKey) {
+      toast.error('Please set the API key.');
+      return;
+    }
+
+    if (isJsonValid(jsonConfig)) {
+      safeLocalStorage.setItem('jsonConfig', jsonConfig);
+      safeLocalStorage.setItem('apiKey', apiKey);
+      safeLocalStorage.setItem('publicApiKey', publicApiKey);
+      toast.success('Configuration saved successfully.');
+      onClose();
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } else {
+      toast.error("Invalid JSON. Please check the configuration's syntax.");
+    }
+  };
+
+  return (
+    <>
+      <p className="text-sm mb-2 text-subtle">Custom Account</p>
+      <div className="flex flex-col gap-3">
+        <Input
+          label="Account API Key"
+          value={apiKey}
+          onChange={e => setApiKey(e.target.value)}
+          containerClassName="flex-1"
+        />
+        <Input
+          label="Public Account API Key"
+          value={publicApiKey}
+          onChange={e => setPublicApiKey(e.target.value)}
+          containerClassName="flex-1"
+        />
+        <Button
+          variant="destructive"
+          onClick={() => {
+            setApiKey('');
+            setPublicApiKey('');
+            safeLocalStorage.removeItem('apiKey');
+            safeLocalStorage.removeItem('publicApiKey');
+            window.location.reload();
+          }}
+          className="flex items-center gap-3"
+        >
+          <span>Clear API Keys</span>
+        </Button>
+      </div>
+
+      <hr />
+      <div>
+        <p className="text-sm mb-2 text-subtle">Intent configuration</p>
+        <JsonEditor value={jsonConfig} onChange={setJsonConfig} />
+      </div>
+      <Button className="mt-4 w-full" size="sm" onClick={saveConfig}>
+        Save Configuration
+      </Button>
+    </>
   );
 }

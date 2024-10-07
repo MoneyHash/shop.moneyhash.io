@@ -1,10 +1,8 @@
 import { Fragment, useState } from 'react';
 import { type IntentDetails, type Method } from '@moneyhash/js-sdk/headless';
 import GooglePayButton from '@google-pay/button-react';
-import toast from 'react-hot-toast';
 
 import { cn } from '@/utils/cn';
-import { moneyHash } from '@/utils/moneyHash';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radioGroup';
 import { IntentStateRenderer } from './intentStateRenderer';
 import useConfiguration from '@/store/useConfiguration';
@@ -12,11 +10,12 @@ import useConfiguration from '@/store/useConfiguration';
 type PaymentFormProps = {
   methods: Method[];
   expressMethods?: Method[] | null;
+  onSelectMethod: (methodId: string) => Promise<void>;
   onApplePayClick: (options: {
     onCancel: () => void;
     onError: () => void;
   }) => void;
-  intentDetails: IntentDetails<'payment'>;
+  intentDetails?: IntentDetails<'payment'> | null;
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
 };
 
@@ -30,6 +29,7 @@ function TabsPaymentForm({
   intentDetails,
   methods,
   expressMethods,
+  onSelectMethod,
   onApplePayClick,
   onIntentDetailsChange,
 }: PaymentFormProps) {
@@ -37,20 +37,10 @@ function TabsPaymentForm({
     null,
   );
 
-  const { intent, state, stateDetails, selectedMethod } = intentDetails;
-
   const handleMethodSelection = (methodId: string) => {
     if (isSelectingMethod) return;
     setIsSelectingMethod(methodId);
-    moneyHash
-      .proceedWith({
-        intentId: intent.id,
-        id: methodId,
-        type: 'method',
-      })
-      .then(onIntentDetailsChange)
-      .catch(() => toast.error('Something went wrong, please try again'))
-      .finally(() => setIsSelectingMethod(null));
+    onSelectMethod(methodId).finally(() => setIsSelectingMethod(null));
   };
 
   const hasExpressMethods = !!expressMethods?.length;
@@ -89,7 +79,7 @@ function TabsPaymentForm({
         </p>
         <RadioGroup
           className="overflow-x-auto space-x-4 flex py-4 -my-4 px-0.5 -mx-0.5"
-          value={selectedMethod || ''}
+          value={intentDetails?.selectedMethod || ''}
           onValueChange={handleMethodSelection}
         >
           {methods.map(method => (
@@ -104,7 +94,7 @@ function TabsPaymentForm({
                 htmlFor={method.id}
                 className={cn(
                   'p-4 flex flex-shrink-0 flex-col gap-2 border border-input rounded-lg cursor-pointer w-44',
-                  selectedMethod === method.id
+                  intentDetails?.selectedMethod === method.id
                     ? 'text-bolder border-ring ring-2 ring-ring/30 bg-primary/5'
                     : 'text-subtle',
                   isSelectingMethod &&
@@ -125,14 +115,14 @@ function TabsPaymentForm({
             </div>
           ))}
         </RadioGroup>
-        {selectedMethod && (
+        {intentDetails?.selectedMethod && (
           <div className="pt-4 -m-4">
             <IntentStateRenderer
-              intentId={intent.id}
-              state={state}
-              stateDetails={stateDetails}
+              intentId={intentDetails?.intent.id}
+              state={intentDetails?.state}
+              stateDetails={intentDetails?.stateDetails}
               onIntentDetailsChange={onIntentDetailsChange}
-              paymentMethod={selectedMethod}
+              paymentMethod={intentDetails?.selectedMethod}
             />
           </div>
         )}
@@ -147,25 +137,16 @@ function AccordionPaymentForm({
   expressMethods,
   onApplePayClick,
   onIntentDetailsChange,
+  onSelectMethod,
 }: PaymentFormProps) {
   const [isSelectingMethod, setIsSelectingMethod] = useState<string | null>(
     null,
   );
 
-  const { intent, state, stateDetails, selectedMethod } = intentDetails;
-
   const handleMethodSelection = (methodId: string) => {
     if (isSelectingMethod) return;
     setIsSelectingMethod(methodId);
-    moneyHash
-      .proceedWith({
-        intentId: intent.id,
-        id: methodId,
-        type: 'method',
-      })
-      .then(onIntentDetailsChange)
-      .catch(() => toast.error('Something went wrong, please try again'))
-      .finally(() => setIsSelectingMethod(null));
+    onSelectMethod(methodId).finally(() => setIsSelectingMethod(null));
   };
 
   return (
@@ -192,13 +173,13 @@ function AccordionPaymentForm({
                     }
                   }}
                 />
-                {selectedMethod === method.id && (
+                {intentDetails?.selectedMethod === method.id && (
                   <IntentStateRenderer
-                    intentId={intent.id}
-                    state={state}
-                    stateDetails={stateDetails}
+                    intentId={intentDetails.intent.id}
+                    state={intentDetails.state}
+                    stateDetails={intentDetails.stateDetails}
                     onIntentDetailsChange={onIntentDetailsChange}
-                    paymentMethod={selectedMethod}
+                    paymentMethod={intentDetails.selectedMethod}
                   />
                 )}
               </Fragment>
@@ -214,7 +195,7 @@ function AccordionPaymentForm({
       </div>
       <RadioGroup
         className="gap-0 border border-input rounded-md divide-y divide-input mt-2"
-        value={selectedMethod || ''}
+        value={intentDetails?.selectedMethod || ''}
         onValueChange={handleMethodSelection}
       >
         {methods.map(method => (
@@ -244,13 +225,13 @@ function AccordionPaymentForm({
                 <span>{method.title}</span>
               </div>
             </label>
-            {selectedMethod === method.id && (
+            {intentDetails?.selectedMethod === method.id && (
               <IntentStateRenderer
-                intentId={intent.id}
-                state={state}
-                stateDetails={stateDetails}
+                intentId={intentDetails.intent.id}
+                state={intentDetails.state}
+                stateDetails={intentDetails.stateDetails}
                 onIntentDetailsChange={onIntentDetailsChange}
-                paymentMethod={selectedMethod}
+                paymentMethod={intentDetails.selectedMethod}
               />
             )}
           </Fragment>

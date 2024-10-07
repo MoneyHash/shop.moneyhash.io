@@ -23,6 +23,7 @@ export default function Checkout() {
   const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
   const [intentDetails, setIntentDetails] =
     useState<IntentDetails<'payment'> | null>(null);
+  const [userInfo, setUserInfo] = useState<InfoFormValues | null>(null);
 
   const navigate = useNavigate();
   const currency = useCurrency(state => state.currency);
@@ -30,51 +31,55 @@ export default function Checkout() {
   const cart = useShoppingCart(state => state.cart);
   const totalPrice = useTotalPrice();
 
+  const handleSelectMethod = async (methodId: string) => {
+    try {
+      if (!userInfo) return;
+      const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
+
+      // Create a new intent if it doesn't exist
+      if (!intentDetails) {
+        const {
+          data: { id: intentId },
+        } = await createIntent({
+          methodId,
+          amount: totalPrice,
+          currency,
+          userInfo,
+          product_items: cart.map(product => ({
+            name: product.name,
+            description: product.description,
+            quantity: product.quantity,
+            amount: product.price[currency],
+          })),
+          extraConfig,
+        });
+
+        setIntentDetails(await moneyHash.getIntentDetails(intentId));
+      } else {
+        setIntentDetails(
+          await moneyHash.proceedWith({
+            intentId: intentDetails.intent.id,
+            id: methodId,
+            type: 'method',
+          }),
+        );
+      }
+    } catch (error) {
+      toast.error('Something went wrong, please try again');
+    }
+  };
+
   const handleSubmit = async (data: InfoFormValues) => {
     const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
 
-    return createIntent({
-      amount: totalPrice,
-      currency,
-      billing_data: {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        phone_number: data.phone_number,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        postal_code: data.postal_code,
-      },
-      shipping_data: {
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        postal_code: data.postal_code,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        phone_number: data.phone_number,
-      },
-      product_items: cart.map(product => ({
-        name: product.name,
-        description: product.description,
-        quantity: product.quantity,
-        amount: product.price[currency],
-        // category: 'Electronics',
-        // subcategory: 'Audio',
-        // type: 'Digital',
-        // tax: 1,
-        // sku: '00000',
-      })),
-      extraConfig,
-    })
-      .then(async intent => {
-        const [intentDetails, { paymentMethods, expressMethods }] =
-          await Promise.all([
-            moneyHash.getIntentDetails(intent.data.id),
-            moneyHash.getIntentMethods(intent.data.id),
-          ]);
-        setIntentDetails(intentDetails);
+    return moneyHash
+      .getMethods({
+        currency,
+        amount: totalPrice,
+        flowId: extraConfig.flow_id,
+      })
+      .then(({ paymentMethods, expressMethods }) => {
+        setUserInfo(data);
         setPaymentMethods(paymentMethods);
         setExpressMethods(expressMethods);
       })
@@ -118,17 +123,17 @@ export default function Checkout() {
             aria-labelledby="payment-and-shipping-heading"
             className="py-16 pb-36 px-4 lg:px-0 lg:col-start-1 lg:row-start-1 lg:mx-auto lg:w-full lg:max-w-lg lg:pb-24 lg:pt-0"
           >
-            {!(paymentMethods || intentDetails) && (
-              <InfoForm onSubmit={handleSubmit} />
-            )}
+            {!userInfo && <InfoForm onSubmit={handleSubmit} />}
 
-            {paymentMethods && intentDetails && (
+            {userInfo && paymentMethods && (
               <PaymentForm
                 intentDetails={intentDetails}
                 onIntentDetailsChange={setIntentDetails}
                 methods={paymentMethods}
                 expressMethods={expressMethods}
+                onSelectMethod={handleSelectMethod}
                 onApplePayClick={async ({ onCancel, onError }) => {
+                  if (!intentDetails) return;
                   moneyHash.payWithApplePay({
                     intentId: intentDetails.intent.id,
                     amount: totalPrice,

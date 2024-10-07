@@ -1,4 +1,6 @@
 import MoneyHashHeadless from '@moneyhash/js-sdk/headless';
+import { ACCOUNT_PUBLIC_API_KEY } from '@/api';
+import safeLocalStorage from '@/utils/safeLocalStorage';
 
 // onComplete: async ({ intent }) => {
 //   navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
@@ -37,4 +39,6 @@ export const moneyHash = new MoneyHashHeadless({
       color: 'black',
     },
   },
+  publicApiKey:
+    safeLocalStorage.getItem('publicApiKey') || ACCOUNT_PUBLIC_API_KEY,
 });

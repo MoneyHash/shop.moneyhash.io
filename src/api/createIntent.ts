@@ -1,3 +1,4 @@
+import { InfoFormValues } from '@/components/checkout';
 import axiosInstance from '.';
 
 type ProductItem = {
@@ -12,34 +13,52 @@ type ProductItem = {
  * In a real-world scenario, you should create a payment intent via backend apis.
  */
 export default function createIntent({
+  methodId,
   amount,
   currency,
-  billing_data,
-  shipping_data,
+  userInfo,
   product_items,
   extraConfig,
 }: {
+  methodId: string;
   amount: number;
   currency: string;
-  billing_data: Record<string, string>;
-  shipping_data: Record<string, string>;
+  userInfo: InfoFormValues;
   product_items: ProductItem[];
   extraConfig?: Record<string, any>;
 }): Promise<{ data: { id: string } }> {
   return axiosInstance.post('/payments/intent/', {
+    payment_method: methodId,
     amount,
     amount_currency: currency,
-    billing_data,
-    shipping_data,
+    billing_data: {
+      first_name: userInfo.first_name,
+      last_name: userInfo.last_name,
+      email: userInfo.email,
+      phone_number: userInfo.phone_number,
+      address: userInfo.address,
+      city: userInfo.city,
+      state: userInfo.state,
+      postal_code: userInfo.postal_code,
+    },
+    shipping_data: {
+      address: userInfo.address,
+      city: userInfo.city,
+      state: userInfo.state,
+      postal_code: userInfo.postal_code,
+      first_name: userInfo.first_name,
+      last_name: userInfo.last_name,
+      phone_number: userInfo.phone_number,
+    },
     product_items,
     form_only: true,
     hide_loader_message: true,
     threeds: { enabled: true },
     webhook_url: 'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
-    successful_redirect_url: `${window.location.origin}/checkout/order`,
-    failed_redirect_url: `${window.location.origin}/checkout/order`,
-    pending_external_action_redirect_url: `${window.location.origin}/checkout/order`,
-    back_url: `${window.location.origin}/checkout/order`,
+    successful_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
+    failed_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
+    pending_external_action_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
+    back_url: `${'https://shop.moneyhash.io'}/checkout/order`,
     ...(!extraConfig?.flow_id && {
       operation: 'purchase',
     }),
