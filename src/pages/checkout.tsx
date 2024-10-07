@@ -71,7 +71,6 @@ export default function Checkout() {
 
   const handleSubmit = async (data: InfoFormValues) => {
     const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
-
     return moneyHash
       .getMethods({
         currency,
@@ -135,20 +134,23 @@ export default function Checkout() {
                 expressMethods={expressMethods}
                 onSelectMethod={handleSelectMethod}
                 onApplePayClick={async ({ onCancel, onError }) => {
-                  if (!intentDetails) return;
-                  const {
-                    data: { id: intentId },
-                  } = await createIntent({
-                    amount: totalPrice,
-                    currency,
-                    userInfo,
-                    product_items: cart.map(product => ({
-                      name: product.name,
-                      description: product.description,
-                      quantity: product.quantity,
-                      amount: product.price[currency],
-                    })),
-                  });
+                  let intentId;
+                  if (!intentDetails) {
+                    const { data } = await createIntent({
+                      amount: totalPrice,
+                      currency,
+                      userInfo,
+                      product_items: cart.map(product => ({
+                        name: product.name,
+                        description: product.description,
+                        quantity: product.quantity,
+                        amount: product.price[currency],
+                      })),
+                    });
+                    intentId = data.id;
+                  } else {
+                    intentId = intentDetails.intent.id;
+                  }
 
                   moneyHash.payWithApplePay({
                     intentId,
