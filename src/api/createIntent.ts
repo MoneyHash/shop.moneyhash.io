@@ -53,7 +53,7 @@ export default function createIntent({
     product_items,
     form_only: true,
     hide_loader_message: true,
-    threeds: { enabled: true },
+    ...(methodId === 'CARD' ? { threeds: { enabled: true } } : {}),
     webhook_url: 'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
     successful_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
     failed_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,

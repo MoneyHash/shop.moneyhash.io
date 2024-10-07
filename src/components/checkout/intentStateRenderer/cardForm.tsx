@@ -519,13 +519,26 @@ export function CardForm({
   const handleSubmit = () => {
     setIsSubmitting(true);
     setError(null);
-    moneyHash
-      .submitForm({
+
+    let apiMethod;
+
+    if (paymentMethod === 'CARD') {
+      apiMethod = moneyHash.cardForm.collect().then(cardData =>
+        moneyHash.cardForm.pay({
+          cardData,
+          intentId,
+          billingData: getBillingValues(),
+        }),
+      );
+    } else {
+      apiMethod = moneyHash.submitForm({
         paymentMethod,
         intentId,
-        accessToken,
         billingData: getBillingValues(),
-      })
+      });
+    }
+
+    apiMethod
       .then(intentDetails => {
         const { stateDetails } = intentDetails;
         if (
