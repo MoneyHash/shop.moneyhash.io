@@ -134,7 +134,7 @@ export default function Checkout() {
                 expressMethods={expressMethods}
                 onSelectMethod={handleSelectMethod}
                 onApplePayClick={async ({ onCancel, onError }) => {
-                  let intentId;
+                  let intentId: string;
                   if (!intentDetails) {
                     const { data } = await createIntent({
                       amount: totalPrice,
