@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type IntentDetails, type Method } from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
@@ -48,11 +48,16 @@ export default function Checkout() {
         amount: totalPrice,
         currency,
         userInfo,
-        product_items: cart.map(product => ({
+        product_items: cart.map((product, index) => ({
           name: product.name,
           description: product.description,
           quantity: product.quantity,
           amount: product.price[currency],
+          category: 'Electronics',
+          subcategory: 'Audio',
+          type: 'Digital',
+          sku: `sku${index}`,
+          tax: 1,
         })),
         extraConfig,
       });
@@ -108,33 +113,61 @@ export default function Checkout() {
   };
 
   const handleSubmit = async (data: InfoFormValues) => {
-    const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
-    return moneyHash
-      .getMethods({
-        currency,
-        amount: totalPrice,
-        flowId: extraConfig.flow_id,
-      })
-      .then(response => {
-        logJSON.response('getMethods', response);
-        const { paymentMethods, expressMethods } = response;
-        setUserInfo(data);
-        setPaymentMethods(paymentMethods);
+    setUserInfo(data);
+  };
+
+  useEffect(() => {
+    if (!userInfo) return;
+    async function fetchMethods() {
+      const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
+
+      try {
+        const purchaseResponse = await moneyHash.getMethods({
+          currency,
+          amount: totalPrice,
+          flowId: extraConfig.flow_id,
+          operation: 'purchase',
+        });
+        const { paymentMethods: purchaseMethods, expressMethods } =
+          purchaseResponse;
+        logJSON.response('getMethods: Operation (Purchase)', purchaseResponse);
+
+        const authorizeResponse = await moneyHash.getMethods({
+          currency,
+          amount: totalPrice,
+          flowId: extraConfig.flow_id,
+          operation: 'authorize',
+        });
+        const { paymentMethods: authorizeMethods } = authorizeResponse;
+        logJSON.response(
+          'getMethods: Operation (Authorize)',
+          authorizeResponse,
+        );
+
+        setPaymentMethods(
+          purchaseMethods.concat(
+            authorizeMethods.filter(
+              method => !purchaseMethods.some(m => m.id === method.id),
+            ),
+          ),
+        );
         setExpressMethods(
           expressMethods.filter(method => method.id !== 'GOOGLE_PAY'),
         );
-      })
-      .catch(err => {
-        logJSON.error('getMethods', err);
+      } catch (error: any) {
+        logJSON.error('getMethods', error);
         const [key, message] =
-          Object.entries(err.response.data.status.errors[0] || {})[0] || [];
+          Object.entries(error.response.data.status.errors[0] || {})[0] || [];
         if (key) {
           toast.error(`${key}: ${message}`);
         } else {
           toast.error((message as string) || 'Something went wrong');
         }
-      });
-  };
+      }
+    }
+
+    fetchMethods();
+  }, [userInfo, currency, jsonConfig, totalPrice]);
 
   return (
     <div className="min-h-full flex flex-col">

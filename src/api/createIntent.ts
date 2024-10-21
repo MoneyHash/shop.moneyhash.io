@@ -26,6 +26,7 @@ export default function createIntent({
   userInfo: InfoFormValues;
   product_items: ProductItem[];
   extraConfig?: Record<string, any>;
+  operation?: string;
 }): Promise<{ data: { id: string } }> {
   return axiosInstance.post('/payments/intent/', {
     payment_method: methodId,
@@ -49,6 +50,14 @@ export default function createIntent({
       first_name: userInfo.first_name,
       last_name: userInfo.last_name,
       phone_number: userInfo.phone_number,
+      shipping_method: 'EM',
+      email: userInfo.email,
+      apartment: '803',
+      building: '8028',
+      description: 'Second building',
+      country: 'SA',
+      street: 'street name',
+      floor: 1,
     },
     product_items,
     form_only: true,
@@ -60,8 +69,12 @@ export default function createIntent({
     pending_external_action_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
     back_url: `${'https://shop.moneyhash.io'}/checkout/order`,
     ...(!extraConfig?.flow_id && {
-      operation: 'purchase',
+      operation: authorizedMethods.includes(methodId!)
+        ? 'authorize'
+        : 'purchase',
     }),
     ...extraConfig,
   });
 }
+
+const authorizedMethods = ['TABBY', 'TAMARA'];

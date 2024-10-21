@@ -13,7 +13,7 @@ export function UrlToRender({
   useEffect(() => {
     moneyHash.renderUrl({
       intentId,
-      renderStrategy,
+      renderStrategy: renderStrategy === 'IFRAME' ? 'REDIRECT' : renderStrategy,
       url,
     });
   }, [intentId, url, renderStrategy]);
