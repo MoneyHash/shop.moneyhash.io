@@ -3,11 +3,14 @@ import { ChevronDownIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import { ShieldCheckIcon } from '@heroicons/react/20/solid';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
+import { BookOpenIcon } from 'lucide-react';
 import useCopyToClipboard from '@/hooks/useCopyToClipboard';
 
 import { cn } from '@/utils/cn';
 import useCurrency from '@/store/useCurrency';
 import { testCards } from '@/utils/testCards';
+import { Button } from './ui/button';
 
 export default function TestCardsPanel() {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,21 +57,6 @@ export default function TestCardsPanel() {
         />
       </button>
       <div ref={contentRef} className="px-4 pb-4">
-        {/* <div>
-          <h3 className="text-base mb-1">Configurations</h3>
-          <JsonEditor value={jsonConfig} onChange={setJsonConfig} />
-          <div className="mt-2 flex gap-1">
-            <p>Want to save configuration?</p>
-            <button
-              type="button"
-              className="select-none cursor-pointer underline hover:text-blue-500"
-              onClick={saveConfig}
-            >
-              click here.
-            </button>
-          </div>
-        </div> */}
-
         <a
           href={cards.docsLink}
           target="_blank"
@@ -146,6 +134,18 @@ export default function TestCardsPanel() {
             `Use any future expiration date and
           three-number CVV.`}
         </p>
+        <div>
+          <Button
+            asChild
+            className="w-full mt-3 items-center space-x-2"
+            variant="secondary"
+          >
+            <Link to="/integration-guide" target="_blank">
+              <BookOpenIcon className="w-5 h-5" />{' '}
+              <span>Integration Guide</span>
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

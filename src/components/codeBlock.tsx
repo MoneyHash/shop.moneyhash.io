@@ -27,7 +27,7 @@ export default function CodeBlock({
       className={
         isReady
           ? '[&_pre]:p-3 [&_pre]:rounded-md'
-          : 'whitespace-pre-wrap text-sm not-prose rounded-md p-3 blur-sm'
+          : 'whitespace-pre-wrap text-sm not-prose rounded-md p-3 blur-md'
       }
     >
       {code}
