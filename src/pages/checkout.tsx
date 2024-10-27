@@ -265,7 +265,7 @@ export default function Checkout() {
                     <button
                       type="button"
                       key={method.id}
-                      className="bg-black w-full flex justify-center rounded-md hover:opacity-90 my-4"
+                      className="bg-white border border-gray-300 w-full flex justify-center rounded-md hover:opacity-90 my-4"
                       onClick={() => {
                         moneyHash.payWithApplePay({
                           intentId,
