@@ -470,10 +470,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@moneyhash/js-sdk@^1.9.1-beta.0":
-  version "1.9.1-beta.0"
-  resolved "https://registry.yarnpkg.com/@moneyhash/js-sdk/-/js-sdk-1.9.1-beta.0.tgz#0725bf0946b9d43605e8224422c727d30358d962"
-  integrity sha512-q2BoyVBHZW2KSuT70cvPXZ8DhlcXAAFYthIlB+feqYYmhwLKdF9Y6EfElxE2/z8g4xPJkeGBIWEWNV6AHPE/lg==
+"@moneyhash/js-sdk@^1.9.1-beta.1":
+  version "1.9.1-beta.1"
+  resolved "https://registry.yarnpkg.com/@moneyhash/js-sdk/-/js-sdk-1.9.1-beta.1.tgz#cb4cbd65fcf472b87a1dd074388335590297a7e6"
+  integrity sha512-QGZw5VszMgGc6Ohr7XaIGj9bThsdXjIw2rTdUrGo2zOLl+ifOZ2tkmnUycpcnIXQmypaA9zEfPWoNoL2462vJQ==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
