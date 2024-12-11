@@ -66,11 +66,28 @@ function Playground() {
       <button
         type="button"
         onClick={async () => {
-          const { stateDetails } = await moneyHash.getIntentDetails(intentId);
-          moneyHash.renderUrl({
+          const { expressMethods } = await moneyHash.getMethods({
+            currency: 'usd',
+            amount: 50,
+          });
+          const applePayMethod = expressMethods.find(
+            m => m.id === 'APPLE_PAY',
+          )!;
+          console.log({ applePayMethod });
+          const applePayReceipt = await moneyHash.generateApplePayReceipt({
+            nativePayData: applePayMethod?.nativePayData,
+            onCancel: () => console.log('Closed applePay sheet'),
+          });
+
+          console.log({ applePayReceipt });
+          await moneyHash.proceedWith({
+            type: 'method',
+            id: 'APPLE_PAY',
             intentId,
-            url: (stateDetails as IntentStateDetails<'URL_TO_RENDER'>)?.url,
-            renderStrategy: 'POPUP_IFRAME',
+          });
+          await moneyHash.submitPaymentReceipt({
+            nativeReceiptData: applePayReceipt,
+            intentId,
           });
         }}
       >
