@@ -50,7 +50,7 @@ export default function useMoneyHash({
           },
         },
         publicApiKey:
-          'public.vhmdefFo.7vfWsIfeQyVWdmUNTjSBlw1KrmM4fIxX3tO7bTUF',
+          'public.WsCZwBVz.mUyakj73ByciUGMOE1UYvGSFDJC7uu6ftLs4C5fy',
       }),
     [currency],
   );
