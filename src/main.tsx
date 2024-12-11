@@ -93,10 +93,11 @@ function Playground() {
             id: 'APPLE_PAY',
             intentId,
           });
-          await moneyHash.submitPaymentReceipt({
+          const intentDetails = await moneyHash.submitPaymentReceipt({
             nativeReceiptData: applePayReceipt,
             intentId,
           });
+          console.log({ intentDetails });
         }}
         disabled={!applePayNativeData}
       >
