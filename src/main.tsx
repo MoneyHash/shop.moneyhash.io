@@ -69,12 +69,12 @@ function Playground() {
             currency: 'usd',
             amount: 50,
           });
-          const applePayMethod = expressMethods.find(
+          const applePayNativeData = expressMethods.find(
             m => m.id === 'APPLE_PAY',
-          )!;
-          console.log({ applePayMethod });
+          )?.nativePayData!;
+          console.log({ applePayNativeData });
           const applePayReceipt = await moneyHash.generateApplePayReceipt({
-            nativePayData: applePayMethod?.nativePayData,
+            nativePayData: applePayNativeData,
             onCancel: () => console.log('Closed applePay sheet'),
           });
 
