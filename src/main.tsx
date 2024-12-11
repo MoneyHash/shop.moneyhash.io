@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
@@ -42,6 +42,7 @@ const router = createBrowserRouter([
 
 function Playground() {
   const [intentId, setIntentId] = useState('');
+  const [applePayNativeData, setApplePayNativeData] = useState<any>(null);
   const moneyHash = useMoneyHash({
     onComplete: data => {
       console.log('Complete', data);
@@ -50,6 +51,21 @@ function Playground() {
       console.log('Fail', data);
     },
   });
+
+  useEffect(() => {
+    async function getApplePay() {
+      const { expressMethods } = await moneyHash.getMethods({
+        currency: 'usd',
+        amount: 50,
+      });
+      const applePayNativeData = expressMethods.find(m => m.id === 'APPLE_PAY')
+        ?.nativePayData!;
+
+      setApplePayNativeData(applePayNativeData);
+    }
+
+    getApplePay();
+  }, []);
 
   return (
     <div>
@@ -65,13 +81,6 @@ function Playground() {
       <button
         type="button"
         onClick={async () => {
-          const { expressMethods } = await moneyHash.getMethods({
-            currency: 'usd',
-            amount: 50,
-          });
-          const applePayNativeData = expressMethods.find(
-            m => m.id === 'APPLE_PAY',
-          )?.nativePayData!;
           console.log({ applePayNativeData });
           const applePayReceipt = await moneyHash.generateApplePayReceipt({
             nativePayData: applePayNativeData,
@@ -89,6 +98,7 @@ function Playground() {
             intentId,
           });
         }}
+        disabled={!applePayNativeData}
       >
         Click me
       </button>
