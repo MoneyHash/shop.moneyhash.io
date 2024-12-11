@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { IntentStateDetails } from '@moneyhash/js-sdk';
 import App from './App';
 import './index.css';
 
@@ -86,6 +85,7 @@ function Playground() {
             intentId,
           });
           await moneyHash.submitPaymentReceipt({
+            // @ts-expect-error
             nativeReceiptData: applePayReceipt,
             intentId,
           });
