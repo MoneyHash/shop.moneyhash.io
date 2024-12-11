@@ -85,7 +85,6 @@ function Playground() {
             intentId,
           });
           await moneyHash.submitPaymentReceipt({
-            // @ts-expect-error
             nativeReceiptData: applePayReceipt,
             intentId,
           });
@@ -93,6 +92,7 @@ function Playground() {
       >
         Click me
       </button>
+      <p>SDK version {(window as any).SDK_VERSION}</p>
     </div>
   );
 }
