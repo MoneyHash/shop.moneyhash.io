@@ -49,6 +49,8 @@ export default function useMoneyHash({
             color: '#1A82C3',
           },
         },
+        publicApiKey:
+          'public.vhmdefFo.7vfWsIfeQyVWdmUNTjSBlw1KrmM4fIxX3tO7bTUF',
       }),
     [currency],
   );
