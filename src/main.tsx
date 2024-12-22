@@ -43,6 +43,7 @@ const router = createBrowserRouter([
 function Playground() {
   const [intentId, setIntentId] = useState('');
   const [applePayNativeData, setApplePayNativeData] = useState<any>(null);
+  const [billingData, setBillingData] = useState(false);
   const moneyHash = useMoneyHash({
     onComplete: data => {
       console.log('Complete', data);
@@ -60,7 +61,7 @@ function Playground() {
       });
       const applePayNativeData = expressMethods.find(m => m.id === 'APPLE_PAY')
         ?.nativePayData!;
-
+      console.log({ applePayNativeData });
       setApplePayNativeData(applePayNativeData);
     }
 
@@ -81,10 +82,10 @@ function Playground() {
       <button
         type="button"
         onClick={async () => {
-          console.log({ applePayNativeData });
           const applePayReceipt = await moneyHash.generateApplePayReceipt({
             nativePayData: applePayNativeData,
             onCancel: () => console.log('Closed applePay sheet'),
+            billingData: billingData,
           });
 
           console.log({ applePayReceipt });
@@ -103,7 +104,14 @@ function Playground() {
       >
         Click me
       </button>
-      <p>SDK version {(window as any).SDK_VERSION}</p>
+      <label>
+        Billing Data
+        <input
+          type="checkbox"
+          checked={billingData}
+          onChange={e => setBillingData(e.target.checked)}
+        />
+      </label>
     </div>
   );
 }
