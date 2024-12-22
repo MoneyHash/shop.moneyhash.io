@@ -51,6 +51,12 @@ export default function useMoneyHash({
         },
         publicApiKey:
           'public.WsCZwBVz.mUyakj73ByciUGMOE1UYvGSFDJC7uu6ftLs4C5fy',
+        applePay: {
+          collectibleBillingData:
+            localStorage.getItem('applePayCollectEmail') === 'true'
+              ? ['email']
+              : [],
+        },
       }),
     [currency],
   );

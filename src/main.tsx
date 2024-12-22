@@ -43,7 +43,6 @@ const router = createBrowserRouter([
 function Playground() {
   const [intentId, setIntentId] = useState('');
   const [applePayNativeData, setApplePayNativeData] = useState<any>(null);
-  const [billingData, setBillingData] = useState(false);
   const moneyHash = useMoneyHash({
     onComplete: data => {
       console.log('Complete', data);
@@ -85,7 +84,6 @@ function Playground() {
           const applePayReceipt = await moneyHash.generateApplePayReceipt({
             nativePayData: applePayNativeData,
             onCancel: () => console.log('Closed applePay sheet'),
-            billingData: billingData,
           });
 
           console.log({ applePayReceipt });
@@ -104,14 +102,6 @@ function Playground() {
       >
         Click me
       </button>
-      <label>
-        Billing Data
-        <input
-          type="checkbox"
-          checked={billingData}
-          onChange={e => setBillingData(e.target.checked)}
-        />
-      </label>
     </div>
   );
 }
