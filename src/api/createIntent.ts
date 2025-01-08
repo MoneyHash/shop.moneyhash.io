@@ -68,10 +68,6 @@ export default function createIntent({
     failed_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
     pending_external_action_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
     back_url: `${'https://shop.moneyhash.io'}/checkout/order`,
-    redirect_branding_data: {
-      icon: 'https://sc-images-prod.s3.eu-central-1.amazonaws.com/logos/b9bc2bfa-1bf8-4edd-9e7d-8268ef677fa2_logo.png',
-      background_color: 'white',
-    },
     ...(!extraConfig?.flow_id && {
       operation: authorizedMethods.includes(methodId!)
         ? 'authorize'
