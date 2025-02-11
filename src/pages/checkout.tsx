@@ -236,7 +236,7 @@ export default function Checkout() {
                     });
                   } catch (error) {
                     // eslint-disable-next-line no-alert
-                    alert(JSON.stringify(error, null, 2));
+                    alert(JSON.stringify(error));
                   }
                 }}
               />
