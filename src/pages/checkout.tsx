@@ -218,7 +218,7 @@ export default function Checkout() {
                   }
 
                   try {
-                    moneyHash.payWithApplePay({
+                    await moneyHash.payWithApplePay({
                       intentId,
                       amount: totalPrice,
                       currency,
