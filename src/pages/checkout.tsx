@@ -217,22 +217,27 @@ export default function Checkout() {
                     intentId = intentDetails.intent.id;
                   }
 
-                  moneyHash.payWithApplePay({
-                    intentId,
-                    amount: totalPrice,
-                    currency,
-                    countryCode: 'AE',
-                    onCancel,
-                    onComplete: () => {
-                      navigate(`/checkout/order?intent_id=${intentId}`, {
-                        replace: true,
-                      });
-                    },
-                    onError: () => {
-                      toast.error('Something went wrong, please try again!');
-                      onError();
-                    },
-                  });
+                  try {
+                    moneyHash.payWithApplePay({
+                      intentId,
+                      amount: totalPrice,
+                      currency,
+                      countryCode: 'AE',
+                      onCancel,
+                      onComplete: () => {
+                        navigate(`/checkout/order?intent_id=${intentId}`, {
+                          replace: true,
+                        });
+                      },
+                      onError: () => {
+                        toast.error('Something went wrong, please try again!');
+                        onError();
+                      },
+                    });
+                  } catch (error) {
+                    // eslint-disable-next-line no-alert
+                    alert(JSON.stringify(error, null, 2));
+                  }
                 }}
               />
             )}
