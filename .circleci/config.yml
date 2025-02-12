@@ -21,6 +21,8 @@ jobs:
             yarn
       - run:
           name: Build & deploy
+          environment:
+            SENTRY_AUTH_TOKEN: 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
           command: |
             yarn build
             cd dist
