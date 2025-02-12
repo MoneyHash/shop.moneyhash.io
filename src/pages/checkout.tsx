@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type IntentDetails, type Method } from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
+import * as Sentry from '@sentry/react';
 
 import NavBar from '@/components/navbar';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
@@ -235,8 +236,7 @@ export default function Checkout() {
                       },
                     });
                   } catch (error) {
-                    // eslint-disable-next-line no-alert
-                    alert(JSON.stringify(error));
+                    Sentry.captureException(error);
                   }
                 }}
               />
