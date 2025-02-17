@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { type IntentDetails, type Method } from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
+import * as Sentry from '@sentry/react';
 
 import NavBar from '@/components/navbar';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
@@ -217,22 +218,26 @@ export default function Checkout() {
                     intentId = intentDetails.intent.id;
                   }
 
-                  moneyHash.payWithApplePay({
-                    intentId,
-                    amount: totalPrice,
-                    currency,
-                    countryCode: 'AE',
-                    onCancel,
-                    onComplete: () => {
-                      navigate(`/checkout/order?intent_id=${intentId}`, {
-                        replace: true,
-                      });
-                    },
-                    onError: () => {
-                      toast.error('Something went wrong, please try again!');
-                      onError();
-                    },
-                  });
+                  try {
+                    await moneyHash.payWithApplePay({
+                      intentId,
+                      amount: totalPrice,
+                      currency,
+                      countryCode: 'AE',
+                      onCancel,
+                      onComplete: () => {
+                        navigate(`/checkout/order?intent_id=${intentId}`, {
+                          replace: true,
+                        });
+                      },
+                      onError: () => {
+                        toast.error('Something went wrong, please try again!');
+                        onError();
+                      },
+                    });
+                  } catch (error) {
+                    Sentry.captureException(error);
+                  }
                 }}
               />
             )}
