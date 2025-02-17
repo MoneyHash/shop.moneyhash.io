@@ -209,6 +209,20 @@ export default function Checkout() {
                 expressMethods={expressMethods}
                 onSelectMethod={handleSelectMethod}
                 onApplePayClick={async ({ onCancel, onError }) => {
+                  const applePayNativeData = expressMethods?.find(
+                    method => method.id === 'APPLE_PAY',
+                  )?.nativePayData;
+
+                  if (!applePayNativeData) return;
+
+                  const applePayReceipt =
+                    await moneyHash.generateApplePayReceipt({
+                      nativePayData: applePayNativeData,
+                      onCancel,
+                    });
+
+                  if (!applePayReceipt) return;
+
                   let intentId: string;
                   if (!intentDetails) {
                     intentId = await handleCreateIntent({
@@ -219,23 +233,24 @@ export default function Checkout() {
                   }
 
                   try {
-                    await moneyHash.payWithApplePay({
+                    await moneyHash.proceedWith({
+                      type: 'method',
+                      id: 'APPLE_PAY',
                       intentId,
-                      amount: totalPrice,
-                      currency,
-                      countryCode: 'AE',
-                      onCancel,
-                      onComplete: () => {
-                        navigate(`/checkout/order?intent_id=${intentId}`, {
-                          replace: true,
-                        });
-                      },
-                      onError: () => {
-                        toast.error('Something went wrong, please try again!');
-                        onError();
-                      },
+                    });
+
+                    await moneyHash.submitPaymentReceipt({
+                      nativeReceiptData: applePayReceipt,
+                      intentId,
+                    });
+
+                    navigate(`/checkout/order?intent_id=${intentId}`, {
+                      replace: true,
                     });
                   } catch (error) {
+                    toast.error('Something went wrong, please try again!');
+                    onError();
+
                     Sentry.captureException(error);
                   }
                 }}
