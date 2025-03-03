@@ -236,7 +236,12 @@ export default function Checkout() {
                         Sentry.captureEvent({
                           message: key,
                           level: 'warning',
-                          extra: { value },
+                          extra: {
+                            value,
+                            canMakePayment: (
+                              window as any
+                            ).ApplePaySession.canMakePayments(),
+                          },
                         });
                       },
                     });
@@ -248,6 +253,9 @@ export default function Checkout() {
                         extra: {
                           intentId: intentDetails?.intent?.id,
                           applePayNativeData,
+                          canMakePayment: (
+                            window as any
+                          ).ApplePaySession.canMakePayments(),
                         },
                       });
                       return;
@@ -286,6 +294,9 @@ export default function Checkout() {
                         intentId,
                         applePayNativeData,
                         applePayReceipt,
+                        canMakePayment: (
+                          window as any
+                        ).ApplePaySession.canMakePayments(),
                       },
                     });
 
