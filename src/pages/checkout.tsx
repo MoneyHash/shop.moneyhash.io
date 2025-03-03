@@ -219,7 +219,7 @@ export default function Checkout() {
                   if (!applePayNativeData) {
                     Sentry.captureEvent({
                       message: 'applepay:no:applePayNativeData',
-                      level: 'log',
+                      level: 'warning',
                       extra: {
                         intentId: intentDetails?.intent?.id,
                         expressMethods,
@@ -232,12 +232,19 @@ export default function Checkout() {
                     applePayReceipt = await moneyHash.generateApplePayReceipt({
                       nativePayData: applePayNativeData,
                       onCancel,
+                      logger: ({ key, value }) => {
+                        Sentry.captureEvent({
+                          message: key,
+                          level: 'warning',
+                          extra: { value },
+                        });
+                      },
                     });
 
                     if (!applePayReceipt) {
                       Sentry.captureEvent({
                         message: 'applepay:no:applePayReceipt',
-                        level: 'log',
+                        level: 'warning',
                         extra: {
                           intentId: intentDetails?.intent?.id,
                           applePayNativeData,
@@ -274,7 +281,7 @@ export default function Checkout() {
 
                     Sentry.captureEvent({
                       message: 'applepay:intent:failed',
-                      level: 'log',
+                      level: 'warning',
                       extra: {
                         intentId,
                         applePayNativeData,
