@@ -213,26 +213,47 @@ export default function Checkout() {
                     method => method.id === 'APPLE_PAY',
                   )?.nativePayData;
 
-                  if (!applePayNativeData) return;
+                  let intentId: string | undefined = intentDetails?.intent?.id;
+                  let applePayReceipt: any;
 
-                  const applePayReceipt =
-                    await moneyHash.generateApplePayReceipt({
+                  if (!applePayNativeData) {
+                    Sentry.captureEvent({
+                      message: 'applepay:no:applePayNativeData',
+                      level: 'log',
+                      extra: {
+                        intentId: intentDetails?.intent?.id,
+                        expressMethods,
+                      },
+                    });
+                    return;
+                  }
+
+                  try {
+                    applePayReceipt = await moneyHash.generateApplePayReceipt({
                       nativePayData: applePayNativeData,
                       onCancel,
                     });
 
-                  if (!applePayReceipt) return;
+                    if (!applePayReceipt) {
+                      Sentry.captureEvent({
+                        message: 'applepay:no:applePayReceipt',
+                        level: 'log',
+                        extra: {
+                          intentId: intentDetails?.intent?.id,
+                          applePayNativeData,
+                        },
+                      });
+                      return;
+                    }
 
-                  let intentId: string;
-                  if (!intentDetails) {
-                    intentId = await handleCreateIntent({
-                      userInfo,
-                    });
-                  } else {
-                    intentId = intentDetails.intent.id;
-                  }
+                    if (!intentDetails) {
+                      intentId = await handleCreateIntent({
+                        userInfo,
+                      });
+                    } else {
+                      intentId = intentDetails.intent.id;
+                    }
 
-                  try {
                     await moneyHash.proceedWith({
                       type: 'method',
                       id: 'APPLE_PAY',
@@ -250,6 +271,16 @@ export default function Checkout() {
                   } catch (error) {
                     toast.error('Something went wrong, please try again!');
                     onError();
+
+                    Sentry.captureEvent({
+                      message: 'applepay:intent:failed',
+                      level: 'log',
+                      extra: {
+                        intentId,
+                        applePayNativeData,
+                        applePayReceipt,
+                      },
+                    });
 
                     Sentry.captureException(error);
                   }
