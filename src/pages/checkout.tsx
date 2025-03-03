@@ -19,6 +19,7 @@ import {
 } from '@/components/checkout';
 import { PaymentForm } from '@/components/checkout/paymentForm';
 import { logJSON } from '@/utils/logJSON';
+import Playground from '@/components/playground';
 
 export default function Checkout() {
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
@@ -170,6 +171,10 @@ export default function Checkout() {
     fetchMethods();
   }, [userInfo, currency, jsonConfig, totalPrice]);
 
+  const applePayNativeData = expressMethods?.find(
+    method => method.id === 'APPLE_PAY',
+  )?.nativePayData;
+
   return (
     <div className="min-h-full flex flex-col">
       <NavBar hideCurrency={!!intentDetails} hideCart={!!intentDetails} />
@@ -202,108 +207,110 @@ export default function Checkout() {
             {!userInfo && <InfoForm onSubmit={handleSubmit} />}
 
             {userInfo && paymentMethods && (
-              <PaymentForm
-                intentDetails={intentDetails}
-                onIntentDetailsChange={setIntentDetails}
-                methods={paymentMethods}
-                expressMethods={expressMethods}
-                onSelectMethod={handleSelectMethod}
-                onApplePayClick={async ({ onCancel, onError }) => {
-                  const applePayNativeData = expressMethods?.find(
-                    method => method.id === 'APPLE_PAY',
-                  )?.nativePayData;
+              <>
+                <PaymentForm
+                  intentDetails={intentDetails}
+                  onIntentDetailsChange={setIntentDetails}
+                  methods={paymentMethods}
+                  expressMethods={expressMethods}
+                  onSelectMethod={handleSelectMethod}
+                  onApplePayClick={async ({ onCancel, onError }) => {
+                    let intentId: string | undefined =
+                      intentDetails?.intent?.id;
+                    let applePayReceipt: any;
 
-                  let intentId: string | undefined = intentDetails?.intent?.id;
-                  let applePayReceipt: any;
-
-                  if (!applePayNativeData) {
-                    Sentry.captureEvent({
-                      message: 'applepay:no:applePayNativeData',
-                      level: 'warning',
-                      extra: {
-                        intentId: intentDetails?.intent?.id,
-                        expressMethods,
-                      },
-                    });
-                    return;
-                  }
-
-                  try {
-                    applePayReceipt = await moneyHash.generateApplePayReceipt({
-                      nativePayData: applePayNativeData,
-                      onCancel,
-                      logger: ({ key, value }) => {
-                        Sentry.captureEvent({
-                          message: key,
-                          level: 'warning',
-                          extra: {
-                            value,
-                            canMakePayment: (
-                              window as any
-                            ).ApplePaySession.canMakePayments(),
-                          },
-                        });
-                      },
-                    });
-
-                    if (!applePayReceipt) {
+                    if (!applePayNativeData) {
                       Sentry.captureEvent({
-                        message: 'applepay:no:applePayReceipt',
+                        message: 'applepay:no:applePayNativeData',
                         level: 'warning',
                         extra: {
                           intentId: intentDetails?.intent?.id,
-                          applePayNativeData,
-                          canMakePayment: (
-                            window as any
-                          ).ApplePaySession.canMakePayments(),
+                          expressMethods,
                         },
                       });
                       return;
                     }
 
-                    if (!intentDetails) {
-                      intentId = await handleCreateIntent({
-                        userInfo,
-                      });
-                    } else {
-                      intentId = intentDetails.intent.id;
-                    }
+                    try {
+                      applePayReceipt = await moneyHash.generateApplePayReceipt(
+                        {
+                          nativePayData: applePayNativeData,
+                          onCancel,
+                          logger: ({ key, value }) => {
+                            Sentry.captureEvent({
+                              message: key,
+                              level: 'warning',
+                              extra: {
+                                value,
+                                canMakePayment: (
+                                  window as any
+                                ).ApplePaySession.canMakePayments(),
+                              },
+                            });
+                          },
+                        },
+                      );
 
-                    await moneyHash.proceedWith({
-                      type: 'method',
-                      id: 'APPLE_PAY',
-                      intentId,
-                    });
+                      if (!applePayReceipt) {
+                        Sentry.captureEvent({
+                          message: 'applepay:no:applePayReceipt',
+                          level: 'warning',
+                          extra: {
+                            intentId: intentDetails?.intent?.id,
+                            applePayNativeData,
+                            canMakePayment: (
+                              window as any
+                            ).ApplePaySession.canMakePayments(),
+                          },
+                        });
+                        return;
+                      }
 
-                    await moneyHash.submitPaymentReceipt({
-                      nativeReceiptData: applePayReceipt,
-                      intentId,
-                    });
+                      if (!intentDetails) {
+                        intentId = await handleCreateIntent({
+                          userInfo,
+                        });
+                      } else {
+                        intentId = intentDetails.intent.id;
+                      }
 
-                    navigate(`/checkout/order?intent_id=${intentId}`, {
-                      replace: true,
-                    });
-                  } catch (error) {
-                    toast.error('Something went wrong, please try again!');
-                    onError();
-
-                    Sentry.captureEvent({
-                      message: 'applepay:intent:failed',
-                      level: 'warning',
-                      extra: {
+                      await moneyHash.proceedWith({
+                        type: 'method',
+                        id: 'APPLE_PAY',
                         intentId,
-                        applePayNativeData,
-                        applePayReceipt,
-                        canMakePayment: (
-                          window as any
-                        ).ApplePaySession.canMakePayments(),
-                      },
-                    });
+                      });
 
-                    Sentry.captureException(error);
-                  }
-                }}
-              />
+                      await moneyHash.submitPaymentReceipt({
+                        nativeReceiptData: applePayReceipt,
+                        intentId,
+                      });
+
+                      navigate(`/checkout/order?intent_id=${intentId}`, {
+                        replace: true,
+                      });
+                    } catch (error) {
+                      toast.error('Something went wrong, please try again!');
+                      onError();
+
+                      Sentry.captureEvent({
+                        message: 'applepay:intent:failed',
+                        level: 'warning',
+                        extra: {
+                          intentId,
+                          applePayNativeData,
+                          applePayReceipt,
+                          canMakePayment: (
+                            window as any
+                          ).ApplePaySession.canMakePayments(),
+                        },
+                      });
+
+                      Sentry.captureException(error);
+                    }
+                  }}
+                />
+                <Playground nativePayData={applePayNativeData} />
+              </>
             )}
           </section>
         </div>
