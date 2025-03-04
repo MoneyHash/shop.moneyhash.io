@@ -236,18 +236,6 @@ export default function Checkout() {
                         {
                           nativePayData: applePayNativeData,
                           onCancel,
-                          logger: ({ key, value }) => {
-                            Sentry.captureEvent({
-                              message: key,
-                              level: 'warning',
-                              extra: {
-                                value,
-                                canMakePayment: (
-                                  window as any
-                                ).ApplePaySession.canMakePayments(),
-                              },
-                            });
-                          },
                         },
                       );
 
