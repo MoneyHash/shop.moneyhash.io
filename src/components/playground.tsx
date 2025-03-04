@@ -33,17 +33,14 @@ export default function Playground({ nativePayData }: { nativePayData: any }) {
     });
 
     session.onvalidatemerchant = e =>
-      // @ts-expect-error
-      moneyHash.sdkApiHandler
-        .request({
-          api: 'sdk:applePaySession',
-          payload: {
-            methodId: nativePayData.method_id,
-            validationUrl: e.validationURL,
-            parentOrigin: window.location.origin,
-          },
+      moneyHash
+        .validateApplePayMerchantSession({
+          methodId: nativePayData.method_id,
+          validationUrl: e.validationURL,
         })
         .then((merchantSession: any) => {
+          // eslint-disable-next-line no-console
+          console.log({ merchantSession });
           if (isCancelled) return;
           session.completeMerchantValidation(merchantSession);
         })
