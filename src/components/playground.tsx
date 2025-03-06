@@ -16,9 +16,14 @@ declare global {
   }
 }
 
-export default function Playground({ nativePayData }: { nativePayData: any }) {
+export default function Playground({
+  nativePayData,
+  intentId,
+}: {
+  nativePayData: any;
+  intentId: string;
+}) {
   const applePayClick = () => {
-    let isCancelled = false;
     const session = new ApplePaySession(3, {
       countryCode: nativePayData.country_code,
       currencyCode: nativePayData.currency_code,
@@ -38,19 +43,15 @@ export default function Playground({ nativePayData }: { nativePayData: any }) {
           methodId: nativePayData.method_id,
           validationUrl: e.validationURL,
         })
-        .then((merchantSession: any) => {
-          // eslint-disable-next-line no-console
-          console.log({ merchantSession });
-          if (isCancelled) return;
-          session.completeMerchantValidation(merchantSession);
-        })
-        .catch((error: any) => {
-          // eslint-disable-next-line no-alert
-          alert(`Error: ${error.message}`);
+        .then(merchantSession =>
+          session.completeMerchantValidation(merchantSession),
+        )
+        .catch(() => {
+          session.completeMerchantValidation({});
         });
 
-    session.onpaymentauthorized = e => {
-      const nativeReceiptData = {
+    session.onpaymentauthorized = async e => {
+      const applePayReceipt = {
         receipt: JSON.stringify({ token: e.payment.token }),
         receiptBillingData: {
           email: e.payment.shippingContact?.emailAddress,
@@ -58,13 +59,25 @@ export default function Playground({ nativePayData }: { nativePayData: any }) {
       };
       session.completePayment(ApplePaySession.STATUS_SUCCESS);
 
-      // eslint-disable-next-line no-alert
-      alert(JSON.stringify(nativeReceiptData, null, 2));
+      await moneyHash.proceedWith({
+        type: 'method',
+        id: 'APPLE_PAY',
+        intentId,
+      });
+
+      const intentDetails = await moneyHash.submitPaymentReceipt({
+        nativeReceiptData: applePayReceipt,
+        intentId,
+      });
+      // eslint-disable-next-line no-console
+      console.log({ intentDetails });
     };
 
     session.oncancel = () => {
-      isCancelled = true;
+      // eslint-disable-next-line no-console
+      console.log('ApplePay Sheet was closed');
     };
+
     session.begin();
   };
 

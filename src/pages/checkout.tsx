@@ -297,7 +297,10 @@ export default function Checkout() {
                     }
                   }}
                 />
-                <Playground nativePayData={applePayNativeData} />
+                <Playground
+                  nativePayData={applePayNativeData}
+                  intentId={intentDetails?.intent.id!}
+                />
               </>
             )}
           </section>
