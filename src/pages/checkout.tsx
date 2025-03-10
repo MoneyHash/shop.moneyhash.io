@@ -208,7 +208,64 @@ export default function Checkout() {
                 expressMethods={expressMethods}
                 onSelectMethod={handleSelectMethod}
                 onApplePayClick={async ({ onCancel, onError }) => {
+                  const applePayNativeData = expressMethods?.find(
+                    method => method.id === 'APPLE_PAY',
+                  )?.nativePayData!;
                   let intentId: string;
+
+                  const session = new ApplePaySession(3, {
+                    countryCode: applePayNativeData.country_code,
+                    currencyCode: applePayNativeData.currency_code,
+                    supportedNetworks: applePayNativeData.supported_networks,
+                    merchantCapabilities: ['supports3DS'],
+                    total: {
+                      label: 'Apple Pay',
+                      type: 'final',
+                      amount: `${applePayNativeData.amount}`,
+                    },
+                    requiredShippingContactFields: ['email'],
+                  });
+
+                  session.onvalidatemerchant = e =>
+                    moneyHash
+                      .validateApplePayMerchantSession({
+                        methodId: applePayNativeData.method_id,
+                        validationUrl: e.validationURL,
+                      })
+                      .then(merchantSession =>
+                        session.completeMerchantValidation(merchantSession),
+                      )
+                      .catch(() => {
+                        session.completeMerchantValidation({});
+                        onError();
+                        toast.error('Something went wrong, please try again!');
+                      });
+
+                  session.onpaymentauthorized = async e => {
+                    const applePayReceipt = {
+                      receipt: JSON.stringify({ token: e.payment.token }),
+                      receiptBillingData: {
+                        email: e.payment.shippingContact?.emailAddress,
+                      },
+                    };
+                    session.completePayment(ApplePaySession.STATUS_SUCCESS);
+
+                    await moneyHash.proceedWith({
+                      type: 'method',
+                      id: 'APPLE_PAY',
+                      intentId,
+                    });
+
+                    await moneyHash.submitPaymentReceipt({
+                      nativeReceiptData: applePayReceipt,
+                      intentId,
+                    });
+
+                    navigate(`/checkout/order?intent_id=${intentId}`, {
+                      replace: true,
+                    });
+                  };
+
                   if (!intentDetails) {
                     intentId = await handleCreateIntent({
                       userInfo,
@@ -216,23 +273,8 @@ export default function Checkout() {
                   } else {
                     intentId = intentDetails.intent.id;
                   }
-
-                  moneyHash.payWithApplePay({
-                    intentId,
-                    amount: totalPrice,
-                    currency,
-                    countryCode: 'AE',
-                    onCancel,
-                    onComplete: () => {
-                      navigate(`/checkout/order?intent_id=${intentId}`, {
-                        replace: true,
-                      });
-                    },
-                    onError: () => {
-                      toast.error('Something went wrong, please try again!');
-                      onError();
-                    },
-                  });
+                  session.oncancel = onCancel;
+                  session.begin();
                 }}
               />
             )}

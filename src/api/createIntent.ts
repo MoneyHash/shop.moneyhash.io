@@ -71,6 +71,7 @@ export default function createIntent({
     redirect_branding_data: {
       icon: 'https://shop.moneyhash.io/images/moneyhash-logo.png',
       background_color: 'white',
+      size: 200,
       animate: 'pulse',
     },
     ...(!extraConfig?.flow_id && {
