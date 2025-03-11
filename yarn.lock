@@ -470,10 +470,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@moneyhash/js-sdk@1.12.0-beta.0":
-  version "1.12.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@moneyhash/js-sdk/-/js-sdk-1.12.0-beta.0.tgz#d86a70857d0ec72225a449bb0d142f2bca4f0644"
-  integrity sha512-zkk+8nlfdf8RVoYUjNCcZyZa91jXejvW/SNmPIHiqnKKeiEiSuIaGlaFVhF7qmh+0QEAmF2JvBXlSQjWWl6Yxw==
+"@moneyhash/js-sdk@^1.15.0":
+  version "1.15.0"
+  resolved "https://registry.yarnpkg.com/@moneyhash/js-sdk/-/js-sdk-1.15.0.tgz#cbe212d2530f525162c47f0fe3b512a1e27b3834"
+  integrity sha512-wWL/6cXenTB3U9mC5laP78U0/xymSbfJsLWZi1TA1pLQ77EoEgRz3jBZGT+R54WMfB7DrTVGPUMlEtWN+mQf9w==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -820,6 +820,11 @@
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.4.tgz#0b92dcc0cc1c81f6f306a381f28e31b1a56536e9"
   integrity sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==
+
+"@types/applepayjs@^14.0.9":
+  version "14.0.9"
+  resolved "https://registry.yarnpkg.com/@types/applepayjs/-/applepayjs-14.0.9.tgz#66b760691f146a17009c4be808d0a341b776f429"
+  integrity sha512-xEprYbb0TEP/XIiDPbVnTYpDai8fTFpsQfVSfTd81Is2GOMUy7ie019eyX6Mz2ECxfjoUVKaiGSL577roIeHCg==
 
 "@types/aria-query@^5.0.1":
   version "5.0.4"

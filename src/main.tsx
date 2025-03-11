@@ -81,22 +81,49 @@ function Playground() {
       <button
         type="button"
         onClick={async () => {
-          const applePayReceipt = await moneyHash.generateApplePayReceipt({
-            nativePayData: applePayNativeData,
-            onCancel: () => console.log('Closed applePay sheet'),
+          const session = new ApplePaySession(3, {
+            countryCode: applePayNativeData.country_code,
+            currencyCode: applePayNativeData.currency_code,
+            supportedNetworks: applePayNativeData.supported_networks,
+            merchantCapabilities: applePayNativeData.supported_capabilities,
+            total: {
+              label: 'Apple Pay',
+              type: 'final',
+              amount: `${applePayNativeData.amount}`,
+            },
+            requiredShippingContactFields: ['email'],
           });
 
-          console.log({ applePayReceipt });
-          await moneyHash.proceedWith({
-            type: 'method',
-            id: 'APPLE_PAY',
-            intentId,
-          });
-          const intentDetails = await moneyHash.submitPaymentReceipt({
-            nativeReceiptData: applePayReceipt,
-            intentId,
-          });
-          console.log({ intentDetails });
+          session.onvalidatemerchant = e =>
+            moneyHash
+              .validateApplePayMerchantSession({
+                methodId: applePayNativeData.method_id,
+                validationUrl: e.validationURL,
+              })
+              .then(merchantSession =>
+                session.completeMerchantValidation(merchantSession),
+              )
+              .catch(() => {
+                session.completeMerchantValidation({});
+              });
+
+          session.onpaymentauthorized = async e => {
+            const applePayReceipt = {
+              receipt: JSON.stringify({ token: e.payment.token }),
+              receiptBillingData: {
+                email: e.payment.shippingContact?.emailAddress,
+              },
+            };
+            session.completePayment(ApplePaySession.STATUS_SUCCESS);
+
+            console.log(applePayReceipt);
+          };
+
+          session.oncancel = () => {
+            console.log('ApplePay Sheet was closed');
+          };
+
+          session.begin();
         }}
         disabled={!applePayNativeData}
       >
