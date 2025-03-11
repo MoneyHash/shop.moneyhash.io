@@ -148,6 +148,12 @@ function Playground() {
               },
             });
 
+            await moneyHash.proceedWith({
+              type: 'method',
+              id: 'APPLE_PAY',
+              intentId,
+            });
+
             const intentDetails = await moneyHash.submitPaymentReceipt({
               nativeReceiptData: applePayReceipt,
               intentId,
