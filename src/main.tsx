@@ -10,6 +10,7 @@ import Checkout from './pages/checkout';
 import Order from './pages/order';
 import IntegrationGuide from './pages/integrationGuide';
 import useMoneyHash from './hooks/useMoneyHash';
+import createIntent from './api/createIntent';
 
 const router = createBrowserRouter([
   {
@@ -117,6 +118,42 @@ function Playground() {
             session.completePayment(ApplePaySession.STATUS_SUCCESS);
 
             console.log(applePayReceipt);
+
+            const {
+              data: { id: intentId },
+            } = await createIntent({
+              amount: 50,
+              currency: 'USD',
+              billing_data: {
+                first_name: 'Mustafa',
+                last_name: 'eid',
+                phone_number: '+201064610000',
+                email: 'test@email.com',
+              },
+              shipping_data: {
+                apartment: '803',
+                address: 'address',
+                shipping_method: 'em',
+                email: 'claudette09@exa.com',
+                first_name: 'clifford',
+                building: '8028',
+                phone_number: '+201064610000',
+                postal_code: '01898',
+                description: '8 ram , 128 giga',
+                city: 'jaskolskiburgh',
+                country: 'cr',
+                last_name: 'nicolas',
+                state: 'utah',
+                street: 'street',
+              },
+            });
+
+            const intentDetails = await moneyHash.submitPaymentReceipt({
+              nativeReceiptData: applePayReceipt,
+              intentId,
+            });
+
+            console.log(intentDetails);
           };
 
           session.oncancel = () => {

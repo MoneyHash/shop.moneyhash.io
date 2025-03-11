@@ -18,7 +18,7 @@ export default function createIntent({
   currency: string;
   billing_data: Record<string, string>;
   shipping_data: Record<string, string>;
-  product_items: ProductItem[];
+  product_items?: ProductItem[];
   [key: string]: unknown;
 }): Promise<{ data: { id: string } }> {
   return axiosInstance.post('/payments/intent/', {
