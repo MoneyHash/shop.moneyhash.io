@@ -160,6 +160,13 @@ function Playground() {
             });
 
             console.log(intentDetails);
+
+            const binLookup = await moneyHash.binLookupByReceipt({
+              nativeReceiptData: applePayReceipt,
+              methodId: applePayNativeData.method_id,
+            });
+
+            console.log(binLookup);
           };
 
           session.oncancel = () => {
