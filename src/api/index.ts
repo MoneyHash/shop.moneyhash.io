@@ -1,12 +1,17 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://staging-web.moneyhash.io/api/v1.1',
+  baseURL: 'https://web.moneyhash.io/api/v1.1',
+  // baseURL: 'https://staging-web.moneyhash.io/api/v1.1',
 });
 
 axiosInstance.interceptors.response.use(res => res.data);
 
-const ACCOUNT_API_KEY = 'S69fqVhv.CR3P2mTPiINP5cOR6LShPclwHQivDxfO'; // account: Instashop Demo
+// Production API key
+const ACCOUNT_API_KEY = 'FLMn2Ux5.dev7XQ9wqrZyxJjjgNXFkrG455YDf6r5'; // Account: (XZOJyog: Rick Garage)
+
+// Staging API key
+// const ACCOUNT_API_KEY = 'S69fqVhv.CR3P2mTPiINP5cOR6LShPclwHQivDxfO';
 
 axiosInstance.interceptors.request.use(config => {
   // eslint-disable-next-line no-param-reassign
