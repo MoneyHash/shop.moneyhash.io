@@ -119,6 +119,13 @@ function Playground() {
 
             console.log(applePayReceipt);
 
+            const binLookup = await moneyHash.binLookupByReceipt({
+              nativeReceiptData: applePayReceipt,
+              methodId: applePayNativeData.method_id,
+            });
+
+            console.log(binLookup);
+
             const {
               data: { id: intentId },
             } = await createIntent({
@@ -160,13 +167,6 @@ function Playground() {
             });
 
             console.log(intentDetails);
-
-            const binLookup = await moneyHash.binLookupByReceipt({
-              nativeReceiptData: applePayReceipt,
-              methodId: applePayNativeData.method_id,
-            });
-
-            console.log(binLookup);
           };
 
           session.oncancel = () => {
