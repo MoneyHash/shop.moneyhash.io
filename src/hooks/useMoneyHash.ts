@@ -50,7 +50,7 @@ export default function useMoneyHash({
           },
         },
         publicApiKey:
-          'public.DzgyZjC0.I6HkvcLCoCC9RmoDSMiuefoaP8XgmG6bPiez8rYp',
+          'public.mULpyewx.uZFxS94DEMqW7E4DyumSYVNfMUGRZdbFkta198Q6',
         applePay: {
           collectibleBillingData:
             localStorage.getItem('applePayCollectEmail') === 'true'
