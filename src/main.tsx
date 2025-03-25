@@ -130,12 +130,16 @@ function Playground() {
               data: { id: intentId },
             } = await createIntent({
               amount: 50,
-              currency: 'USD',
+              currency: 'AED',
+              flow_id: 'A9e4nZm',
               billing_data: {
                 first_name: 'Mustafa',
                 last_name: 'eid',
                 phone_number: '+201064610000',
                 email: 'test@email.com',
+              },
+              custom_fields: {
+                use_cko: true,
               },
               shipping_data: {
                 apartment: '803',
@@ -155,11 +159,13 @@ function Playground() {
               },
             });
 
-            await moneyHash.proceedWith({
+            const afterProceed = await moneyHash.proceedWith({
               type: 'method',
               id: 'APPLE_PAY',
               intentId,
             });
+
+            console.log(afterProceed);
 
             const intentDetails = await moneyHash.submitPaymentReceipt({
               nativeReceiptData: applePayReceipt,
