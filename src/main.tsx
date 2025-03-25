@@ -130,7 +130,7 @@ function Playground() {
               data: { id: intentId },
             } = await createIntent({
               amount: 50,
-              currency: 'AED',
+              currency: 'USD',
               flow_id: 'A9e4nZm',
               billing_data: {
                 first_name: 'Mustafa',
