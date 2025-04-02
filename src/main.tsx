@@ -53,6 +53,9 @@ function Playground() {
     },
   });
 
+  // @ts-ignore
+  window.moneyHash = moneyHash;
+
   useEffect(() => {
     async function getApplePay() {
       const { expressMethods } = await moneyHash.getMethods({
@@ -173,6 +176,12 @@ function Playground() {
             });
 
             console.log(intentDetails);
+            if (intentDetails.state === 'NATIVE_PAY') {
+              console.log(
+                'show apple pay button again with new values',
+                intentDetails.nativePayData,
+              );
+            }
           };
 
           session.oncancel = () => {
