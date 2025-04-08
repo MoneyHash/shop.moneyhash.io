@@ -217,10 +217,14 @@ export default function ApplePay() {
                       intentId,
                     });
 
-                    await moneyHash.submitPaymentReceipt({
+                    const intentDetails = await moneyHash.submitPaymentReceipt({
                       nativeReceiptData: applePayReceipt,
                       intentId,
                     });
+                    logJSON.response('Submit Receipt', intentDetails);
+                    toast.success(
+                      `Submitted receipt successfully, check logs.`,
+                    );
                   } catch (error) {
                     toast.error('Failed to submit receipt, check logs');
                     logJSON.error('Submit Receipt', error);
@@ -295,6 +299,7 @@ export default function ApplePay() {
                     })
                     .then(binLookup => {
                       logJSON.response('Bin Lookup', binLookup);
+                      toast.success(`Bin Lookup Succeeded, check logs.`);
                     })
                     .catch(e => {
                       toast.error('Failed to lookup bin, check logs');
