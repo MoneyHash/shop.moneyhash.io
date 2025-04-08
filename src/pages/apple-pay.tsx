@@ -125,7 +125,7 @@ export default function ApplePay() {
               onClick={async () => {
                 if (!nativePayData) return;
 
-                let session;
+                let session: ApplePaySession;
                 try {
                   session = new ApplePaySession(3, {
                     countryCode: nativePayData.country_code,
@@ -217,7 +217,7 @@ export default function ApplePay() {
               onClick={() => {
                 if (!nativePayData) return;
 
-                let session;
+                let session: ApplePaySession;
                 try {
                   session = new ApplePaySession(3, {
                     countryCode: nativePayData.country_code,
