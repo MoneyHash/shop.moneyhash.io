@@ -3,6 +3,7 @@ import { Editor } from '@monaco-editor/react';
 import loader from '@monaco-editor/loader';
 import { editor } from 'monaco-editor';
 import { useTheme } from '@/context/themeProvider';
+import { cn } from '@/utils/cn';
 
 loader.config({
   paths: { vs: '/monaco/vs' },
@@ -17,7 +18,7 @@ interface JsonEditorProps {
   value: string;
   onChange?: (value: string) => void;
   readOnly?: boolean;
-  // className?: string;
+  className?: string;
   // toolbarClassName?: string;
   hideFooter?: boolean;
   options?: editor.IStandaloneEditorConstructionOptions;
@@ -28,7 +29,7 @@ export function JsonEditor({
   value,
   onChange,
   readOnly,
-  // className,
+  className,
   // toolbarClassName,
   hideFooter = false,
   options,
@@ -65,13 +66,16 @@ export function JsonEditor({
         width="100%"
         onMount={editor => setEditor(editor)}
         theme={theme === 'dark' ? 'vs-dark' : undefined}
-        className="
+        className={cn(
+          `
         min-h-[266px] [&_.lines-content]:border-l
         [&_.lines-content]:border-border
         [&_.monaco-editor]:[--vscode-editor-background:theme(colors.background)]
         [&_.monaco-editor]:[--vscode-editorGutter-background:theme(colors.background)]
         [&_.monaco-editor]:[--vscode-editorLineNumber-activeForeground:theme(colors.foreground)]
-        [&_.monaco-editor]:[--vscode-editorLineNumber-foreground:theme(textColor.subtler)]"
+        [&_.monaco-editor]:[--vscode-editorLineNumber-foreground:theme(textColor.subtler)]`,
+          className,
+        )}
         onChange={v => onChange?.(v || '')}
         options={{
           readOnly,

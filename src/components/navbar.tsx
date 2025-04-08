@@ -20,14 +20,16 @@ const navigation = [
 export default function NavBar({
   hideCurrency = false,
   hideCart = false,
+  hideConfig = false,
 }: {
   hideCurrency?: boolean;
   hideCart?: boolean;
+  hideConfig?: boolean;
 }) {
   const { currency, setCurrency } = useCurrency(state => state);
   return (
     <div className="fixed top-0 w-full z-30">
-      <Configuration />
+      {!hideConfig && <Configuration />}
       <nav
         aria-label="Top"
         className="z-20  bg-background  border-b shadow-sm -mt-1"

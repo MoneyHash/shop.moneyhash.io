@@ -7,6 +7,7 @@ import Home from '@/pages/home';
 import Checkout from '@/pages/checkout';
 import Order from '@/pages/order';
 import IntegrationGuide from '@/pages/integrationGuide';
+import ApplePay from '@/pages/apple-pay';
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: '/integration-guide',
         element: <IntegrationGuide />,
+      },
+      {
+        path: '/apple-pay',
+        element: <ApplePay />,
       },
     ],
   },

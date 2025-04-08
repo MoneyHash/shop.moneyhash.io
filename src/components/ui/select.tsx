@@ -7,12 +7,28 @@ import {
 import * as SelectPrimitive from '@radix-ui/react-select';
 
 import { cn } from '@/utils/cn';
+import { Label } from '@/components/ui/label';
 
 const Select = SelectPrimitive.Root;
 
 const SelectGroup = SelectPrimitive.Group;
 
 const SelectValue = SelectPrimitive.Value;
+
+const SelectFloatingLabel = React.forwardRef<
+  React.ElementRef<typeof Label>,
+  React.ComponentPropsWithoutRef<typeof Label>
+>(({ className, ...props }, ref) => (
+  <Label
+    ref={ref}
+    className={cn(
+      'pointer-events-none absolute text-sm bg-background duration-150 transform -translate-y-4 scale-75 top-2 z-10 origin-left px-2 peer-focus:px-2 text-subtle group-data-[placeholder]:scale-100 group-data-[placeholder]:-translate-y-1/2 group-data-[placeholder]:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1',
+      className,
+    )}
+    {...props}
+  />
+));
+SelectFloatingLabel.displayName = 'SelectFloatingLabel';
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
@@ -21,7 +37,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      'group flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1',
+      'group flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 data-[placeholder]:text-muted-foreground',
       className,
     )}
     {...props}
@@ -152,6 +168,7 @@ export {
   SelectGroup,
   SelectValue,
   SelectTrigger,
+  SelectFloatingLabel,
   SelectContent,
   SelectLabel,
   SelectItem,

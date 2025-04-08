@@ -25,25 +25,59 @@ export function ThemeProvider({
   defaultTheme = 'system',
   storageKey = 'theme',
 }: ThemeProviderProps) {
-  const [internalTheme, setInternalTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
-  );
+  const getSystemTheme = () =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+
+  const [internalTheme, setInternalTheme] = useState<Theme>(() => {
+    const storedTheme = localStorage.getItem(storageKey) as Theme;
+    if (storedTheme === 'system' || !storedTheme) {
+      return defaultTheme === 'system' ? getSystemTheme() : defaultTheme;
+    }
+    return storedTheme;
+  });
 
   useEffect(() => {
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      if (internalTheme === 'system') {
+        const newTheme = e.matches ? 'dark' : 'light';
+        setInternalTheme(newTheme);
+        updateRootClassName(newTheme);
+      }
+    };
+
+    const systemThemeMediaQuery = window.matchMedia(
+      '(prefers-color-scheme: dark)',
+    );
+    systemThemeMediaQuery.addEventListener('change', handleSystemThemeChange);
+
     updateRootClassName(internalTheme);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    return () => {
+      systemThemeMediaQuery.removeEventListener(
+        'change',
+        handleSystemThemeChange,
+      );
+    };
+  }, [internalTheme]);
 
   const value = useMemo(
     () => ({
       theme: internalTheme,
       setTheme(theme: Theme) {
-        updateRootClassName(theme);
-        setInternalTheme(theme);
+        if (theme === 'system') {
+          const systemTheme = getSystemTheme();
+          updateRootClassName(systemTheme);
+          setInternalTheme(systemTheme);
+        } else {
+          updateRootClassName(theme);
+          setInternalTheme(theme);
+        }
         localStorage.setItem(storageKey, theme);
       },
     }),
-    [internalTheme, storageKey, setInternalTheme],
+    [internalTheme, storageKey],
   );
 
   return (
