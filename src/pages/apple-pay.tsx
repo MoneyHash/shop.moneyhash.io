@@ -78,6 +78,7 @@ export default function ApplePay() {
 
     logJSON.info('Configuration Used', { ...config, intentConfig: intent });
 
+    moneyHash.setPublicApiKey(config.publicApiKey);
     moneyHash
       .getMethods({
         currency: intent.amount_currency,
@@ -182,11 +183,20 @@ export default function ApplePay() {
                         ? 'https://web.moneyhash.io/api/v1.1'
                         : 'https://staging-web.moneyhash.io/api/v1.1';
                     intentId = await axios
-                      .post(`${baseUrl}/payments/intent/`)
+                      .post(
+                        `${baseUrl}/payments/intent/`,
+                        JSON.parse(config.intentConfig),
+                        {
+                          headers: {
+                            'x-api-key': config.apiKey,
+                          },
+                        },
+                      )
                       .then(res => res.data.data.id);
                   } catch (error) {
                     toast.error('Failed to create intent, check logs');
                     logJSON.error('Create Intent', error);
+                    return;
                   }
 
                   try {
