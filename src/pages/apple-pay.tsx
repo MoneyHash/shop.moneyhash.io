@@ -54,18 +54,29 @@ const defaultPublicApiKey: Record<Env, string> = {
   staging: 'public.nFsXq2BS.rwzwRJAZaq8jEEPZcnMldOSFXIqklPOe9QXaOwW1',
 };
 
+const storedEnv =
+  (localStorage.getItem('apple-pay-env') as Env) || 'production';
+if (storedEnv === 'staging') {
+  (window as any).MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
+  (window as any).API_URL = 'https://staging-web.moneyhash.io';
+  (window as any).MONEYHASH_VAULT_INPUT_IFRAME_URL =
+    'https://vault-staging-form.moneyhash.io';
+  (window as any).MONEYHASH_VAULT_API_URL =
+    'https://vault-staging.moneyhash.io';
+}
+
 const moneyHash = new MoneyHash({
   type: 'payment',
   publicApiKey: defaultPublicApiKey.production,
 });
 
 export default function ApplePay() {
-  const [config, setConfig] = useState<FormConfiguration>({
+  const [config, setConfig] = useState<FormConfiguration>(() => ({
     intentConfig: defaultConfig,
-    apiKey: defaultApiKey.production,
-    env: 'production',
-    publicApiKey: defaultPublicApiKey.production,
-  });
+    apiKey: defaultApiKey[storedEnv],
+    env: storedEnv,
+    publicApiKey: defaultPublicApiKey[storedEnv],
+  }));
   const [nativePayData, setNativePayData] =
     useState<Method['nativePayData']>(null);
 
@@ -318,16 +329,10 @@ function ConfigurationForm({
   const [intentConfig, setIntentConfig] = useState(
     initialConfiguration.intentConfig,
   );
-  const [env, setEnv] = useState<Env>(initialConfiguration.env);
   const [apiKey, setApiKey] = useState(initialConfiguration.apiKey);
   const [publicApiKey, setPublicApiKey] = useState(
     initialConfiguration.publicApiKey,
   );
-
-  useEffect(() => {
-    setApiKey(defaultApiKey[env]);
-    setPublicApiKey(defaultPublicApiKey[env]);
-  }, [env]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -341,7 +346,13 @@ function ConfigurationForm({
         value={publicApiKey}
         onChange={e => setPublicApiKey(e.target.value)}
       />
-      <Select value={env} onValueChange={v => setEnv(v as Env)}>
+      <Select
+        value={initialConfiguration.env}
+        onValueChange={v => {
+          localStorage.setItem('apple-pay-env', v);
+          window.location.reload();
+        }}
+      >
         <SelectTrigger className="border border-input group relative focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/20">
           <SelectValue />
           <SelectFloatingLabel>Environment</SelectFloatingLabel>
@@ -367,7 +378,7 @@ function ConfigurationForm({
             onUpdate({
               intentConfig,
               apiKey,
-              env,
+              env: initialConfiguration.env,
               publicApiKey,
             });
           } catch (error) {

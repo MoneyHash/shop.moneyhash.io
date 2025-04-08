@@ -1,13 +1,14 @@
+import { lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from '@/App';
 import '@/index.css';
-
 import Home from '@/pages/home';
-import Checkout from '@/pages/checkout';
-import Order from '@/pages/order';
 import IntegrationGuide from '@/pages/integrationGuide';
-import ApplePay from '@/pages/apple-pay';
+
+const Checkout = lazy(() => import('@/pages/checkout'));
+const Order = lazy(() => import('@/pages/order'));
+const ApplePay = lazy(() => import('@/pages/apple-pay'));
 
 const router = createBrowserRouter([
   {
