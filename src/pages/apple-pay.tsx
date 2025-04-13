@@ -169,7 +169,7 @@ export default function ApplePay() {
                       session.completeMerchantValidation(merchantSession),
                     )
                     .catch(e => {
-                      session.abort();
+                      session.completeMerchantValidation({});
                       toast.error(
                         'Failed to validate merchant session, check logs',
                       );
@@ -236,6 +236,7 @@ export default function ApplePay() {
             >
               Pay with Apple Pay
             </AppleButton>
+
             <AppleButton
               disabled={!nativePayData}
               className={isLoading ? 'animate-pulse' : ''}
@@ -264,17 +265,20 @@ export default function ApplePay() {
                   return;
                 }
 
+                let isCanceled = false;
                 session.onvalidatemerchant = e =>
                   moneyHash
                     .validateApplePayMerchantSession({
                       methodId: nativePayData.method_id,
                       validationUrl: e.validationURL,
                     })
-                    .then(merchantSession =>
-                      session.completeMerchantValidation(merchantSession),
-                    )
+                    .then(merchantSession => {
+                      if (!isCanceled) {
+                        session.completeMerchantValidation(merchantSession);
+                      }
+                    })
                     .catch(e => {
-                      session.abort();
+                      session.completeMerchantValidation({});
                       toast.error(
                         'Failed to validate merchant session, check logs',
                       );
@@ -308,6 +312,9 @@ export default function ApplePay() {
                 };
 
                 session.begin();
+                session.oncancel = () => {
+                  isCanceled = true;
+                };
               }}
             >
               Bin Lookup
