@@ -169,7 +169,7 @@ export default function ApplePay() {
                       session.completeMerchantValidation(merchantSession),
                     )
                     .catch(e => {
-                      session.completeMerchantValidation({});
+                      session.abort();
                       toast.error(
                         'Failed to validate merchant session, check logs',
                       );
@@ -274,7 +274,7 @@ export default function ApplePay() {
                       session.completeMerchantValidation(merchantSession),
                     )
                     .catch(e => {
-                      session.completeMerchantValidation({});
+                      session.abort();
                       toast.error(
                         'Failed to validate merchant session, check logs',
                       );
