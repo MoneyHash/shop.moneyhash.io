@@ -1,4 +1,5 @@
 import {
+  PaymentStatus,
   type IntentDetails,
   type IntentState,
 } from '@moneyhash/js-sdk/headless';
@@ -19,29 +20,46 @@ export function IntentStateRenderer({
   stateDetails,
   onIntentDetailsChange,
   paymentMethod,
+  paymentStatus,
 }: {
   intentId: string;
   state: IntentState;
   stateDetails: StateDetails;
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
   paymentMethod: PaymentMethodSlugs;
+  paymentStatus: PaymentStatus;
 }) {
   const { cardForm, fontFamily } = useConfiguration(
     useShallow(({ cardForm, fontFamily }) => ({ cardForm, fontFamily })),
   );
 
   if (state === 'INTENT_FORM') {
-    return <IntentForm intentId={intentId} />;
+    return (
+      <IntentForm
+        intentId={intentId}
+        onIntentDetailsChange={onIntentDetailsChange}
+      />
+    );
   }
 
-  if (!stateDetails) {
+  if (
+    paymentStatus.status === 'CAPTURED' ||
+    paymentStatus.status === 'AUTHORIZED' ||
+    paymentStatus.status === 'AUTHORIZE_ATTEMPT_FAILED'
+  ) {
     return <Navigate replace to={`/checkout/order?intent_id=${intentId}`} />;
   }
 
-  if (state === 'URL_TO_RENDER' && 'url' in stateDetails)
-    return <UrlToRender intentId={intentId} {...stateDetails} />;
+  if (state === 'URL_TO_RENDER' && stateDetails && 'url' in stateDetails)
+    return (
+      <UrlToRender
+        intentId={intentId}
+        {...stateDetails}
+        onIntentDetailsChange={onIntentDetailsChange}
+      />
+    );
 
-  if (state === 'FORM_FIELDS' && 'formFields' in stateDetails)
+  if (state === 'FORM_FIELDS' && stateDetails && 'formFields' in stateDetails)
     return (
       <CardForm
         key={`${cardForm}-${fontFamily}`}

@@ -4,12 +4,6 @@ import safeLocalStorage from '@/utils/safeLocalStorage';
 
 export const moneyHash = new MoneyHashHeadless({
   type: 'payment',
-  onComplete: ({ intent }) => {
-    window.location.href = `/checkout/order?intent_id=${intent.id}`;
-  },
-  onFail: ({ intent }) => {
-    window.location.href = `/checkout/order?intent_id=${intent.id}`;
-  },
   styles: {
     loader: {
       backgroundColor: 'white',

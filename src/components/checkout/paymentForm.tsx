@@ -122,6 +122,7 @@ function TabsPaymentForm({
               stateDetails={intentDetails?.stateDetails}
               onIntentDetailsChange={onIntentDetailsChange}
               paymentMethod={intentDetails?.selectedMethod}
+              paymentStatus={intentDetails.paymentStatus}
             />
           </div>
         )}
@@ -179,6 +180,7 @@ function AccordionPaymentForm({
                     stateDetails={intentDetails.stateDetails}
                     onIntentDetailsChange={onIntentDetailsChange}
                     paymentMethod={intentDetails.selectedMethod}
+                    paymentStatus={intentDetails.paymentStatus}
                   />
                 )}
               </Fragment>
@@ -231,6 +233,7 @@ function AccordionPaymentForm({
                 stateDetails={intentDetails.stateDetails}
                 onIntentDetailsChange={onIntentDetailsChange}
                 paymentMethod={intentDetails.selectedMethod}
+                paymentStatus={intentDetails.paymentStatus}
               />
             )}
           </Fragment>

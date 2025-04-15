@@ -570,6 +570,8 @@ export function CardForm({
       .then(intentDetails => {
         const { stateDetails } = intentDetails;
         if (
+          // Skip rendering the redirection loader and redirect directly
+          // You can use paymentStatus.status === 'CAPTURED' if you're not using redirection on intent creation
           stateDetails &&
           'url' in stateDetails &&
           stateDetails.renderStrategy === 'REDIRECT'

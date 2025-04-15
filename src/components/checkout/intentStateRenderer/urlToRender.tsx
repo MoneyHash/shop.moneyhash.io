@@ -1,22 +1,34 @@
 import { useEffect } from 'react';
-import { type IntentStateDetails } from '@moneyhash/js-sdk/headless';
+import {
+  IntentDetails,
+  type IntentStateDetails,
+} from '@moneyhash/js-sdk/headless';
 
 import { moneyHash } from '@/utils/moneyHash';
 import { Button } from '@/components/ui/button';
 import Loader from '@/components/loader';
+import { useCallbackRef } from '@/hooks/useCallbackRef';
 
 export function UrlToRender({
   intentId,
   url,
   renderStrategy,
-}: { intentId: string } & IntentStateDetails<'URL_TO_RENDER'>) {
+  onIntentDetailsChange,
+}: {
+  intentId: string;
+  onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
+} & IntentStateDetails<'URL_TO_RENDER'>) {
+  const onIntentDetailsChangeRef = useCallbackRef(onIntentDetailsChange);
   useEffect(() => {
-    moneyHash.renderUrl({
-      intentId,
-      renderStrategy: renderStrategy === 'IFRAME' ? 'REDIRECT' : renderStrategy,
-      url,
-    });
-  }, [intentId, url, renderStrategy]);
+    moneyHash
+      .renderUrl({
+        intentId,
+        renderStrategy:
+          renderStrategy === 'IFRAME' ? 'REDIRECT' : renderStrategy,
+        url,
+      })
+      .then(onIntentDetailsChangeRef);
+  }, [intentId, url, renderStrategy, onIntentDetailsChangeRef]);
 
   if (renderStrategy === 'POPUP_IFRAME')
     return (
@@ -24,11 +36,13 @@ export function UrlToRender({
         <Button
           size="sm"
           onClick={() =>
-            moneyHash.renderUrl({
-              intentId,
-              renderStrategy,
-              url,
-            })
+            moneyHash
+              .renderUrl({
+                intentId,
+                renderStrategy,
+                url,
+              })
+              .then(onIntentDetailsChangeRef)
           }
         >
           Continue payment

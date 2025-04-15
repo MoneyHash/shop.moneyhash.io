@@ -54,7 +54,7 @@ export default function Order() {
     );
   }
 
-  if (intentDetails?.transaction.status === 'purchase.failed') {
+  if (intentDetails?.paymentStatus.status === 'AUTHORIZE_ATTEMPT_FAILED') {
     return (
       <div>
         <NavBar hideCurrency hideCart />
@@ -72,6 +72,9 @@ export default function Order() {
     );
   }
 
+  const externalActionMessage =
+    intentDetails?.transaction?.externalActionMessage || [];
+
   return (
     <div>
       <NavBar hideCurrency hideCart />
@@ -88,8 +91,7 @@ export default function Order() {
                   Your order #<span className="uppercase">{orderId}</span> has
                   shipped and will be with you soon.
                 </p>
-                {intentDetails.transaction?.externalActionMessage?.length >
-                  0 && (
+                {externalActionMessage?.length > 0 && (
                   <a href="#actions" className="underline text-sm text-primary">
                     Please check the actions required ↓
                   </a>
@@ -99,7 +101,7 @@ export default function Order() {
               <dl className="mt-12 text-sm font-medium">
                 <dt className="text-bolder">Tracking id</dt>
                 <dd className="mt-2  text-primary dark:text-subtler">
-                  {intentDetails.transaction.id}
+                  {intentDetails.transaction?.id}
                 </dd>
               </dl>
             </div>
@@ -144,8 +146,7 @@ export default function Order() {
               ))}
 
               <div className="sm:ml-40 sm:pl-6">
-                {intentDetails.transaction.externalActionMessage?.length >
-                  0 && (
+                {externalActionMessage?.length > 0 && (
                   <div className="border-b mt-10 pb-10">
                     <h4
                       className="text-lg font-medium text-subtle mb-2 scroll-mt-20"
@@ -154,15 +155,13 @@ export default function Order() {
                       Actions required
                     </h4>
                     <ul className="list-decimal list-inside space-y-1">
-                      {intentDetails.transaction.externalActionMessage.map(
-                        message => (
-                          <li key={`${message}`}>
-                            <LinkItUrl className="text-blue-600 underline hover:text-blue-500">
-                              {message}
-                            </LinkItUrl>
-                          </li>
-                        ),
-                      )}
+                      {externalActionMessage.map(message => (
+                        <li key={`${message}`}>
+                          <LinkItUrl className="text-blue-600 underline hover:text-blue-500">
+                            {message}
+                          </LinkItUrl>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 )}
@@ -194,14 +193,14 @@ export default function Order() {
                     <dd className="mt-2">
                       <address className="not-italic">
                         <span className="block">
-                          {intentDetails.transaction.billingData.first_name}{' '}
-                          {intentDetails.transaction.billingData.last_name}
+                          {intentDetails.transaction?.billingData.first_name}{' '}
+                          {intentDetails.transaction?.billingData.last_name}
                         </span>
                         <span className="block">
-                          {intentDetails.transaction.billingData.email}
+                          {intentDetails.transaction?.billingData.email}
                         </span>
                         <span className="block">
-                          {intentDetails.transaction.billingData.phone_number}
+                          {intentDetails.transaction?.billingData.phone_number}
                         </span>
                       </address>
                     </dd>
@@ -213,7 +212,7 @@ export default function Order() {
                   <div>
                     <dt className="font-medium text-subtle">Payment method</dt>
                     <dd className="mt-2">
-                      <p>{intentDetails.transaction.paymentMethodName}</p>
+                      <p>{intentDetails.transaction?.paymentMethodName}</p>
                     </dd>
                   </div>
                   <div>
