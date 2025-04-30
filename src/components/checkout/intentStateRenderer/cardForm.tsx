@@ -69,7 +69,7 @@ function CardFormProvider({
   }, [elements, onValidityChangeRef]);
 
   return (
-    <CardFormContext.Provider value={elements}>
+    <CardFormContext.Provider value={elements as Elements}>
       {children}
     </CardFormContext.Provider>
   );
@@ -126,6 +126,20 @@ function useMoneyHashFormField({
             required: true,
           },
           styles,
+        },
+      });
+    }
+
+    if (elementType === 'cardNumber') {
+      return elements.create({
+        elementType: 'cardNumber',
+        elementOptions: {
+          selector: `#${elementType}`,
+          placeholder,
+          styles,
+          validation: {
+            cardNumber: true,
+          },
         },
       });
     }
