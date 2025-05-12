@@ -15,11 +15,35 @@
   <body>
     <div id="root"></div>
     <script>
-      // window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
-      // window.API_URL = 'https://staging-web.moneyhash.io';
-      // window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
-      //   'https://vault-staging-form.moneyhash.io';
-      // window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
+      const localEnv = localStorage.getItem('env') || 'production';
+
+      window.switchEnvironment = function (env) {
+        const isValidEnv = ['staging', 'production'].includes(env);
+
+        if (env && !isValidEnv) {
+          console.error(
+            `Invalid environment: ${env}, Allowed "staging" "production"`,
+          );
+          return;
+        }
+
+        localStorage.setItem(
+          'env',
+          env || localEnv === 'production' ? 'staging' : 'production',
+        );
+
+        window.location.reload();
+      };
+
+      console.log('Environment:', localEnv);
+
+      if (localEnv === 'staging') {
+        window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
+        window.API_URL = 'https://staging-web.moneyhash.io';
+        window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
+          'https://vault-staging-form.moneyhash.io';
+        window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
+      }
     </script>
     <script src="https://applepay.cdn-apple.com/jsapi/1.latest/apple-pay-sdk.js"></script>
     <script type="module" src="/src/main.tsx"></script>
