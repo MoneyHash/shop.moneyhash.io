@@ -9,6 +9,9 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
+  build: {
+    target: 'ES2015',
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
