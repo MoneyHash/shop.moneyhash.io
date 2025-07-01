@@ -1,15 +1,25 @@
 import { Fragment, useState } from 'react';
-import { type IntentDetails, type Method } from '@moneyhash/js-sdk/headless';
+import {
+  type Card,
+  type IntentDetails,
+  type Method,
+} from '@moneyhash/js-sdk/headless';
 
 import { cn } from '@/utils/cn';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radioGroup';
 import { IntentStateRenderer } from './intentStateRenderer';
 import useConfiguration from '@/store/useConfiguration';
+import { SavedCards } from './savedCards';
 
 type PaymentFormProps = {
   methods: Method[];
   expressMethods?: Method[] | null;
+  savedCards: Card[] | null;
   onSelectMethod: (methodId: string) => Promise<any>;
+  onPayWithSavedCard: (options: {
+    cardId: string;
+    cvv: string;
+  }) => Promise<any>;
   onApplePayClick: (options: {
     onCancel: () => void;
     onError: () => void;
@@ -28,8 +38,10 @@ function TabsPaymentForm({
   intentDetails,
   methods,
   expressMethods,
+  savedCards,
   onSelectMethod,
   onApplePayClick,
+  onPayWithSavedCard,
   onIntentDetailsChange,
 }: PaymentFormProps) {
   const [isSelectingMethod, setIsSelectingMethod] = useState<string | null>(
@@ -45,9 +57,9 @@ function TabsPaymentForm({
   const hasExpressMethods = !!expressMethods?.length;
 
   return (
-    <>
+    <div className="space-y-8">
       {hasExpressMethods && (
-        <div className="grid grid-cols-1 gap-3 p-4 pt-8 relative border rounded mb-8">
+        <div className="grid grid-cols-1 gap-3 p-4 pt-8 relative border rounded">
           <p className="text-sm absolute top-0 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-background px-2 text-bolder">
             Express checkout
           </p>
@@ -69,6 +81,17 @@ function TabsPaymentForm({
               }}
             />
           ))}
+        </div>
+      )}
+
+      {savedCards && savedCards?.length > 0 && (
+        <div className="relative border rounded p-4 pt-8">
+          <p className="text-sm absolute top-0 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-background px-2 text-bolder capitalize">
+            Saved Cards
+          </p>
+          <div>
+            <SavedCards cards={savedCards} onPay={onPayWithSavedCard} />
+          </div>
         </div>
       )}
 
@@ -127,7 +150,7 @@ function TabsPaymentForm({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -135,9 +158,11 @@ function AccordionPaymentForm({
   intentDetails,
   methods,
   expressMethods,
+  savedCards,
   onApplePayClick,
   onIntentDetailsChange,
   onSelectMethod,
+  onPayWithSavedCard,
 }: PaymentFormProps) {
   const [isSelectingMethod, setIsSelectingMethod] = useState<string | null>(
     null,
@@ -194,6 +219,13 @@ function AccordionPaymentForm({
           All transactions are secure and encrypted.
         </p>
       </div>
+
+      {savedCards && savedCards?.length > 0 && (
+        <div className="mt-4">
+          <SavedCards cards={savedCards} onPay={onPayWithSavedCard} />
+        </div>
+      )}
+
       <RadioGroup
         className="gap-0 border border-input rounded-md divide-y divide-input mt-2"
         value={intentDetails?.selectedMethod || ''}

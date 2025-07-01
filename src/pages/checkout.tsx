@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { type IntentDetails, type Method } from '@moneyhash/js-sdk/headless';
+import {
+  type IntentDetails,
+  type Method,
+  type Card,
+} from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
 
 import NavBar from '@/components/navbar';
@@ -22,6 +26,7 @@ import { logJSON } from '@/utils/logJSON';
 export default function Checkout() {
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
   const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
+  const [savedCards, setSavedCards] = useState<Card[] | null>(null);
   const [intentDetails, setIntentDetails] =
     useState<IntentDetails<'payment'> | null>(null);
   const [userInfo, setUserInfo] = useState<InfoFormValues | null>(null);
@@ -35,9 +40,11 @@ export default function Checkout() {
   const handleCreateIntent = async ({
     methodId,
     userInfo,
+    disableIntentDetails = false,
   }: {
     userInfo: InfoFormValues;
     methodId?: string;
+    disableIntentDetails?: boolean;
   }) => {
     const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
 
@@ -73,6 +80,10 @@ export default function Checkout() {
       }
 
       return Promise.reject(error);
+    }
+
+    if (disableIntentDetails) {
+      return intentId;
     }
 
     return moneyHash
@@ -112,6 +123,35 @@ export default function Checkout() {
       });
   };
 
+  const handlePayWithSavedCard = async ({
+    cardId,
+    cvv,
+  }: {
+    cardId: string;
+    cvv: string;
+  }) => {
+    if (!userInfo) return;
+
+    const intentId =
+      intentDetails?.intent.id ||
+      (await handleCreateIntent({ userInfo, disableIntentDetails: true }));
+
+    try {
+      const intentDetails = await moneyHash.proceedWith({
+        type: 'savedCard',
+        id: cardId,
+        metaData: {
+          cvv,
+        },
+        intentId,
+      });
+      logJSON.response('proceedWith:savedCard', intentDetails);
+      setIntentDetails(intentDetails);
+    } catch (error: any) {
+      toast.error(error.message || 'Something went wrong');
+    }
+  };
+
   const handleSubmit = async (data: InfoFormValues) => {
     setUserInfo(data);
   };
@@ -126,16 +166,23 @@ export default function Checkout() {
           currency,
           amount: totalPrice,
           flowId: extraConfig.flow_id,
+          customer: extraConfig.customer,
+          customFields: extraConfig.custom_fields,
           operation: 'purchase',
         });
-        const { paymentMethods: purchaseMethods, expressMethods } =
-          purchaseResponse;
+        const {
+          paymentMethods: purchaseMethods,
+          expressMethods,
+          savedCards,
+        } = purchaseResponse;
         logJSON.response('getMethods: Operation (Purchase)', purchaseResponse);
 
         const authorizeResponse = await moneyHash.getMethods({
           currency,
           amount: totalPrice,
           flowId: extraConfig.flow_id,
+          customer: extraConfig.customer,
+          customFields: extraConfig.custom_fields,
           operation: 'authorize',
         });
         const { paymentMethods: authorizeMethods } = authorizeResponse;
@@ -154,6 +201,7 @@ export default function Checkout() {
         setExpressMethods(
           expressMethods.filter(method => method.id !== 'GOOGLE_PAY'),
         );
+        setSavedCards(savedCards);
       } catch (error: any) {
         logJSON.error('getMethods', error);
         const [key, message] =
@@ -206,7 +254,9 @@ export default function Checkout() {
                 onIntentDetailsChange={setIntentDetails}
                 methods={paymentMethods}
                 expressMethods={expressMethods}
+                savedCards={savedCards}
                 onSelectMethod={handleSelectMethod}
+                onPayWithSavedCard={handlePayWithSavedCard}
                 onApplePayClick={async ({ onCancel, onError }) => {
                   const applePayNativeData = expressMethods?.find(
                     method => method.id === 'APPLE_PAY',
