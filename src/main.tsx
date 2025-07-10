@@ -5,6 +5,7 @@ import App from '@/App';
 import '@/index.css';
 import Home from '@/pages/home';
 import IntegrationGuide from '@/pages/integrationGuide';
+import GooglePay from '@/pages/google-pay';
 
 const Checkout = lazy(() => import('@/pages/checkout'));
 const Order = lazy(() => import('@/pages/order'));
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
       {
         path: '/apple-pay',
         element: <ApplePay />,
+      },
+      {
+        path: '/google-pay',
+        element: <GooglePay />,
       },
     ],
   },

@@ -1,20 +1,25 @@
 import { Fragment, useState } from 'react';
 import {
+  type NativeReceiptData,
   type Card,
   type IntentDetails,
   type Method,
 } from '@moneyhash/js-sdk/headless';
+import GooglePayButton from '@google-pay/button-react';
 
+import toast from 'react-hot-toast';
 import { cn } from '@/utils/cn';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radioGroup';
 import { IntentStateRenderer } from './intentStateRenderer';
 import useConfiguration from '@/store/useConfiguration';
 import { SavedCards } from './savedCards';
+import { logJSON } from '@/utils/logJSON';
 
 type PaymentFormProps = {
   methods: Method[];
   expressMethods?: Method[] | null;
   savedCards: Card[] | null;
+  googlePayNativeData: Record<string, any> | null;
   onSelectMethod: (methodId: string) => Promise<any>;
   onPayWithSavedCard: (options: {
     cardId: string;
@@ -24,6 +29,7 @@ type PaymentFormProps = {
     onCancel: () => void;
     onError: () => void;
   }) => void;
+  onGooglePayClick: (googlePayReceipt: NativeReceiptData) => Promise<void>;
   intentDetails?: IntentDetails<'payment'> | null;
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
 };
@@ -39,9 +45,11 @@ function TabsPaymentForm({
   methods,
   expressMethods,
   savedCards,
+  googlePayNativeData,
   onSelectMethod,
   onApplePayClick,
   onPayWithSavedCard,
+  onGooglePayClick,
   onIntentDetailsChange,
 }: PaymentFormProps) {
   const [isSelectingMethod, setIsSelectingMethod] = useState<string | null>(
@@ -67,18 +75,26 @@ function TabsPaymentForm({
             <ExpressButton
               key={method.id}
               method={method}
+              googlePayNativeData={googlePayNativeData}
               isSelected={false}
-              onClick={async () => {
-                if (method.id === 'APPLE_PAY') {
-                  setIsSelectingMethod(method.id);
-                  onApplePayClick({
-                    onCancel: () => setIsSelectingMethod(null),
-                    onError: () => setIsSelectingMethod(null),
-                  });
-                } else {
-                  handleMethodSelection(method.id);
-                }
+              onApplePayClick={() => {
+                setIsSelectingMethod(method.id);
+                onApplePayClick({
+                  onCancel: () => setIsSelectingMethod(null),
+                  onError: () => setIsSelectingMethod(null),
+                });
               }}
+              onPayWithGooglePay={googlePayReceipt => {
+                setIsSelectingMethod(method.id);
+                onGooglePayClick(googlePayReceipt).catch(e => {
+                  toast.error(
+                    'Failed to process Google Pay payment. Please try again. Check console for details.',
+                  );
+                  logJSON.error('Google Pay Error', e);
+                  setIsSelectingMethod(null);
+                });
+              }}
+              onCancelGooglePay={() => setIsSelectingMethod(null)}
             />
           ))}
         </div>
@@ -159,10 +175,12 @@ function AccordionPaymentForm({
   methods,
   expressMethods,
   savedCards,
+  googlePayNativeData,
   onApplePayClick,
   onIntentDetailsChange,
   onSelectMethod,
   onPayWithSavedCard,
+  onGooglePayClick,
 }: PaymentFormProps) {
   const [isSelectingMethod, setIsSelectingMethod] = useState<string | null>(
     null,
@@ -185,18 +203,26 @@ function AccordionPaymentForm({
                 <ExpressButton
                   key={method.id}
                   method={method}
+                  googlePayNativeData={googlePayNativeData}
                   isSelected={false}
-                  onClick={async () => {
-                    if (method.id === 'APPLE_PAY') {
-                      setIsSelectingMethod(method.id);
-                      onApplePayClick({
-                        onCancel: () => setIsSelectingMethod(null),
-                        onError: () => setIsSelectingMethod(null),
-                      });
-                    } else {
-                      handleMethodSelection(method.id);
-                    }
+                  onApplePayClick={async () => {
+                    setIsSelectingMethod(method.id);
+                    onApplePayClick({
+                      onCancel: () => setIsSelectingMethod(null),
+                      onError: () => setIsSelectingMethod(null),
+                    });
                   }}
+                  onPayWithGooglePay={googlePayReceipt => {
+                    setIsSelectingMethod(method.id);
+                    onGooglePayClick(googlePayReceipt).catch(e => {
+                      toast.error(
+                        'Failed to process Google Pay payment. Please try again. Check console for details.',
+                      );
+                      logJSON.error('Google Pay Error', e);
+                      setIsSelectingMethod(null);
+                    });
+                  }}
+                  onCancelGooglePay={() => setIsSelectingMethod(null)}
                 />
                 {intentDetails?.selectedMethod === method.id && (
                   <IntentStateRenderer
@@ -278,15 +304,74 @@ function AccordionPaymentForm({
 function ExpressButton({
   isSelected,
   method,
-  onClick,
+  onApplePayClick,
+  googlePayNativeData,
+  onPayWithGooglePay,
+  onCancelGooglePay,
 }: {
   isSelected: boolean;
   method: Method;
-  onClick: () => void;
+  onApplePayClick: () => void;
+  googlePayNativeData: Record<string, any> | null;
+  onPayWithGooglePay: (googlePayReceipt: NativeReceiptData) => void;
+  onCancelGooglePay: () => void;
 }) {
-  if (method.id === 'GOOGLE_PAY') {
-    // TODO: Implement Google Pay button
-    return null;
+  if (googlePayNativeData && method.id === 'GOOGLE_PAY') {
+    return (
+      <GooglePayButton
+        environment="TEST"
+        buttonColor="white"
+        buttonSizeMode="fill"
+        buttonType="pay"
+        buttonRadius={4}
+        className="[&_#gpay-button-online-api-id]:block [&_#gpay-button-online-api-id]:outline-none [&_#gpay-button-online-api-id]:border [&_#gpay-button-online-api-id]:border-input [&_#gpay-button-online-api-id]:border-solid"
+        paymentRequest={{
+          apiVersion: 2,
+          apiVersionMinor: 0,
+          allowedPaymentMethods: [
+            {
+              type: 'CARD',
+              parameters: {
+                allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+                allowedCardNetworks: ['MASTERCARD', 'VISA'],
+              },
+              tokenizationSpecification: {
+                type: 'PAYMENT_GATEWAY',
+                parameters: {
+                  gateway: googlePayNativeData.gateway,
+                  gatewayMerchantId: googlePayNativeData.gateway_merchant_id,
+                },
+              },
+            },
+          ],
+          merchantInfo: {
+            merchantId: googlePayNativeData.merchant_id,
+            merchantName: googlePayNativeData.merchant_name,
+          },
+          transactionInfo: {
+            totalPriceStatus: 'FINAL',
+            totalPriceLabel: 'Total',
+            totalPrice: `${googlePayNativeData.amount}`,
+            currencyCode: googlePayNativeData.currency_code,
+            countryCode: googlePayNativeData.country_code || 'US',
+          },
+          emailRequired: true,
+        }}
+        onLoadPaymentData={paymentRequest => {
+          const { paymentMethodData, email } = paymentRequest;
+          const paymentToken = paymentMethodData.tokenizationData.token;
+          const googlePayReceipt = {
+            receipt: paymentToken,
+            receiptBillingData: {
+              email,
+            },
+          };
+          logJSON.info('GooglePay Receipt', googlePayReceipt);
+          onPayWithGooglePay(googlePayReceipt);
+        }}
+        onCancel={onCancelGooglePay}
+      />
+    );
   }
 
   return (
@@ -296,7 +381,7 @@ function ExpressButton({
         'flex justify-center items-center rounded-sm hover:opacity-90 border border-input h-[40px] py-1 focus:outline-none focus-visible:ring-2 focus-visible:border-ring focus-visible:ring-ring/30 overflow-hidden bg-white',
         isSelected && 'border-ring ring-2 ring-ring/30 bg-primary/5',
       )}
-      onClick={onClick}
+      onClick={onApplePayClick}
     >
       {method.id === 'APPLE_PAY' ? (
         <img

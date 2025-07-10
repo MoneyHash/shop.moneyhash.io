@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   type IntentDetails,
@@ -198,9 +198,7 @@ export default function Checkout() {
             ),
           ),
         );
-        setExpressMethods(
-          expressMethods.filter(method => method.id !== 'GOOGLE_PAY'),
-        );
+        setExpressMethods(expressMethods);
         setSavedCards(savedCards);
       } catch (error: any) {
         logJSON.error('getMethods', error);
@@ -216,6 +214,13 @@ export default function Checkout() {
 
     fetchMethods();
   }, [userInfo, currency, jsonConfig, totalPrice]);
+
+  const googlePayNativeData = useMemo(
+    () =>
+      expressMethods?.find(method => method.id === 'GOOGLE_PAY')
+        ?.nativePayData || null,
+    [expressMethods],
+  );
 
   return (
     <div className="min-h-full flex flex-col">
@@ -255,6 +260,7 @@ export default function Checkout() {
                 methods={paymentMethods}
                 expressMethods={expressMethods}
                 savedCards={savedCards}
+                googlePayNativeData={googlePayNativeData}
                 onSelectMethod={handleSelectMethod}
                 onPayWithSavedCard={handlePayWithSavedCard}
                 onApplePayClick={async ({ onCancel, onError }) => {
@@ -325,6 +331,26 @@ export default function Checkout() {
                   }
                   session.oncancel = onCancel;
                   session.begin();
+                }}
+                onGooglePayClick={async googlePayReceipt => {
+                  const intentId =
+                    intentDetails?.intent.id ||
+                    (await handleCreateIntent({
+                      userInfo,
+                    }));
+
+                  await moneyHash.proceedWith({
+                    type: 'method',
+                    id: 'GOOGLE_PAY',
+                    intentId,
+                  });
+
+                  setIntentDetails(
+                    await moneyHash.submitPaymentReceipt({
+                      intentId,
+                      nativeReceiptData: googlePayReceipt,
+                    }),
+                  );
                 }}
               />
             )}
