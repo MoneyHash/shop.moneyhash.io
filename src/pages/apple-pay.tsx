@@ -57,12 +57,11 @@ const defaultPublicApiKey: Record<Env, string> = {
 const storedEnv =
   (localStorage.getItem('apple-pay-env') as Env) || 'production';
 if (storedEnv === 'staging') {
-  (window as any).MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
-  (window as any).API_URL = 'https://staging-web.moneyhash.io';
-  (window as any).MONEYHASH_VAULT_INPUT_IFRAME_URL =
+  window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
+  window.API_URL = 'https://staging-web.moneyhash.io';
+  window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
     'https://vault-staging-form.moneyhash.io';
-  (window as any).MONEYHASH_VAULT_API_URL =
-    'https://vault-staging.moneyhash.io';
+  window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
 }
 
 const moneyHash = new MoneyHash({
