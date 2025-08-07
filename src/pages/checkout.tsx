@@ -55,8 +55,6 @@ export default function Checkout() {
   const cart = useShoppingCart(state => state.cart);
   const paymentExperience = usePaymentExperience(state => state.experience);
   const paymentOperation = usePaymentOperation(state => state.operation);
-  const emptyCart = useShoppingCart(state => state.emptyCart);
-  const navigate = useNavigate();
 
   const moneyHash = useMoneyHash();
 
@@ -266,26 +264,7 @@ export default function Checkout() {
                       type="button"
                       key={method.id}
                       className="bg-white border border-gray-300 w-full flex justify-center rounded-md hover:opacity-90 my-4"
-                      onClick={() => {
-                        moneyHash.payWithApplePay({
-                          intentId,
-                          amount: totalPrice,
-                          currency,
-                          countryCode: 'AE',
-                          onCancel: () => {},
-                          onComplete: () => {
-                            emptyCart();
-                            navigate(`/checkout/order?intent_id=${intentId}`, {
-                              replace: true,
-                            });
-                          },
-                          onError: () => {
-                            navigate(`/checkout/order?intent_id=${intentId}`, {
-                              replace: true,
-                            });
-                          },
-                        });
-                      }}
+                      onClick={() => {}}
                     >
                       <img src={method.icons[0]} alt="" className="h-10 w-10" />
                       <p className="sr-only">{method.title}</p>
@@ -776,16 +755,8 @@ function PaymentFormInAppExperience({
 
 function PayFlexModal({ intentId }: { intentId: string }) {
   const [isOpen, setIsOpen] = useState(true);
-  const navigate = useNavigate();
-  const emptyCart = useShoppingCart(state => state.emptyCart);
 
-  const moneyHash = useMoneyHash({
-    onComplete: ({ intent }) => {
-      emptyCart();
-      navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
-    },
-    onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
-  });
+  const moneyHash = useMoneyHash();
 
   useEffect(() => {
     if (isOpen) {
@@ -845,16 +816,7 @@ function PayFlexModal({ intentId }: { intentId: string }) {
 }
 
 function CheckoutForm({ intentId }: { intentId: string }) {
-  const navigate = useNavigate();
-  const emptyCart = useShoppingCart(state => state.emptyCart);
-
-  const moneyHash = useMoneyHash({
-    onComplete: ({ intent }) => {
-      emptyCart();
-      navigate(`/checkout/order?intent_id=${intent.id}`, { replace: true });
-    },
-    onFail: ({ intent }) => navigate(`/checkout/order?intent_id=${intent.id}`),
-  });
+  const moneyHash = useMoneyHash({});
 
   useEffect(() => {
     moneyHash.renderForm({ selector: '#moneyHash-iframe', intentId });

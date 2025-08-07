@@ -43,7 +43,7 @@ const router = createBrowserRouter([
 
 function Playground() {
   const [intentId, setIntentId] = useState('');
-  const [applePayNativeData, setApplePayNativeData] = useState<any>({
+  const [applePayNativeData] = useState<any>({
     merchant_id: 'merchant.momen.dechatlon',
     country_code: 'AE',
     supported_regions: [],
