@@ -93,7 +93,7 @@ export default function Order() {
                   Your order #<span className="uppercase">{orderId}</span> has
                   shipped and will be with you soon.
                 </p>
-                {intentDetails.transaction?.externalActionMessage?.length >
+                {intentDetails.transaction!?.externalActionMessage?.length >
                   0 && (
                   <a
                     href="#actions"
@@ -107,7 +107,7 @@ export default function Order() {
               <dl className="mt-12 text-sm font-medium">
                 <dt className="text-gray-900">Tracking id</dt>
                 <dd className="mt-2 text-decathlon-dark">
-                  {intentDetails.transaction.id}
+                  {intentDetails.transaction?.id}
                 </dd>
               </dl>
             </div>
@@ -158,7 +158,7 @@ export default function Order() {
               ))}
 
               <div className="sm:ml-40 sm:pl-6">
-                {intentDetails.transaction.externalActionMessage?.length >
+                {intentDetails.transaction!?.externalActionMessage?.length >
                   0 && (
                   <div className="border-b border-gray-200 mt-10 pb-10">
                     <h4
@@ -168,7 +168,7 @@ export default function Order() {
                       Actions required
                     </h4>
                     <ul className="list-decimal list-inside text-gray-800 space-y-1">
-                      {intentDetails.transaction.externalActionMessage.map(
+                      {intentDetails.transaction!?.externalActionMessage.map(
                         message => (
                           <li key={`${message}`}>
                             <LinkItUrl className="text-blue-600 underline hover:text-blue-500">
@@ -205,7 +205,7 @@ export default function Order() {
                     <dt className="font-medium text-gray-900">
                       Contact Information
                     </dt>
-                    {intentDetails.transaction.billingData && (
+                    {intentDetails.transaction?.billingData && (
                       <dd className="mt-2 text-gray-700">
                         <address className="not-italic">
                           <span className="block">
@@ -231,7 +231,7 @@ export default function Order() {
                       Payment method
                     </dt>
                     <dd className="mt-2 text-gray-700">
-                      <p>{intentDetails.transaction.paymentMethodName}</p>
+                      <p>{intentDetails.transaction?.paymentMethodName}</p>
                     </dd>
                   </div>
                   <div>

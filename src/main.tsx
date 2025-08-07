@@ -10,7 +10,7 @@ import Checkout from './pages/checkout';
 import Order from './pages/order';
 import IntegrationGuide from './pages/integrationGuide';
 import useMoneyHash from './hooks/useMoneyHash';
-import createIntent from './api/createIntent';
+// import createIntent from './api/createIntent';
 
 const router = createBrowserRouter([
   {
