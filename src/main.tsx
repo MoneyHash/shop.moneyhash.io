@@ -43,32 +43,33 @@ const router = createBrowserRouter([
 
 function Playground() {
   const [intentId, setIntentId] = useState('');
-  const [applePayNativeData, setApplePayNativeData] = useState<any>(null);
-  const moneyHash = useMoneyHash({
-    onComplete: data => {
-      console.log('Complete', data);
-    },
-    onFail: data => {
-      console.log('Fail', data);
-    },
+  const [applePayNativeData, setApplePayNativeData] = useState<any>({
+    merchant_id: 'merchant.momen.dechatlon',
+    country_code: 'AE',
+    supported_regions: [],
+    amount: 50,
+    currency_code: 'USD',
+    supported_networks: ['visa', 'masterCard'],
+    supported_capabilities: ['supportsDebit', 'supports3DS', 'supportsCredit'],
+    method_id: '7L56kgd',
   });
+  const moneyHash = useMoneyHash();
 
   // @ts-ignore
   window.moneyHash = moneyHash;
 
   useEffect(() => {
-    async function getApplePay() {
-      const { expressMethods } = await moneyHash.getMethods({
-        currency: 'usd',
-        amount: 50,
-      });
-      const applePayNativeData = expressMethods.find(m => m.id === 'APPLE_PAY')
-        ?.nativePayData!;
-      console.log({ applePayNativeData });
-      setApplePayNativeData(applePayNativeData);
-    }
-
-    getApplePay();
+    // async function getApplePay() {
+    //   const { expressMethods } = await moneyHash.getMethods({
+    //     currency: 'usd',
+    //     amount: 50,
+    //   });
+    //   const applePayNativeData = expressMethods.find(m => m.id === 'APPLE_PAY')
+    //     ?.nativePayData!;
+    //   console.log({ applePayNativeData });
+    //   setApplePayNativeData(applePayNativeData);
+    // }
+    // getApplePay();
   }, []);
 
   return (
@@ -85,114 +86,85 @@ function Playground() {
       <button
         type="button"
         onClick={async () => {
-          const session = new ApplePaySession(3, {
-            countryCode: applePayNativeData.country_code,
-            currencyCode: applePayNativeData.currency_code,
-            supportedNetworks: applePayNativeData.supported_networks,
-            merchantCapabilities: applePayNativeData.supported_capabilities,
-            total: {
-              label: 'Apple Pay',
-              type: 'final',
-              amount: `${applePayNativeData.amount}`,
-            },
-            requiredShippingContactFields: ['email'],
-          });
-
-          session.onvalidatemerchant = e =>
-            moneyHash
-              .validateApplePayMerchantSession({
-                methodId: applePayNativeData.method_id,
-                validationUrl: e.validationURL,
-              })
-              .then(merchantSession =>
-                session.completeMerchantValidation(merchantSession),
-              )
-              .catch(() => {
-                session.completeMerchantValidation({});
-              });
-
-          session.onpaymentauthorized = async e => {
-            const applePayReceipt = {
-              receipt: JSON.stringify({ token: e.payment.token }),
-              receiptBillingData: {
-                email: e.payment.shippingContact?.emailAddress,
+          try {
+            const session = new ApplePaySession(3, {
+              countryCode: applePayNativeData.country_code,
+              currencyCode: applePayNativeData.currency_code,
+              supportedNetworks: applePayNativeData.supported_networks,
+              merchantCapabilities: applePayNativeData.supported_capabilities,
+              total: {
+                label: 'Apple Pay',
+                type: 'final',
+                amount: `${applePayNativeData.amount}`,
               },
+              requiredShippingContactFields: ['email'],
+            });
+
+            session.onvalidatemerchant = e =>
+              moneyHash
+                .validateApplePayMerchantSession({
+                  methodId: applePayNativeData.method_id,
+                  validationUrl: e.validationURL,
+                })
+                .then(merchantSession =>
+                  session.completeMerchantValidation(merchantSession),
+                )
+                .catch(() => {
+                  session.completeMerchantValidation({});
+                });
+
+            session.onpaymentauthorized = async e => {
+              const applePayReceipt = {
+                receipt: JSON.stringify({ token: e.payment.token }),
+                receiptBillingData: {
+                  email: e.payment.shippingContact?.emailAddress,
+                },
+              };
+              session.completePayment(ApplePaySession.STATUS_SUCCESS);
+
+              console.log(applePayReceipt);
+
+              // const binLookup = await moneyHash.binLookupByReceipt({
+              //   nativeReceiptData: applePayReceipt,
+              //   methodId: applePayNativeData.method_id,
+              // });
+
+              // console.log(binLookup);
+
+              // const afterProceed = await moneyHash.proceedWith({
+              //   type: 'method',
+              //   id: 'APPLE_PAY',
+              //   intentId,
+              // });
+
+              // console.log(afterProceed);
+
+              // const intentDetails = await moneyHash.submitPaymentReceipt({
+              //   nativeReceiptData: applePayReceipt,
+              //   intentId,
+              // });
+
+              // console.log(intentDetails);
+              // if (intentDetails.state === 'NATIVE_PAY') {
+              //   console.log(
+              //     'show apple pay button again with new values',
+              //     intentDetails.nativePayData,
+              //   );
+              // }
             };
-            session.completePayment(ApplePaySession.STATUS_SUCCESS);
 
-            console.log(applePayReceipt);
+            session.oncancel = () => {
+              console.log('ApplePay Sheet was closed');
+            };
 
-            const binLookup = await moneyHash.binLookupByReceipt({
-              nativeReceiptData: applePayReceipt,
-              methodId: applePayNativeData.method_id,
-            });
-
-            console.log(binLookup);
-
-            const {
-              data: { id: intentId },
-            } = await createIntent({
-              amount: 50,
-              currency: 'USD',
-              flow_id: 'A9e4nZm',
-              billing_data: {
-                first_name: 'Mustafa',
-                last_name: 'eid',
-                phone_number: '+201064610000',
-                email: 'test@email.com',
-              },
-              custom_fields: {
-                use_cko: true,
-              },
-              shipping_data: {
-                apartment: '803',
-                address: 'address',
-                shipping_method: 'em',
-                email: 'claudette09@exa.com',
-                first_name: 'clifford',
-                building: '8028',
-                phone_number: '+201064610000',
-                postal_code: '01898',
-                description: '8 ram , 128 giga',
-                city: 'jaskolskiburgh',
-                country: 'cr',
-                last_name: 'nicolas',
-                state: 'utah',
-                street: 'street',
-              },
-            });
-
-            const afterProceed = await moneyHash.proceedWith({
-              type: 'method',
-              id: 'APPLE_PAY',
-              intentId,
-            });
-
-            console.log(afterProceed);
-
-            const intentDetails = await moneyHash.submitPaymentReceipt({
-              nativeReceiptData: applePayReceipt,
-              intentId,
-            });
-
-            console.log(intentDetails);
-            if (intentDetails.state === 'NATIVE_PAY') {
-              console.log(
-                'show apple pay button again with new values',
-                intentDetails.nativePayData,
-              );
-            }
-          };
-
-          session.oncancel = () => {
-            console.log('ApplePay Sheet was closed');
-          };
-
-          session.begin();
+            session.begin();
+          } catch (error) {
+            console.log(error);
+          }
         }}
         disabled={!applePayNativeData}
       >
-        Click me
+        Apple Pay
       </button>
     </div>
   );

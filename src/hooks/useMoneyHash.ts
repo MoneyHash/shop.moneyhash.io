@@ -1,6 +1,4 @@
-import MoneyHash, {
-  MoneyHashHeadlessOptions,
-} from '@moneyhash/js-sdk/headless';
+import MoneyHash from '@moneyhash/js-sdk/headless';
 import { useEffect, useMemo, useRef } from 'react';
 import useCurrency from '../store/useCurrency';
 
@@ -8,8 +6,8 @@ export default function useMoneyHash({
   onComplete,
   onFail,
 }: {
-  onComplete?: MoneyHashHeadlessOptions<'payment'>['onComplete'];
-  onFail?: MoneyHashHeadlessOptions<'payment'>['onFail'];
+  onComplete?: any;
+  onFail?: any;
 } = {}) {
   const currency = useCurrency(state => state.currency);
   const onCompleteRef = useRef(onComplete);
@@ -22,8 +20,6 @@ export default function useMoneyHash({
     () =>
       new MoneyHash({
         type: 'payment',
-        onComplete: onCompleteRef.current,
-        onFail: onFailRef.current,
         locale: currency === 'EGP' ? 'ar-EG' : undefined,
         styles: {
           input: {
@@ -51,12 +47,7 @@ export default function useMoneyHash({
         },
         publicApiKey:
           'public.26eMVt1V.8aHrRwG81Xrzha5SyeyhTOSzpH48VDQCPhYvhRx4',
-        applePay: {
-          collectibleBillingData:
-            localStorage.getItem('applePayCollectEmail') === 'true'
-              ? ['email']
-              : [],
-        },
+        // 'public.b7WVmnAe.GKSX3OfQGUTqT5fz0C3lIAZH8P05nnQSfnGtRmIU',
       }),
     [currency],
   );
