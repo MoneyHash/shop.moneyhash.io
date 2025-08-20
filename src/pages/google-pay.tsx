@@ -150,8 +150,9 @@ export default function GooglePay() {
                   {
                     type: 'CARD',
                     parameters: {
-                      allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-                      allowedCardNetworks: ['MASTERCARD', 'VISA'],
+                      allowedAuthMethods:
+                        nativePayData?.allowed_card_auth_methods,
+                      allowedCardNetworks: nativePayData?.allowed_card_networks,
                     },
                     tokenizationSpecification: {
                       type: 'PAYMENT_GATEWAY',
