@@ -4,7 +4,7 @@ import MoneyHashHeadless from '@moneyhash/js-sdk/headless';
 import { ACCOUNT_PUBLIC_API_KEY } from '@/api';
 import safeLocalStorage from '@/utils/safeLocalStorage';
 
-const localEnv = localStorage.getItem('env') || 'production';
+export const localEnv = localStorage.getItem('env') || 'production';
 
 declare global {
   interface Window {
@@ -28,7 +28,7 @@ window.switchEnvironment = env => {
 
   localStorage.setItem(
     'env',
-    env || localEnv === 'production' ? 'staging' : 'production',
+    env || (localEnv === 'production' ? 'staging' : 'production'),
   );
 
   window.location.reload();

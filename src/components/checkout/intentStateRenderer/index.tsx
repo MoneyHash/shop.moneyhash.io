@@ -11,6 +11,7 @@ import useConfiguration from '@/store/useConfiguration';
 import { UrlToRender } from './urlToRender';
 import { CardForm } from './cardForm';
 import { IntentForm } from './intentForm';
+import { InstallmentPlans } from './installmentPlans';
 
 type StateDetails = IntentDetails<'payment'>['stateDetails'];
 
@@ -70,4 +71,18 @@ export function IntentStateRenderer({
         billingFields={stateDetails.formFields.billing}
       />
     );
+
+  if (
+    state === 'INSTALLMENT_PLANS' &&
+    stateDetails &&
+    'plans' in stateDetails
+  ) {
+    return (
+      <InstallmentPlans
+        intentId={intentId}
+        {...stateDetails}
+        onIntentDetailsChange={onIntentDetailsChange}
+      />
+    );
+  }
 }

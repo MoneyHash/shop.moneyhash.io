@@ -11,7 +11,9 @@ import { JsonEditor } from '@/components/jsonEditor';
 
 import useJsonConfig from '@/store/useJsonConfig';
 import safeLocalStorage from '@/utils/safeLocalStorage';
-import { Input } from './ui/input';
+import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { localEnv } from '@/utils/moneyHash';
 
 function isJsonValid(str: string) {
   try {
@@ -82,6 +84,26 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
 
   return (
     <>
+      <div>
+        <p className="text-sm text-subtle mb-2">Environment</p>
+
+        <ToggleGroup
+          type="single"
+          defaultValue={localEnv}
+          variant="outline"
+          size="sm"
+          onValueChange={value => window.switchEnvironment(value)}
+        >
+          <ToggleGroupItem value="staging" className="flex-1">
+            Staging
+          </ToggleGroupItem>
+          <ToggleGroupItem value="production" className="flex-1">
+            Production
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      <hr />
+
       <p className="text-sm mb-2 text-subtle">Custom Account</p>
       <div className="flex flex-col gap-3">
         <Input

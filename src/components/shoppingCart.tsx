@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBagIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 
@@ -16,6 +16,7 @@ import {
 import { cn } from '@/utils/cn';
 
 export default function ShoppingCart() {
+  const [open, setOpen] = useState(false);
   const currency = useCurrency(state => state.currency);
   const {
     cart,
@@ -30,7 +31,7 @@ export default function ShoppingCart() {
   );
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="shrink-0 px-2 py-1">
           <ShoppingBagIcon
@@ -130,6 +131,7 @@ export default function ShoppingCart() {
               cart.length === 0 && 'pointer-events-none opacity-50',
             )}
             size="lg"
+            onClick={() => setOpen(false)}
           >
             <Link to="/checkout">Checkout</Link>
           </Button>

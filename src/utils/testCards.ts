@@ -35,10 +35,18 @@ const tapTestCards: TestCards = {
     'Use 01/39 as expiration date and 100 valid, 101 invalid as CVV',
 };
 
+const amazonTestCards: TestCards = {
+  providerName: 'Amazon Payment Services',
+  docsLink: 'https://paymentservices.amazon.com/docs/EN/12.html',
+  frictionless: '5123456789012346',
+  challenge: '5123450000000008',
+  failed: '5455031252665454',
+};
+
 export const testCards: Record<Currency, TestCards> = {
   EGP: checkoutTestCards,
   USD: stripeTestCards,
-  AED: checkoutTestCards,
+  AED: amazonTestCards,
   KWD: tapTestCards,
   SAR: checkoutTestCards,
 } as const;
