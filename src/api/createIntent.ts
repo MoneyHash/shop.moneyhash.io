@@ -55,7 +55,7 @@ export default function createIntent({
       apartment: '803',
       building: '8028',
       description: 'Second building',
-      area: userInfo.city,
+      area: 'الحى السادس',
       country: 'SA',
       street: 'street name',
       floor: 1,
