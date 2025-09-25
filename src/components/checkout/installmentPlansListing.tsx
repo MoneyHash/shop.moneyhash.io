@@ -89,14 +89,14 @@ export function InstallmentPlansListing({
                           )}
                         </p>
                         <p className="text-xs text-green-500 mt-1">
-                          {plan.interestRate
-                            ? `${plan.interestRate}% Interest`
+                          {Number(plan.interestRate)
+                            ? `${Number(plan.interestRate)}% Interest`
                             : 'Interest-free'}
                         </p>
 
-                        {plan.upfrontFees && (
+                        {!!Number(plan.upfrontFees) && (
                           <p className="text-xs text-red-500 mt-1">
-                            + {plan.upfrontFees} AED upfront fee
+                            + {Number(plan.upfrontFees)} {currency} upfront fee
                           </p>
                         )}
                       </div>

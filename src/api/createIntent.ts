@@ -60,7 +60,7 @@ export default function createIntent({
       street: 'street name',
       floor: 1,
     },
-    product_items,
+    product_items: methodId === 'TABBY' ? undefined : product_items,
     form_only: true,
     hide_loader_message: true,
     ...(methodId === 'CARD' ? { threeds: { enabled: true } } : {}),
