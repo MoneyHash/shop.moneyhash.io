@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { SelectValue } from '@radix-ui/react-select';
+import { lazy } from 'react';
 import useCurrency from '@/store/useCurrency';
 import ShoppingCart from '@/components/shoppingCart';
 import { MoneyHashLogo } from '@/components/moneyHashLogo';
@@ -10,7 +11,12 @@ import {
   SelectTrigger,
 } from '@/components/ui/select';
 import { ThemeToggleMenu } from '@/components/themeToggleMenu';
-import { Configuration } from '@/components/configuration';
+
+const Configuration = lazy(() =>
+  import('@/components/configuration').then(mod => ({
+    default: mod.Configuration,
+  })),
+);
 
 const navigation = [
   { name: 'Shirts', href: '#Shirts' },
