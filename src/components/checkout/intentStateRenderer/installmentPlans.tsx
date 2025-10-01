@@ -1,9 +1,9 @@
 import type { IntentDetails } from '@moneyhash/js-sdk/headless';
 import { type InstallmentPlan } from '@moneyhash/js-sdk';
 import toast from 'react-hot-toast';
-import { moneyHash } from '@/utils/moneyHash';
 import { InstallmentPlansListing } from '../installmentPlansListing';
 import { logJSON } from '@/utils/logJSON';
+import { useMoneyHash } from '@/context/moneyHashProvider';
 
 export function InstallmentPlans({
   intentId,
@@ -14,6 +14,7 @@ export function InstallmentPlans({
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
   plans: InstallmentPlan[];
 }) {
+  const moneyHash = useMoneyHash();
   return (
     <div className="p-4">
       <InstallmentPlansListing

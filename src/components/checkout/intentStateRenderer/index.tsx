@@ -2,11 +2,11 @@ import {
   PaymentStatus,
   type IntentDetails,
   type IntentState,
+  type PaymentMethodSlugs,
 } from '@moneyhash/js-sdk/headless';
 import { Navigate } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
 
-import { type PaymentMethodSlugs } from '@moneyhash/js-sdk';
 import useConfiguration from '@/store/useConfiguration';
 import { UrlToRender } from './urlToRender';
 import { CardForm } from './cardForm';
@@ -22,6 +22,7 @@ export function IntentStateRenderer({
   onIntentDetailsChange,
   paymentMethod,
   paymentStatus,
+  isSubscription = false,
 }: {
   intentId: string;
   state: IntentState;
@@ -29,6 +30,7 @@ export function IntentStateRenderer({
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
   paymentMethod: PaymentMethodSlugs;
   paymentStatus: PaymentStatus;
+  isSubscription?: boolean;
 }) {
   const { cardForm, fontFamily } = useConfiguration(
     useShallow(({ cardForm, fontFamily }) => ({ cardForm, fontFamily })),
@@ -69,6 +71,7 @@ export function IntentStateRenderer({
         accessToken={stateDetails.formFields.card?.accessToken!}
         onIntentDetailsChange={onIntentDetailsChange}
         billingFields={stateDetails.formFields.billing}
+        isSubscription={isSubscription}
       />
     );
 

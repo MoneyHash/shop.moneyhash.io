@@ -9,6 +9,8 @@ import formatCurrency from '@/utils/formatCurrency';
 import { products, type Currency } from '@/utils/productSections';
 import NotFound from '@/components/notFound';
 import TransactionFailed from '@/components/transactionFailed';
+import { logJSON } from '@/utils/logJSON';
+import { SubscriptionPlanCard } from '@/components/subscriptionPlanCard';
 
 export default function Order() {
   const [intentDetails, setIntentDetails] =
@@ -19,7 +21,13 @@ export default function Order() {
 
   useEffect(() => {
     if (!orderId) return;
-    moneyHash.getIntentDetails(orderId).then(setIntentDetails).catch(setError);
+    moneyHash
+      .getIntentDetails(orderId)
+      .then(intentDetails => {
+        logJSON.response('getIntentDetails', intentDetails);
+        setIntentDetails(intentDetails);
+      })
+      .catch(setError);
   }, [orderId]);
 
   const currency = intentDetails?.intent.amount.currency! as Currency;
@@ -84,13 +92,27 @@ export default function Order() {
             <div className="max-w-xl">
               <h1 className="text-base font-medium text-primary">Thank you!</h1>
               <p className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
-                It&apos;s on the way!
+                {intentDetails.subscription ? (
+                  'Congratulations'
+                ) : (
+                  <>It&apos;s on the way!</>
+                )}
               </p>
               <div className="mt-2 text-base text-subtle">
-                <p>
-                  Your order #<span className="uppercase">{orderId}</span> has
-                  shipped and will be with you soon.
-                </p>
+                {intentDetails.subscription ? (
+                  <p>
+                    Your subscription #
+                    <span className="uppercase">
+                      {intentDetails.subscription.id}
+                    </span>{' '}
+                    is now active.
+                  </p>
+                ) : (
+                  <p>
+                    Your order #<span className="uppercase">{orderId}</span> has
+                    shipped and will be with you soon.
+                  </p>
+                )}
                 {externalActionMessage?.length > 0 && (
                   <a href="#actions" className="underline text-sm text-primary">
                     Please check the actions required ↓
@@ -106,9 +128,14 @@ export default function Order() {
               </dl>
             </div>
 
+            {intentDetails.subscription && (
+              <div className="mt-10">
+                <SubscriptionPlanCard plan={intentDetails.subscription.plan} />
+              </div>
+            )}
+
             <div className="mt-10 border-t">
               <h2 className="sr-only">Your order</h2>
-
               <h3 className="sr-only">Items</h3>
               {orderedProducts.map(product => (
                 <div
@@ -144,7 +171,6 @@ export default function Order() {
                   </div>
                 </div>
               ))}
-
               <div className="sm:ml-40 sm:pl-6">
                 {externalActionMessage?.length > 0 && (
                   <div className="border-b mt-10 pb-10">
@@ -170,22 +196,24 @@ export default function Order() {
 
                 <h4 className="sr-only">Addresses</h4>
                 <dl className="grid grid-cols-2 gap-x-6 py-10 text-sm">
-                  <div>
-                    <dt className="font-medium text-subtle">
-                      Shipping address
-                    </dt>
-                    <dd className="mt-2">
-                      <address className="not-italic">
-                        <span className="block">
-                          {intentDetails.shippingData?.address}
-                        </span>
-                        <span className="block">
-                          {intentDetails.shippingData?.city},{' '}
-                          {intentDetails.shippingData?.state}
-                        </span>
-                      </address>
-                    </dd>
-                  </div>
+                  {intentDetails.shippingData && (
+                    <div>
+                      <dt className="font-medium text-subtle">
+                        Shipping address
+                      </dt>
+                      <dd className="mt-2">
+                        <address className="not-italic">
+                          <span className="block">
+                            {intentDetails.shippingData.address}
+                          </span>
+                          <span className="block">
+                            {intentDetails.shippingData.city},{' '}
+                            {intentDetails.shippingData.state}
+                          </span>
+                        </address>
+                      </dd>
+                    </div>
+                  )}
                   <div>
                     <dt className="font-medium text-subtle">
                       Contact Information
@@ -226,17 +254,19 @@ export default function Order() {
 
                 <h3 className="sr-only">Summary</h3>
 
-                <dl className="space-y-6 border-t pt-10 text-sm">
-                  <div className="flex justify-between">
-                    <dt className="font-medium text-bolder">Total</dt>
-                    <dd>
-                      {formatCurrency({
-                        currency,
-                        amount: totalPrice!,
-                      })}
-                    </dd>
-                  </div>
-                </dl>
+                {!!totalPrice && (
+                  <dl className="space-y-6 border-t pt-10 text-sm">
+                    <div className="flex justify-between">
+                      <dt className="font-medium text-bolder">Total</dt>
+                      <dd>
+                        {formatCurrency({
+                          currency,
+                          amount: totalPrice!,
+                        })}
+                      </dd>
+                    </div>
+                  </dl>
+                )}
               </div>
             </div>
           </div>

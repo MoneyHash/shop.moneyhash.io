@@ -22,7 +22,6 @@ import { isValidPhoneNumber } from 'react-phone-number-input/max';
 
 import { Controller, useForm, type Control } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
-import { moneyHash } from '@/utils/moneyHash';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/utils/cn';
 import { getColorFromCssVariable } from '@/utils/getColorFromCssVariable';
@@ -36,6 +35,7 @@ import useConfiguration from '@/store/useConfiguration';
 import { PhoneInput } from '@/components/ui/phoneInput';
 import { Input } from '@/components/ui/input';
 import { logJSON } from '@/utils/logJSON';
+import { useMoneyHash } from '@/context/moneyHashProvider';
 
 const CardFormContext = createContext<Elements | null>(null);
 
@@ -46,6 +46,7 @@ function CardFormProvider({
   children: React.ReactNode;
   onValidityChange: (isValid: boolean) => void;
 }) {
+  const moneyHash = useMoneyHash();
   const configurationFontFamily = useConfiguration(state => state.fontFamily);
   const [elements] = useState(() =>
     moneyHash.elements({
@@ -480,12 +481,14 @@ export function CardForm({
   intentId,
   onIntentDetailsChange,
   billingFields,
+  isSubscription = false,
 }: {
   paymentMethod: PaymentMethodSlugs;
   accessToken: string | null;
   billingFields: Field[] | null;
   intentId: string;
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
+  isSubscription?: boolean;
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidCardForm, setIsValidCardForm] = useState(false);
@@ -494,6 +497,7 @@ export function CardForm({
   const totalPrice = useTotalPrice();
   const { theme } = useTheme();
   const cardForm = useConfiguration(state => state.cardForm);
+  const moneyHash = useMoneyHash();
 
   const billingValibotSchema = useMemo(() => {
     if (!billingFields) return undefined;
@@ -623,11 +627,17 @@ export function CardForm({
               (accessToken && !isValidCardForm) || !isValid || isSubmitting
             }
           >
-            Pay{' '}
-            {formatCurrency({
-              currency,
-              amount: totalPrice,
-            })}
+            {isSubscription ? (
+              'Subscribe '
+            ) : (
+              <>
+                Pay{' '}
+                {formatCurrency({
+                  currency,
+                  amount: totalPrice,
+                })}
+              </>
+            )}
           </Button>
           {error && (
             <p className="text-sm text-center mt-2 text-destructive">{error}</p>

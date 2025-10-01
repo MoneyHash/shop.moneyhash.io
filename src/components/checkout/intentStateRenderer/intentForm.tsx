@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { IntentDetails } from '@moneyhash/js-sdk/headless';
-import { moneyHash } from '@/utils/moneyHash';
 import { useCallbackRef } from '@/hooks/useCallbackRef';
+import { useMoneyHash } from '@/context/moneyHashProvider';
 
 export function IntentForm({
   intentId,
@@ -10,6 +10,7 @@ export function IntentForm({
   intentId: string;
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
 }) {
+  const moneyHash = useMoneyHash();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const onIntentDetailsChangeRef = useCallbackRef(onIntentDetailsChange);
@@ -20,7 +21,7 @@ export function IntentForm({
         intentId,
       })
       .then(onIntentDetailsChangeRef);
-  }, [intentId, onIntentDetailsChangeRef]);
+  }, [intentId, onIntentDetailsChangeRef, moneyHash]);
 
   return <div ref={containerRef} id="moneyHash-intent-form" className="h-96" />;
 }

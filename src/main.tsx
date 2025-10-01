@@ -10,6 +10,7 @@ const Checkout = lazy(() => import('@/pages/checkout'));
 const Order = lazy(() => import('@/pages/order'));
 const ApplePay = lazy(() => import('@/pages/apple-pay'));
 const GooglePay = lazy(() => import('@/pages/google-pay'));
+const Subscriptions = lazy(() => import('@/pages/subscriptions'));
 
 const router = createBrowserRouter([
   {
@@ -39,6 +40,10 @@ const router = createBrowserRouter([
       {
         path: '/google-pay',
         element: <GooglePay />,
+      },
+      {
+        path: '/subscriptions',
+        element: <Subscriptions />,
       },
     ],
   },

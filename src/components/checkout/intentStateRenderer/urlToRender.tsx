@@ -4,10 +4,10 @@ import {
   type IntentStateDetails,
 } from '@moneyhash/js-sdk/headless';
 
-import { moneyHash } from '@/utils/moneyHash';
 import { Button } from '@/components/ui/button';
 import Loader from '@/components/loader';
 import { useCallbackRef } from '@/hooks/useCallbackRef';
+import { useMoneyHash } from '@/context/moneyHashProvider';
 
 export function UrlToRender({
   intentId,
@@ -19,6 +19,7 @@ export function UrlToRender({
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
 } & IntentStateDetails<'URL_TO_RENDER'>) {
   const onIntentDetailsChangeRef = useCallbackRef(onIntentDetailsChange);
+  const moneyHash = useMoneyHash();
   useEffect(() => {
     moneyHash
       .renderUrl({
@@ -28,7 +29,7 @@ export function UrlToRender({
         url,
       })
       .then(onIntentDetailsChangeRef);
-  }, [intentId, url, renderStrategy, onIntentDetailsChangeRef]);
+  }, [intentId, url, renderStrategy, onIntentDetailsChangeRef, moneyHash]);
 
   if (renderStrategy === 'POPUP_IFRAME')
     return (

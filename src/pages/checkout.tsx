@@ -22,6 +22,7 @@ import {
 } from '@/components/checkout';
 import { PaymentForm } from '@/components/checkout/paymentForm';
 import { logJSON } from '@/utils/logJSON';
+import { MoneyHashProvider } from '@/context/moneyHashProvider';
 
 export default function Checkout() {
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
@@ -253,107 +254,111 @@ export default function Checkout() {
           >
             {!userInfo && <InfoForm onSubmit={handleSubmit} />}
 
-            {userInfo && paymentMethods && (
-              <PaymentForm
-                intentDetails={intentDetails}
-                onIntentDetailsChange={setIntentDetails}
-                methods={paymentMethods}
-                expressMethods={expressMethods}
-                savedCards={savedCards}
-                googlePayNativeData={googlePayNativeData}
-                onSelectMethod={handleSelectMethod}
-                onPayWithSavedCard={handlePayWithSavedCard}
-                onApplePayClick={async ({ onCancel, onError }) => {
-                  const applePayNativeData = expressMethods?.find(
-                    method => method.id === 'APPLE_PAY',
-                  )?.nativePayData!;
-                  let intentId: string;
+            <MoneyHashProvider moneyHash={moneyHash}>
+              {userInfo && paymentMethods && (
+                <PaymentForm
+                  intentDetails={intentDetails}
+                  onIntentDetailsChange={setIntentDetails}
+                  methods={paymentMethods}
+                  expressMethods={expressMethods}
+                  savedCards={savedCards}
+                  googlePayNativeData={googlePayNativeData}
+                  onSelectMethod={handleSelectMethod}
+                  onPayWithSavedCard={handlePayWithSavedCard}
+                  onApplePayClick={async ({ onCancel, onError }) => {
+                    const applePayNativeData = expressMethods?.find(
+                      method => method.id === 'APPLE_PAY',
+                    )?.nativePayData!;
+                    let intentId: string;
 
-                  const session = new ApplePaySession(3, {
-                    countryCode: applePayNativeData.country_code,
-                    currencyCode: applePayNativeData.currency_code,
-                    supportedNetworks: applePayNativeData.supported_networks,
-                    merchantCapabilities: ['supports3DS'],
-                    total: {
-                      label: 'Apple Pay',
-                      type: 'final',
-                      amount: `${applePayNativeData.amount}`,
-                    },
-                    requiredShippingContactFields: ['email'],
-                  });
+                    const session = new ApplePaySession(3, {
+                      countryCode: applePayNativeData.country_code,
+                      currencyCode: applePayNativeData.currency_code,
+                      supportedNetworks: applePayNativeData.supported_networks,
+                      merchantCapabilities: ['supports3DS'],
+                      total: {
+                        label: 'Apple Pay',
+                        type: 'final',
+                        amount: `${applePayNativeData.amount}`,
+                      },
+                      requiredShippingContactFields: ['email'],
+                    });
 
-                  session.onvalidatemerchant = e =>
-                    moneyHash
-                      .validateApplePayMerchantSession({
-                        methodId: applePayNativeData.method_id,
-                        validationUrl: e.validationURL,
-                      })
-                      .then(merchantSession =>
-                        session.completeMerchantValidation(merchantSession),
-                      )
-                      .catch(() => {
-                        session.completeMerchantValidation({});
-                        onError();
-                        toast.error('Something went wrong, please try again!');
+                    session.onvalidatemerchant = e =>
+                      moneyHash
+                        .validateApplePayMerchantSession({
+                          methodId: applePayNativeData.method_id,
+                          validationUrl: e.validationURL,
+                        })
+                        .then(merchantSession =>
+                          session.completeMerchantValidation(merchantSession),
+                        )
+                        .catch(() => {
+                          session.completeMerchantValidation({});
+                          onError();
+                          toast.error(
+                            'Something went wrong, please try again!',
+                          );
+                        });
+
+                    session.onpaymentauthorized = async e => {
+                      const applePayReceipt = {
+                        receipt: JSON.stringify({ token: e.payment.token }),
+                        receiptBillingData: {
+                          email: e.payment.shippingContact?.emailAddress,
+                        },
+                      };
+                      session.completePayment(ApplePaySession.STATUS_SUCCESS);
+
+                      await moneyHash.proceedWith({
+                        type: 'method',
+                        id: 'APPLE_PAY',
+                        intentId,
                       });
 
-                  session.onpaymentauthorized = async e => {
-                    const applePayReceipt = {
-                      receipt: JSON.stringify({ token: e.payment.token }),
-                      receiptBillingData: {
-                        email: e.payment.shippingContact?.emailAddress,
-                      },
+                      await moneyHash.submitPaymentReceipt({
+                        nativeReceiptData: applePayReceipt,
+                        intentId,
+                      });
+
+                      navigate(`/checkout/order?intent_id=${intentId}`, {
+                        replace: true,
+                      });
                     };
-                    session.completePayment(ApplePaySession.STATUS_SUCCESS);
+
+                    if (!intentDetails) {
+                      intentId = await handleCreateIntent({
+                        userInfo,
+                      });
+                    } else {
+                      intentId = intentDetails.intent.id;
+                    }
+                    session.oncancel = onCancel;
+                    session.begin();
+                  }}
+                  onGooglePayClick={async googlePayReceipt => {
+                    const intentId =
+                      intentDetails?.intent.id ||
+                      (await handleCreateIntent({
+                        userInfo,
+                      }));
 
                     await moneyHash.proceedWith({
                       type: 'method',
-                      id: 'APPLE_PAY',
+                      id: 'GOOGLE_PAY',
                       intentId,
                     });
 
-                    await moneyHash.submitPaymentReceipt({
-                      nativeReceiptData: applePayReceipt,
-                      intentId,
-                    });
-
-                    navigate(`/checkout/order?intent_id=${intentId}`, {
-                      replace: true,
-                    });
-                  };
-
-                  if (!intentDetails) {
-                    intentId = await handleCreateIntent({
-                      userInfo,
-                    });
-                  } else {
-                    intentId = intentDetails.intent.id;
-                  }
-                  session.oncancel = onCancel;
-                  session.begin();
-                }}
-                onGooglePayClick={async googlePayReceipt => {
-                  const intentId =
-                    intentDetails?.intent.id ||
-                    (await handleCreateIntent({
-                      userInfo,
-                    }));
-
-                  await moneyHash.proceedWith({
-                    type: 'method',
-                    id: 'GOOGLE_PAY',
-                    intentId,
-                  });
-
-                  setIntentDetails(
-                    await moneyHash.submitPaymentReceipt({
-                      intentId,
-                      nativeReceiptData: googlePayReceipt,
-                    }),
-                  );
-                }}
-              />
-            )}
+                    setIntentDetails(
+                      await moneyHash.submitPaymentReceipt({
+                        intentId,
+                        nativeReceiptData: googlePayReceipt,
+                      }),
+                    );
+                  }}
+                />
+              )}
+            </MoneyHashProvider>
           </section>
         </div>
       </div>
