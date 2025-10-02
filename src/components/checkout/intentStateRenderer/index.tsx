@@ -23,6 +23,7 @@ export function IntentStateRenderer({
   paymentMethod,
   paymentStatus,
   isSubscription = false,
+  isInstallment = false,
 }: {
   intentId: string;
   state: IntentState;
@@ -31,6 +32,7 @@ export function IntentStateRenderer({
   paymentMethod: PaymentMethodSlugs;
   paymentStatus: PaymentStatus;
   isSubscription?: boolean;
+  isInstallment?: boolean;
 }) {
   const { cardForm, fontFamily } = useConfiguration(
     useShallow(({ cardForm, fontFamily }) => ({ cardForm, fontFamily })),
@@ -64,15 +66,23 @@ export function IntentStateRenderer({
 
   if (state === 'FORM_FIELDS' && stateDetails && 'formFields' in stateDetails)
     return (
-      <CardForm
-        key={`${cardForm}-${fontFamily}`}
-        intentId={intentId}
-        paymentMethod={paymentMethod}
-        accessToken={stateDetails.formFields.card?.accessToken!}
-        onIntentDetailsChange={onIntentDetailsChange}
-        billingFields={stateDetails.formFields.billing}
-        isSubscription={isSubscription}
-      />
+      <div>
+        {isInstallment && (
+          <p className="px-2 pt-4 text-sm text-muted-foreground text-center">
+            Enter your card information to view plans.
+          </p>
+        )}
+
+        <CardForm
+          key={`${cardForm}-${fontFamily}`}
+          intentId={intentId}
+          paymentMethod={paymentMethod}
+          accessToken={stateDetails.formFields.card?.accessToken!}
+          onIntentDetailsChange={onIntentDetailsChange}
+          billingFields={stateDetails.formFields.billing}
+          isSubscription={isSubscription}
+        />
+      </div>
     );
 
   if (

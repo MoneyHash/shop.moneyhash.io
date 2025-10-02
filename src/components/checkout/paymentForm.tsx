@@ -14,6 +14,7 @@ import { IntentStateRenderer } from './intentStateRenderer';
 import useConfiguration from '@/store/useConfiguration';
 import { SavedCards } from './savedCards';
 import { logJSON } from '@/utils/logJSON';
+import { BankIcon } from '../icons/bankIcon';
 
 type PaymentFormProps = {
   methods: Method[];
@@ -21,6 +22,7 @@ type PaymentFormProps = {
   savedCards: Card[] | null;
   googlePayNativeData: Record<string, any> | null;
   onSelectMethod: (methodId: string) => Promise<any>;
+  onSelectBankInstallment: () => Promise<any>;
   onPayWithSavedCard: (options: {
     cardId: string;
     cvv: string;
@@ -47,6 +49,7 @@ function TabsPaymentForm({
   savedCards,
   googlePayNativeData,
   onSelectMethod,
+  onSelectBankInstallment,
   onApplePayClick,
   onPayWithSavedCard,
   onGooglePayClick,
@@ -57,9 +60,16 @@ function TabsPaymentForm({
   );
 
   const handleMethodSelection = (methodId: string) => {
-    if (isSelectingMethod) return;
+    if (isSelectingMethod && isSelectingMethod !== 'BANK_INSTALLMENT') return;
+
     setIsSelectingMethod(methodId);
     onSelectMethod(methodId).finally(() => setIsSelectingMethod(null));
+  };
+
+  const handleBankInstallmentSelection = () => {
+    if (isSelectingMethod) return;
+    setIsSelectingMethod('BANK_INSTALLMENT');
+    onSelectBankInstallment();
   };
 
   const hasExpressMethods = !!expressMethods?.length;
@@ -117,8 +127,18 @@ function TabsPaymentForm({
         </p>
         <RadioGroup
           className="overflow-x-auto space-x-4 flex py-4 -my-4 px-0.5 -mx-0.5"
-          value={intentDetails?.selectedMethod || ''}
-          onValueChange={handleMethodSelection}
+          value={
+            isSelectingMethod === 'BANK_INSTALLMENT'
+              ? 'BANK_INSTALLMENT'
+              : intentDetails?.selectedMethod || ''
+          }
+          onValueChange={method => {
+            if (method === 'BANK_INSTALLMENT') {
+              handleBankInstallmentSelection();
+            } else {
+              handleMethodSelection(method);
+            }
+          }}
         >
           {methods.map(method => (
             <div key={method.id}>
@@ -126,21 +146,21 @@ function TabsPaymentForm({
                 id={method.id}
                 value={method.id}
                 className="sr-only peer"
-                disabled={!!isSelectingMethod}
+                disabled={
+                  isSelectingMethod === 'BANK_INSTALLMENT'
+                    ? false
+                    : !!isSelectingMethod
+                }
               />
               <label
                 htmlFor={method.id}
                 className={cn(
-                  'p-4 flex flex-shrink-0 flex-col gap-2 border border-input rounded-lg cursor-pointer w-44',
-                  intentDetails?.selectedMethod === method.id
-                    ? 'text-bolder border-ring ring-2 ring-ring/30 bg-primary/5'
-                    : 'text-subtle',
+                  'p-4 flex flex-shrink-0 flex-col gap-2 border border-input rounded-lg cursor-pointer w-44 text-subtle',
+                  'peer-aria-checked::text-bolder peer-aria-checked:border-ring peer-aria-checked:ring-2 peer-aria-checked:ring-ring/30 peer-aria-checked:bg-primary/5',
+                  'peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
                   isSelectingMethod &&
                     method.id === isSelectingMethod &&
                     'animate-pulse',
-                  isSelectingMethod &&
-                    isSelectingMethod !== method.id &&
-                    'cursor-not-allowed opacity-50',
                 )}
               >
                 <img
@@ -152,6 +172,34 @@ function TabsPaymentForm({
               </label>
             </div>
           ))}
+
+          <div>
+            <RadioGroupItem
+              id="BANK_INSTALLMENT"
+              value="BANK_INSTALLMENT"
+              className="sr-only peer"
+              disabled={!!isSelectingMethod}
+            />
+            <label
+              htmlFor="BANK_INSTALLMENT"
+              className={cn(
+                'p-4 flex flex-shrink-0 flex-col gap-2 border border-input rounded-lg cursor-pointer w-44',
+                isSelectingMethod === 'BANK_INSTALLMENT'
+                  ? 'text-bolder border-ring ring-2 ring-ring/30 bg-primary/5'
+                  : 'text-subtle',
+                isSelectingMethod &&
+                  isSelectingMethod === 'BANK_INSTALLMENT' &&
+                  !intentDetails &&
+                  'animate-pulse',
+                isSelectingMethod &&
+                  isSelectingMethod !== 'BANK_INSTALLMENT' &&
+                  'cursor-not-allowed opacity-50',
+              )}
+            >
+              <BankIcon className="w-[34px] h-[24px] text-foreground" />
+              <span className="font-medium">Bank Installment</span>
+            </label>
+          </div>
         </RadioGroup>
         {intentDetails?.selectedMethod && (
           <div className="pt-4 -m-4">
@@ -162,6 +210,7 @@ function TabsPaymentForm({
               onIntentDetailsChange={onIntentDetailsChange}
               paymentMethod={intentDetails?.selectedMethod}
               paymentStatus={intentDetails.paymentStatus}
+              isInstallment={Boolean(isSelectingMethod === 'BANK_INSTALLMENT')}
             />
           </div>
         )}
@@ -179,6 +228,7 @@ function AccordionPaymentForm({
   onApplePayClick,
   onIntentDetailsChange,
   onSelectMethod,
+  onSelectBankInstallment,
   onPayWithSavedCard,
   onGooglePayClick,
 }: PaymentFormProps) {
@@ -190,6 +240,12 @@ function AccordionPaymentForm({
     if (isSelectingMethod) return;
     setIsSelectingMethod(methodId);
     onSelectMethod(methodId).finally(() => setIsSelectingMethod(null));
+  };
+
+  const handleBankInstallmentSelection = () => {
+    if (isSelectingMethod) return;
+    setIsSelectingMethod('BANK_INSTALLMENT');
+    onSelectBankInstallment();
   };
 
   return (
@@ -254,8 +310,18 @@ function AccordionPaymentForm({
 
       <RadioGroup
         className="gap-0 border border-input rounded-md divide-y divide-input mt-2"
-        value={intentDetails?.selectedMethod || ''}
-        onValueChange={handleMethodSelection}
+        value={
+          isSelectingMethod === 'BANK_INSTALLMENT'
+            ? 'BANK_INSTALLMENT'
+            : intentDetails?.selectedMethod || ''
+        }
+        onValueChange={method => {
+          if (method === 'BANK_INSTALLMENT') {
+            handleBankInstallmentSelection();
+          } else {
+            handleMethodSelection(method);
+          }
+        }}
       >
         {methods.map(method => (
           <Fragment key={method.id}>
@@ -272,7 +338,9 @@ function AccordionPaymentForm({
                 id={method.id}
                 value={method.id}
                 disabled={
-                  !!(isSelectingMethod && isSelectingMethod !== method.id)
+                  isSelectingMethod === 'BANK_INSTALLMENT'
+                    ? false
+                    : !!isSelectingMethod
                 }
               />
               <div className="text-bolder flex items-center gap-3">
@@ -284,18 +352,51 @@ function AccordionPaymentForm({
                 <span>{method.title}</span>
               </div>
             </label>
-            {intentDetails?.selectedMethod === method.id && (
-              <IntentStateRenderer
-                intentId={intentDetails.intent.id}
-                state={intentDetails.state}
-                stateDetails={intentDetails.stateDetails}
-                onIntentDetailsChange={onIntentDetailsChange}
-                paymentMethod={intentDetails.selectedMethod}
-                paymentStatus={intentDetails.paymentStatus}
-              />
-            )}
+            {isSelectingMethod !== 'BANK_INSTALLMENT' &&
+              intentDetails?.selectedMethod === method.id && (
+                <IntentStateRenderer
+                  intentId={intentDetails.intent.id}
+                  state={intentDetails.state}
+                  stateDetails={intentDetails.stateDetails}
+                  onIntentDetailsChange={onIntentDetailsChange}
+                  paymentMethod={intentDetails.selectedMethod}
+                  paymentStatus={intentDetails.paymentStatus}
+                />
+              )}
           </Fragment>
         ))}
+
+        <>
+          <label
+            htmlFor="BANK_INSTALLMENT"
+            className="p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed"
+          >
+            <RadioGroupItem
+              id="BANK_INSTALLMENT"
+              value="BANK_INSTALLMENT"
+              disabled={
+                !!(
+                  isSelectingMethod && isSelectingMethod !== 'BANK_INSTALLMENT'
+                )
+              }
+            />
+            <div className="text-bolder flex items-center gap-3">
+              <BankIcon className="w-[34px] h-[24px] text-foreground" />
+              <span>Bank Installment</span>
+            </div>
+          </label>
+          {intentDetails && isSelectingMethod === 'BANK_INSTALLMENT' && (
+            <IntentStateRenderer
+              intentId={intentDetails.intent.id}
+              state={intentDetails.state}
+              stateDetails={intentDetails.stateDetails}
+              onIntentDetailsChange={onIntentDetailsChange}
+              paymentMethod={intentDetails.selectedMethod!}
+              paymentStatus={intentDetails.paymentStatus}
+              isInstallment
+            />
+          )}
+        </>
       </RadioGroup>
     </>
   );

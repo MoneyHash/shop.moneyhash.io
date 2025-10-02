@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 import NavBar from '@/components/navbar';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
-import { moneyHash } from '@/utils/moneyHash';
+import { localEnv, moneyHash } from '@/utils/moneyHash';
 import createIntent from '@/api/createIntent';
 import useCurrency from '@/store/useCurrency';
 import TestCardsPanel from '@/components/testCardsPanel';
@@ -23,6 +23,11 @@ import {
 import { PaymentForm } from '@/components/checkout/paymentForm';
 import { logJSON } from '@/utils/logJSON';
 import { MoneyHashProvider } from '@/context/moneyHashProvider';
+
+const fawryBankInstallment = {
+  production: 'LVEnPN9',
+  staging: '9epnEDZ',
+};
 
 export default function Checkout() {
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
@@ -40,11 +45,13 @@ export default function Checkout() {
 
   const handleCreateIntent = async ({
     methodId,
+    paymentProvider,
     userInfo,
     disableIntentDetails = false,
   }: {
     userInfo: InfoFormValues;
     methodId?: string;
+    paymentProvider?: string;
     disableIntentDetails?: boolean;
   }) => {
     const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
@@ -53,6 +60,7 @@ export default function Checkout() {
     try {
       const response = await createIntent({
         methodId,
+        paymentProvider,
         amount: totalPrice,
         currency,
         userInfo,
@@ -122,6 +130,17 @@ export default function Checkout() {
         logJSON.error('proceedWith', error);
         toast.error('Something went wrong, please try again');
       });
+  };
+
+  const handleSelectBankInstallment = async () => {
+    if (!userInfo) return;
+    return handleCreateIntent({
+      paymentProvider:
+        localEnv === 'production'
+          ? fawryBankInstallment.production
+          : fawryBankInstallment.staging,
+      userInfo,
+    });
   };
 
   const handlePayWithSavedCard = async ({
@@ -264,6 +283,7 @@ export default function Checkout() {
                   savedCards={savedCards}
                   googlePayNativeData={googlePayNativeData}
                   onSelectMethod={handleSelectMethod}
+                  onSelectBankInstallment={handleSelectBankInstallment}
                   onPayWithSavedCard={handlePayWithSavedCard}
                   onApplePayClick={async ({ onCancel, onError }) => {
                     const applePayNativeData = expressMethods?.find(

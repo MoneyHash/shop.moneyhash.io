@@ -14,6 +14,7 @@ type ProductItem = {
  */
 export default function createIntent({
   methodId,
+  paymentProvider,
   amount,
   currency,
   userInfo,
@@ -21,6 +22,7 @@ export default function createIntent({
   extraConfig,
 }: {
   methodId?: string;
+  paymentProvider?: string;
   amount: number;
   currency: string;
   userInfo: InfoFormValues;
@@ -30,6 +32,7 @@ export default function createIntent({
 }): Promise<{ data: { id: string } }> {
   return axiosInstance.post('/payments/intent/', {
     payment_method: methodId,
+    payment_provider: paymentProvider,
     amount,
     amount_currency: currency,
     billing_data: {
