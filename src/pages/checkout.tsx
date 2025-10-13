@@ -213,13 +213,33 @@ export default function Checkout() {
           authorizeResponse,
         );
 
-        setPaymentMethods(
-          purchaseMethods.concat(
-            authorizeMethods.filter(
-              method => !purchaseMethods.some(m => m.id === method.id),
-            ),
+        const sortPaymentMethods = (methods: Method[]) => {
+          const priority: Record<string, number> = {
+            CARD: 1,
+            PAY_AT_FAWRY: 2,
+            CASH_ON_DELIVERY: 3,
+          };
+
+          return methods.sort((a, b) => {
+            const priorityA = priority[a.id] ?? 999;
+            const priorityB = priority[b.id] ?? 999;
+
+            if (priorityA !== priorityB) {
+              return priorityA - priorityB;
+            }
+
+            // If both have same priority (including unlisted methods), sort alphabetically
+            return a.title.localeCompare(b.title);
+          });
+        };
+
+        const combinedMethods = purchaseMethods.concat(
+          authorizeMethods.filter(
+            method => !purchaseMethods.some(m => m.id === method.id),
           ),
         );
+
+        setPaymentMethods(sortPaymentMethods(combinedMethods));
         setExpressMethods(expressMethods);
         setSavedCards(savedCards);
       } catch (error: any) {

@@ -78,6 +78,15 @@ function TabsPaymentForm({
 
   const hasExpressMethods = !!expressMethods?.length;
 
+  // Separate methods into priority order: CARD, then others, maintaining sorted order
+  const cardMethod = methods.find(m => m.id === 'CARD');
+  const fawryMethod = methods.find(m => m.id === 'PAY_AT_FAWRY');
+  const cashOnDeliveryMethod = methods.find(m => m.id === 'CASH_ON_DELIVERY');
+  const otherMethods = methods.filter(
+    m =>
+      m.id !== 'CARD' && m.id !== 'PAY_AT_FAWRY' && m.id !== 'CASH_ON_DELIVERY',
+  );
+
   return (
     <div className="space-y-8">
       {hasExpressMethods && (
@@ -143,12 +152,13 @@ function TabsPaymentForm({
             }
           }}
         >
-          {methods.map(method => (
-            <div key={method.id}>
+          {/* Render CARD first */}
+          {cardMethod && (
+            <div key={cardMethod.id}>
               <RadioGroupItem
                 dir={dir}
-                id={method.id}
-                value={method.id}
+                id={cardMethod.id}
+                value={cardMethod.id}
                 className="sr-only peer"
                 disabled={
                   isSelectingMethod === 'BANK_INSTALLMENT'
@@ -157,28 +167,29 @@ function TabsPaymentForm({
                 }
               />
               <label
-                htmlFor={method.id}
+                htmlFor={cardMethod.id}
                 className={cn(
                   'p-4 flex flex-shrink-0 flex-col gap-2 border border-input rounded-lg cursor-pointer w-44 text-subtle',
                   'peer-aria-checked::text-bolder peer-aria-checked:border-ring peer-aria-checked:ring-2 peer-aria-checked:ring-ring/30 peer-aria-checked:bg-primary/5',
                   'peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
                   isSelectingMethod &&
-                    method.id === isSelectingMethod &&
+                    cardMethod.id === isSelectingMethod &&
                     'animate-pulse',
                 )}
               >
                 <img
-                  src={method.icons[0]}
+                  src={cardMethod.icons[0]}
                   alt=""
                   className="w-[34px] h-[24px] object-contain"
                 />
                 <span className="font-medium">
-                  {translatePaymentMethod(method.title, t)}
+                  {translatePaymentMethod(cardMethod.title, t)}
                 </span>
               </label>
             </div>
-          ))}
+          )}
 
+          {/* Render BANK_INSTALLMENT second */}
           <div>
             <RadioGroupItem
               dir={dir}
@@ -209,6 +220,45 @@ function TabsPaymentForm({
               </span>
             </label>
           </div>
+
+          {/* Render remaining methods: PAY_AT_FAWRY, CASH_ON_DELIVERY, others */}
+          {[fawryMethod, cashOnDeliveryMethod, ...otherMethods]
+            .filter(Boolean)
+            .map(method => (
+              <div key={method!.id}>
+                <RadioGroupItem
+                  dir={dir}
+                  id={method!.id}
+                  value={method!.id}
+                  className="sr-only peer"
+                  disabled={
+                    isSelectingMethod === 'BANK_INSTALLMENT'
+                      ? false
+                      : !!isSelectingMethod
+                  }
+                />
+                <label
+                  htmlFor={method!.id}
+                  className={cn(
+                    'p-4 flex flex-shrink-0 flex-col gap-2 border border-input rounded-lg cursor-pointer w-44 text-subtle',
+                    'peer-aria-checked::text-bolder peer-aria-checked:border-ring peer-aria-checked:ring-2 peer-aria-checked:ring-ring/30 peer-aria-checked:bg-primary/5',
+                    'peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+                    isSelectingMethod &&
+                      method!.id === isSelectingMethod &&
+                      'animate-pulse',
+                  )}
+                >
+                  <img
+                    src={method!.icons[0]}
+                    alt=""
+                    className="w-[34px] h-[24px] object-contain"
+                  />
+                  <span className="font-medium">
+                    {translatePaymentMethod(method!.title, t)}
+                  </span>
+                </label>
+              </div>
+            ))}
         </RadioGroup>
         {intentDetails?.selectedMethod && (
           <div className="pt-4 -m-4">
@@ -258,6 +308,15 @@ function AccordionPaymentForm({
     setIsSelectingMethod('BANK_INSTALLMENT');
     onSelectBankInstallment();
   };
+
+  // Separate methods into priority order: CARD, then others, maintaining sorted order
+  const cardMethod = methods.find(m => m.id === 'CARD');
+  const fawryMethod = methods.find(m => m.id === 'PAY_AT_FAWRY');
+  const cashOnDeliveryMethod = methods.find(m => m.id === 'CASH_ON_DELIVERY');
+  const otherMethods = methods.filter(
+    m =>
+      m.id !== 'CARD' && m.id !== 'PAY_AT_FAWRY' && m.id !== 'CASH_ON_DELIVERY',
+  );
 
   return (
     <>
@@ -333,21 +392,22 @@ function AccordionPaymentForm({
           }
         }}
       >
-        {methods.map(method => (
-          <Fragment key={method.id}>
+        {/* Render CARD first */}
+        {cardMethod && (
+          <Fragment key={cardMethod.id}>
             <label
-              htmlFor={method.id}
+              htmlFor={cardMethod.id}
               className={cn(
                 'p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed',
                 isSelectingMethod &&
-                  method.id === isSelectingMethod &&
+                  cardMethod.id === isSelectingMethod &&
                   'animate-pulse',
               )}
             >
               <RadioGroupItem
                 dir={dir}
-                id={method.id}
-                value={method.id}
+                id={cardMethod.id}
+                value={cardMethod.id}
                 disabled={
                   isSelectingMethod === 'BANK_INSTALLMENT'
                     ? false
@@ -356,15 +416,15 @@ function AccordionPaymentForm({
               />
               <div className="text-bolder flex items-center gap-3">
                 <img
-                  src={method.icons[0]}
+                  src={cardMethod.icons[0]}
                   alt=""
                   className="w-[34px] h-[24px] object-contain"
                 />
-                <span>{translatePaymentMethod(method.title, t)}</span>
+                <span>{translatePaymentMethod(cardMethod.title, t)}</span>
               </div>
             </label>
             {isSelectingMethod !== 'BANK_INSTALLMENT' &&
-              intentDetails?.selectedMethod === method.id && (
+              intentDetails?.selectedMethod === cardMethod.id && (
                 <IntentStateRenderer
                   intentId={intentDetails.intent.id}
                   state={intentDetails.state}
@@ -375,8 +435,9 @@ function AccordionPaymentForm({
                 />
               )}
           </Fragment>
-        ))}
+        )}
 
+        {/* Render BANK_INSTALLMENT second */}
         <>
           <label
             htmlFor="BANK_INSTALLMENT"
@@ -409,6 +470,53 @@ function AccordionPaymentForm({
             />
           )}
         </>
+
+        {/* Render remaining methods: PAY_AT_FAWRY, CASH_ON_DELIVERY, others */}
+        {[fawryMethod, cashOnDeliveryMethod, ...otherMethods]
+          .filter(Boolean)
+          .map(method => (
+            <Fragment key={method!.id}>
+              <label
+                htmlFor={method!.id}
+                className={cn(
+                  'p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed',
+                  isSelectingMethod &&
+                    method!.id === isSelectingMethod &&
+                    'animate-pulse',
+                )}
+              >
+                <RadioGroupItem
+                  dir={dir}
+                  id={method!.id}
+                  value={method!.id}
+                  disabled={
+                    isSelectingMethod === 'BANK_INSTALLMENT'
+                      ? false
+                      : !!isSelectingMethod
+                  }
+                />
+                <div className="text-bolder flex items-center gap-3">
+                  <img
+                    src={method!.icons[0]}
+                    alt=""
+                    className="w-[34px] h-[24px] object-contain"
+                  />
+                  <span>{translatePaymentMethod(method!.title, t)}</span>
+                </div>
+              </label>
+              {isSelectingMethod !== 'BANK_INSTALLMENT' &&
+                intentDetails?.selectedMethod === method!.id && (
+                  <IntentStateRenderer
+                    intentId={intentDetails.intent.id}
+                    state={intentDetails.state}
+                    stateDetails={intentDetails.stateDetails}
+                    onIntentDetailsChange={onIntentDetailsChange}
+                    paymentMethod={intentDetails.selectedMethod}
+                    paymentStatus={intentDetails.paymentStatus}
+                  />
+                )}
+            </Fragment>
+          ))}
       </RadioGroup>
     </>
   );
