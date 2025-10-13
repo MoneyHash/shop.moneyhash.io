@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import useCurrency from '../store/useCurrency';
 import type { Product } from '../utils/productSections';
 import ProductModal from './productModal';
@@ -9,7 +10,8 @@ type ProductItemProps = {
 };
 
 export default function ProductItem({ product }: ProductItemProps) {
-  const { name, description, imageAlt, imageSrc, price } = product;
+  const { t } = useTranslation();
+  const { nameKey, descriptionKey, imageAlt, imageSrc, price } = product;
   const [isOpen, setIsOpen] = useState(false);
   const currency = useCurrency(state => state.currency);
 
@@ -30,9 +32,9 @@ export default function ProductItem({ product }: ProductItemProps) {
             />
           </div>
           <div className="mt-4 flex justify-between">
-            <div className="text-left">
-              <h3 className="text-sm font-medium">{name}</h3>
-              <p className="mt-1 text-sm text-subtle">{description}</p>
+            <div className="text-left rtl:text-right">
+              <h3 className="text-sm font-medium">{t(nameKey)}</h3>
+              <p className="mt-1 text-sm text-subtle">{t(descriptionKey)}</p>
             </div>
             <p className="text-sm font-medium">
               {formatCurrency({ amount: price[currency], currency })}

@@ -4,11 +4,11 @@ export type Currency = 'USD' | 'EGP' | 'SAR' | 'AED' | 'KWD';
 
 export type Product = {
   id: string;
-  name: string;
+  nameKey: string;
   imageSrc: string;
   imageAlt: string;
   price: Record<Currency, number>;
-  description: string;
+  descriptionKey: string;
   rating: 1 | 2 | 3 | 4 | 5;
   category: 'Shirts' | 'Bags';
 };
@@ -17,7 +17,7 @@ export const products: Product[] = [
   {
     id: nanoid(),
     category: 'Shirts',
-    name: 'Basic Tee',
+    nameKey: 'product.items.basicTee',
     imageSrc: '/images/products/product-page-01-related-product-01.png',
     imageAlt: "Front of men's Basic Tee in black.",
     price: {
@@ -27,13 +27,13 @@ export const products: Product[] = [
       AED: 90,
       KWD: 10,
     },
-    description: 'Black',
+    descriptionKey: 'product.colors.black',
     rating: 5,
   },
   {
     id: nanoid(),
     category: 'Shirts',
-    name: 'Basic Tee',
+    nameKey: 'product.items.basicTee',
     imageSrc: '/images/products/product-page-01-related-product-02.png',
     imageAlt: "Front of men's Basic Tee in white.",
     price: {
@@ -43,13 +43,13 @@ export const products: Product[] = [
       AED: 80,
       KWD: 9,
     },
-    description: 'Aspen White',
+    descriptionKey: 'product.colors.aspenWhite',
     rating: 5,
   },
   {
     id: nanoid(),
     category: 'Shirts',
-    name: 'Basic Tee',
+    nameKey: 'product.items.basicTee',
     imageSrc: '/images/products/product-page-01-related-product-03.png',
     imageAlt: "Front of men's Basic Tee in dark gray.",
     price: {
@@ -59,13 +59,13 @@ export const products: Product[] = [
       AED: 100,
       KWD: 11,
     },
-    description: 'Charcoal',
+    descriptionKey: 'product.colors.charcoal',
     rating: 3,
   },
   {
     id: nanoid(),
     category: 'Shirts',
-    name: 'Artwork Tee',
+    nameKey: 'product.items.artworkTee',
     imageSrc: '/images/products/product-page-01-related-product-04.png',
     imageAlt:
       "Front of men's Artwork Tee in peach with white and brown dots forming an isometric cube.",
@@ -76,14 +76,14 @@ export const products: Product[] = [
       AED: 65,
       KWD: 7,
     },
-    description: 'Charcoal',
+    descriptionKey: 'product.colors.charcoal',
     rating: 4,
   },
 
   {
     id: nanoid(),
     category: 'Bags',
-    name: 'Nomad Pouch',
+    nameKey: 'product.items.nomadPouch',
     price: {
       USD: 50,
       EGP: 1500,
@@ -91,7 +91,7 @@ export const products: Product[] = [
       AED: 100,
       KWD: 12,
     },
-    description: 'White and Black',
+    descriptionKey: 'product.colors.whiteAndBlack',
     imageSrc: '/images/products/category-page-07-product-01.png',
     imageAlt:
       'White fabric pouch with white zipper, black zipper pull, and black elastic loop.',
@@ -100,7 +100,7 @@ export const products: Product[] = [
   {
     id: nanoid(),
     category: 'Bags',
-    name: 'Zip Tote Basket',
+    nameKey: 'product.items.zipToteBasket',
     price: {
       USD: 140,
       EGP: 4000,
@@ -108,7 +108,7 @@ export const products: Product[] = [
       AED: 80,
       KWD: 9,
     },
-    description: 'Washed Black',
+    descriptionKey: 'product.colors.washedBlack',
     imageSrc: '/images/products/category-page-07-product-02.png',
     imageAlt:
       'Front of tote bag with washed black canvas body, black straps, and tan leather handles and accents.',
@@ -117,7 +117,7 @@ export const products: Product[] = [
   {
     id: nanoid(),
     category: 'Bags',
-    name: 'Medium Stuff Satchel',
+    nameKey: 'product.items.mediumStuffSatchel',
     price: {
       USD: 220,
       EGP: 6400,
@@ -125,7 +125,7 @@ export const products: Product[] = [
       AED: 70,
       KWD: 8,
     },
-    description: 'Blue',
+    descriptionKey: 'product.colors.blue',
     imageSrc: '/images/products/category-page-07-product-03.png',
     imageAlt:
       'Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch.',
@@ -134,7 +134,7 @@ export const products: Product[] = [
   {
     id: nanoid(),
     category: 'Bags',
-    name: 'High Wall Tote',
+    nameKey: 'product.items.highWallTote',
     price: {
       USD: 210,
       EGP: 6200,
@@ -142,7 +142,7 @@ export const products: Product[] = [
       AED: 50,
       KWD: 7,
     },
-    description: 'Black and Orange',
+    descriptionKey: 'product.colors.blackAndOrange',
     imageSrc: '/images/products/category-page-07-product-04.png',
     imageAlt:
       'Front of zip tote bag with black canvas, black handles, and orange drawstring top.',

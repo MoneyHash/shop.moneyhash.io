@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SubscriptionPlan } from '@moneyhash/js-sdk';
+import { useTranslation } from 'react-i18next';
 import {
   Card,
   CardContent,
@@ -21,6 +22,7 @@ export function SubscriptionPlanCard({
   onSubscribe?: (planId: string) => Promise<void>;
   onReset?: () => void;
 }) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   return (
     <Card
@@ -42,7 +44,7 @@ export function SubscriptionPlanCard({
           </div>
           {plan.alreadySubscribed && (
             <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-              Subscribed
+              {t('subscription.subscribed')}
             </span>
           )}
         </div>
@@ -58,7 +60,7 @@ export function SubscriptionPlanCard({
             })}
           </span>
           <span className="text-sm text-muted-foreground">
-            / {formatRecurrency(plan)}
+            / {formatRecurrency(plan, t)}
           </span>
         </div>
 
@@ -66,7 +68,7 @@ export function SubscriptionPlanCard({
         <div className="flex flex-wrap gap-2 text-xs">
           {plan.recurringCycles && (
             <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary/50 text-foreground">
-              {plan.recurringCycles} cycles
+              {plan.recurringCycles} {t('subscription.cycles')}
             </span>
           )}
 
@@ -76,25 +78,26 @@ export function SubscriptionPlanCard({
                 amount: plan.oneTimeFee,
                 currency: plan.currency,
               })}{' '}
-              setup fee
+              {t('subscription.setupFee')}
             </span>
           )}
 
           {plan.trialPeriod && (
             <span className="inline-flex items-center px-2 py-1 rounded-md bg-green-500/10 text-green-700 dark:text-green-400">
-              {plan.trialPeriod} days trial
+              {plan.trialPeriod} {t('subscription.daysTrial')}
             </span>
           )}
 
           {(plan.discountAmount || plan.discountPercentage) && (
             <span className="inline-flex items-center px-2 py-1 rounded-md bg-orange-500/10 text-orange-700 dark:text-orange-400">
               {plan.discountPercentage
-                ? `${plan.discountPercentage}% off`
+                ? `${plan.discountPercentage}% ${t('subscription.off')}`
                 : `${formatCurrency({
                     amount: plan.discountAmount!,
                     currency: plan.currency,
-                  })} off`}
-              {plan.discountCycles && ` (${plan.discountCycles} cycles)`}
+                  })} ${t('subscription.off')}`}
+              {plan.discountCycles &&
+                ` (${plan.discountCycles} ${t('subscription.cycles')})`}
             </span>
           )}
         </div>
@@ -104,7 +107,7 @@ export function SubscriptionPlanCard({
         <CardFooter>
           {onReset ? (
             <Button variant="outline" className="w-full" onClick={onReset}>
-              ← Back to Plans
+              {t('subscription.backToPlans')}
             </Button>
           ) : (
             <Button
@@ -115,7 +118,9 @@ export function SubscriptionPlanCard({
                 onSubscribe!(plan.id).finally(() => setIsLoading(false));
               }}
             >
-              {plan.alreadySubscribed ? 'Already Subscribed' : 'Subscribe Now'}
+              {plan.alreadySubscribed
+                ? t('subscription.alreadySubscribed')
+                : t('subscription.subscribeNow')}
             </Button>
           )}
         </CardFooter>
@@ -124,13 +129,16 @@ export function SubscriptionPlanCard({
   );
 }
 
-const formatRecurrency = (plan: SubscriptionPlan) => {
+const formatRecurrency = (
+  plan: SubscriptionPlan,
+  t: (key: string) => string,
+) => {
   const unitMap: Record<string, string> = {
-    DAY: 'day',
-    MONTH: 'month',
+    DAY: t('subscription.day'),
+    MONTH: t('subscription.month'),
   };
   const unit =
     unitMap[plan.recurrencyUnit] || plan.recurrencyUnit.toLowerCase();
   const pluralUnit = plan.recurrency > 1 ? `${plan.recurrency} ${unit}s` : unit;
-  return `Every ${pluralUnit}`;
+  return `${t('subscription.every')} ${pluralUnit}`;
 };

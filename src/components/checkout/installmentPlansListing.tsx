@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, CreditCard, Calendar, Zap } from 'lucide-react';
 import { InstallmentPlan } from '@moneyhash/js-sdk';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radioGroup';
 import { Label } from '@/components/ui/label';
@@ -16,6 +17,8 @@ export function InstallmentPlansListing({
   plans,
   onContinuePayment,
 }: InstallmentPlanProps) {
+  const { t, i18n } = useTranslation();
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,9 +30,11 @@ export function InstallmentPlansListing({
 
   const getInstallmentDescription = (period: number, amount: number) => {
     if (period === 0) {
-      return 'Pay in full today';
+      return t('installments.payInFull');
     }
-    return `${period} monthly payments of ${amount.toFixed(2)} ${currency}`;
+    return `${period} ${t('installments.monthlyPayments')} ${amount.toFixed(
+      2,
+    )} ${currency}`;
   };
 
   const getInstallmentIcon = (period: number) => {
@@ -43,24 +48,23 @@ export function InstallmentPlansListing({
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-foreground">
-          Choose Your Payment Plan
+          {t('installments.title')}
         </h2>
-        <p className="text-muted-foreground">
-          Select the payment option that works best for you
-        </p>
+        <p className="text-muted-foreground">{t('installments.description')}</p>
       </div>
 
       <RadioGroup
         value={selectedPlan}
         onValueChange={handlePlanChange}
         className="space-y-3"
+        dir={dir}
       >
         {plans.map(plan => (
           <div key={plan.id} className="relative">
             <Label htmlFor={plan.id} className="cursor-pointer block">
               <Card className="p-6">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center gap-4">
                     <div className="relative">
                       <RadioGroupItem
                         value={plan.id}
@@ -72,17 +76,19 @@ export function InstallmentPlansListing({
                       )}
                     </div>
 
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                       {getInstallmentIcon(plan.installmentPeriod)}
                       <div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <h3 className="font-semibold text-checkout-text">
                             {plan.installmentPeriod === 0
-                              ? 'Full Payment'
-                              : `${plan.installmentPeriod} Months`}
+                              ? t('installments.fullPayment')
+                              : `${plan.installmentPeriod} ${t(
+                                  'installments.months',
+                                )}`}
                           </h3>
                         </div>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {getInstallmentDescription(
                             plan.installmentPeriod,
                             plan.amount.formatted,
@@ -90,13 +96,16 @@ export function InstallmentPlansListing({
                         </p>
                         <p className="text-xs text-green-500 mt-1">
                           {Number(plan.interestRate)
-                            ? `${Number(plan.interestRate)}% Interest`
-                            : 'Interest-free'}
+                            ? `${Number(plan.interestRate)}% ${t(
+                                'installments.interest',
+                              )}`
+                            : t('installments.interestFree')}
                         </p>
 
                         {!!Number(plan.upfrontFees) && (
                           <p className="text-xs text-red-500 mt-1">
-                            + {Number(plan.upfrontFees)} {currency} upfront fee
+                            + {Number(plan.upfrontFees)} {currency}{' '}
+                            {t('installments.upfrontFee')}
                           </p>
                         )}
                       </div>
@@ -112,7 +121,7 @@ export function InstallmentPlansListing({
                     </p>
                     {plan.installmentPeriod > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        per payment
+                        {t('installments.perPayment')}
                       </p>
                     )}
                   </div>
@@ -138,12 +147,12 @@ export function InstallmentPlansListing({
             ).finally(() => setIsLoading(false));
           }}
         >
-          Continue Payment
+          {t('installments.continuePayment')}
         </Button>
       </div>
 
       <div className="text-center text-xs text-muted-foreground">
-        <p>🔒 All transactions are secure and encrypted</p>
+        <p>🔒 {t('payment.secureMessage')}</p>
       </div>
     </div>
   );

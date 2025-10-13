@@ -1,0 +1,185 @@
+{
+  "nav": {
+    "shop": "Shop",
+    "shirts": "Shirts",
+    "bags": "Bags",
+    "currency": "Currency"
+  },
+  "home": {
+    "hero": {
+      "title": "Summer styles are finally here",
+      "description": "This year, our new summer collection will shelter you from the harsh elements of a world that doesn't care if you live or die.",
+      "shopCollection": "Shop Collection"
+    }
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your Cart is Empty",
+    "itemsInCart": "items in cart, view bag",
+    "quantity": "Qty",
+    "remove": "Remove",
+    "checkout": "Checkout"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "paymentAndShipping": "Payment and shipping details",
+    "orderSummary": "Order summary",
+    "total": "Total",
+    "contact": {
+      "title": "Contact",
+      "description": "Enter your contact information",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phoneNumber": "Phone number",
+      "email": "Email address"
+    },
+    "address": {
+      "title": "Address",
+      "description": "Enter your address information",
+      "address": "Address",
+      "city": "City",
+      "state": "State",
+      "postalCode": "Postal code"
+    },
+    "proceedToPayment": "Proceed to payment",
+    "continueShopping": "Continue Shopping"
+  },
+  "payment": {
+    "title": "Payment",
+    "expressCheckout": "Express checkout",
+    "savedCards": "Saved Cards",
+    "orPayWith": "or pay with",
+    "payWith": "pay with",
+    "bankInstallment": "Bank Installment",
+    "secureMessage": "All transactions are secure and encrypted.",
+    "cardNumber": "Card number",
+    "cvv": "CVV",
+    "expiry": "Expiry (MM/YY)",
+    "nameOnCard": "Name on card",
+    "billingDetails": "Billing Details",
+    "pay": "Pay",
+    "subscribe": "Subscribe",
+    "cvvError": "Please enter a valid CVV",
+    "enterCardForPlans": "Enter your card information to view plans.",
+    "selectSavedCard": "Select saved card",
+    "cardNumberPlaceholder": "Card number",
+    "cvvPlaceholder": "CVV",
+    "monthPlaceholder": "MM",
+    "yearPlaceholder": "YY"
+  },
+  "installments": {
+    "title": "Choose Your Payment Plan",
+    "description": "Select the payment option that works best for you",
+    "fullPayment": "Full Payment",
+    "months": "Months",
+    "payInFull": "Pay in full today",
+    "monthlyPayments": "monthly payments of",
+    "interest": "Interest",
+    "interestFree": "Interest-free",
+    "upfrontFee": "upfront fee",
+    "perPayment": "per payment",
+    "continuePayment": "Continue Payment"
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "pleaseTryAgain": "Something went wrong, please try again",
+    "googlePayFailed": "Failed to process Google Pay payment. Please try again. Check console for details."
+  },
+  "paymentMethods": {
+    "Card": "Card",
+    "Pay At Fawry": "Pay At Fawry",
+    "ValU": "ValU",
+    "Mobile Wallet": "Mobile Wallet",
+    "Aman & Masary": "Aman & Masary",
+    "Cash On Delivery": "Cash On Delivery",
+    "Reference Number": "Reference Number",
+    "Shahry": "Shahry"
+  },
+  "product": {
+    "categories": {
+      "shirts": "Shirts",
+      "bags": "Bags"
+    },
+    "items": {
+      "basicTee": "Basic Tee",
+      "artworkTee": "Artwork Tee",
+      "nomadPouch": "Nomad Pouch",
+      "zipToteBasket": "Zip Tote Basket",
+      "mediumStuffSatchel": "Medium Stuff Satchel",
+      "highWallTote": "High Wall Tote"
+    },
+    "colors": {
+      "black": "Black",
+      "aspenWhite": "Aspen White",
+      "charcoal": "Charcoal",
+      "whiteAndBlack": "White and Black",
+      "washedBlack": "Washed Black",
+      "blue": "Blue",
+      "blackAndOrange": "Black and Orange"
+    }
+  },
+  "language": {
+    "select": "Select Language",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "productModal": {
+    "productInformation": "Product information",
+    "reviews": "Reviews",
+    "outOfStars": "out of 5 stars",
+    "inStock": "In stock and ready to ship",
+    "productOptions": "Product options",
+    "addToBag": "Add to bag",
+    "lifetimeGuarantee": "Lifetime Guarantee"
+  },
+  "order": {
+    "thankYou": "Thank you!",
+    "onTheWay": "It's on the way!",
+    "congratulations": "Congratulations",
+    "orderShipped": "Your order #{{orderId}} has shipped and will be with you soon.",
+    "subscriptionActive": "Your subscription #{{subscriptionId}} is now active.",
+    "checkActionsRequired": "Please check the actions required ↓",
+    "trackingId": "Tracking id",
+    "yourOrder": "Your order",
+    "items": "Items",
+    "quantity": "Quantity",
+    "price": "Price",
+    "actionsRequired": "Actions required",
+    "yourInformation": "Your information",
+    "addresses": "Addresses",
+    "shippingAddress": "Shipping address",
+    "contactInformation": "Contact Information",
+    "payment": "Payment",
+    "paymentMethod": "Payment method",
+    "shippingMethod": "Shipping method",
+    "dhlShipping": "DHL",
+    "dhlDescription": "Takes up to 3 working days",
+    "summary": "Summary",
+    "total": "Total",
+    "paymentClosed": "Your payment was closed"
+  },
+  "subscription": {
+    "subscribed": "Subscribed",
+    "cycles": "cycles",
+    "setupFee": "setup fee",
+    "daysTrial": "days trial",
+    "off": "off",
+    "backToPlans": "← Back to Plans",
+    "alreadySubscribed": "Already Subscribed",
+    "subscribeNow": "Subscribe Now",
+    "every": "Every",
+    "day": "day",
+    "month": "month"
+  },
+  "transactionFailed": {
+    "title": "Oh no, your payment failed",
+    "message": "Don't worry, you can try again with a different payment method.",
+    "checkoutButton": "Checkout"
+  }
+}

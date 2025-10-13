@@ -3,6 +3,7 @@ import { Fragment, useState } from 'react';
 import { type Card } from '@moneyhash/js-sdk/headless';
 import { CreditCardIcon, LoaderIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ export function SavedCards({
   cards: Card[];
   onPay: (options: { cardId: string; cvv: string }) => Promise<any>;
 }) {
+  const { t } = useTranslation();
   const [selectedCard, setSelectedCard] = useState(cards[0].id);
   const [cvv, setCvv] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +31,7 @@ export function SavedCards({
     <div className="flex items-center gap-3">
       <Select value={selectedCard} onValueChange={setSelectedCard}>
         <SelectTrigger className="[&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_img]:shrink-0 border border-input rounded-md">
-          <SelectValue placeholder="Select framework" />
+          <SelectValue placeholder={t('payment.selectSavedCard')} />
         </SelectTrigger>
         <SelectContent className="[&_*[role=option]]:pl-2 [&_*[role=option]]:pr-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex-1 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2">
           {cards.map((card, index) => (
@@ -51,7 +53,7 @@ export function SavedCards({
       </Select>
 
       <Input
-        label="CVV"
+        label={t('payment.cvv')}
         className="h-9"
         maxLength={4}
         value={cvv}
@@ -64,7 +66,7 @@ export function SavedCards({
         disabled={loading}
         onClick={() => {
           if (cvv.length < 3) {
-            toast.error('Please enter a valid CVV');
+            toast.error(t('payment.cvvError'));
             return;
           }
           setLoading(true);
@@ -73,7 +75,7 @@ export function SavedCards({
           });
         }}
       >
-        Pay{' '}
+        {t('payment.pay')}{' '}
         {loading ? (
           <LoaderIcon className="w-4 h-4 animate-spin" />
         ) : (

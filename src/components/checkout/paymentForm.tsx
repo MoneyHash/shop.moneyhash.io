@@ -6,6 +6,7 @@ import {
   type Method,
 } from '@moneyhash/js-sdk/headless';
 import GooglePayButton from '@google-pay/button-react';
+import { useTranslation } from 'react-i18next';
 
 import toast from 'react-hot-toast';
 import { cn } from '@/utils/cn';
@@ -15,6 +16,7 @@ import useConfiguration from '@/store/useConfiguration';
 import { SavedCards } from './savedCards';
 import { logJSON } from '@/utils/logJSON';
 import { BankIcon } from '../icons/bankIcon';
+import { translatePaymentMethod } from '@/utils/translatePaymentMethod';
 
 type PaymentFormProps = {
   methods: Method[];
@@ -55,6 +57,8 @@ function TabsPaymentForm({
   onGooglePayClick,
   onIntentDetailsChange,
 }: PaymentFormProps) {
+  const { t, i18n } = useTranslation();
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   const [isSelectingMethod, setIsSelectingMethod] = useState<string | null>(
     null,
   );
@@ -79,7 +83,7 @@ function TabsPaymentForm({
       {hasExpressMethods && (
         <div className="grid grid-cols-1 gap-3 p-4 pt-8 relative border rounded">
           <p className="text-sm absolute top-0 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-background px-2 text-bolder">
-            Express checkout
+            {t('payment.expressCheckout')}
           </p>
           {expressMethods?.map(method => (
             <ExpressButton
@@ -97,9 +101,7 @@ function TabsPaymentForm({
               onPayWithGooglePay={googlePayReceipt => {
                 setIsSelectingMethod(method.id);
                 onGooglePayClick(googlePayReceipt).catch(e => {
-                  toast.error(
-                    'Failed to process Google Pay payment. Please try again. Check console for details.',
-                  );
+                  toast.error(t('errors.googlePayFailed'));
                   logJSON.error('Google Pay Error', e);
                   setIsSelectingMethod(null);
                 });
@@ -113,7 +115,7 @@ function TabsPaymentForm({
       {savedCards && savedCards?.length > 0 && (
         <div className="relative border rounded p-4 pt-8">
           <p className="text-sm absolute top-0 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-background px-2 text-bolder capitalize">
-            Saved Cards
+            {t('payment.savedCards')}
           </p>
           <div>
             <SavedCards cards={savedCards} onPay={onPayWithSavedCard} />
@@ -123,9 +125,10 @@ function TabsPaymentForm({
 
       <div className="relative border rounded p-4 pt-8">
         <p className="text-sm absolute top-0 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-background px-2 text-bolder capitalize">
-          {hasExpressMethods && 'or'} pay with
+          {hasExpressMethods ? t('payment.orPayWith') : t('payment.payWith')}
         </p>
         <RadioGroup
+          dir={dir}
           className="overflow-x-auto space-x-4 flex py-4 -my-4 px-0.5 -mx-0.5"
           value={
             isSelectingMethod === 'BANK_INSTALLMENT'
@@ -143,6 +146,7 @@ function TabsPaymentForm({
           {methods.map(method => (
             <div key={method.id}>
               <RadioGroupItem
+                dir={dir}
                 id={method.id}
                 value={method.id}
                 className="sr-only peer"
@@ -168,13 +172,16 @@ function TabsPaymentForm({
                   alt=""
                   className="w-[34px] h-[24px] object-contain"
                 />
-                <span className="font-medium">{method.title}</span>
+                <span className="font-medium">
+                  {translatePaymentMethod(method.title, t)}
+                </span>
               </label>
             </div>
           ))}
 
           <div>
             <RadioGroupItem
+              dir={dir}
               id="BANK_INSTALLMENT"
               value="BANK_INSTALLMENT"
               className="sr-only peer"
@@ -197,7 +204,9 @@ function TabsPaymentForm({
               )}
             >
               <BankIcon className="w-[34px] h-[24px] text-foreground" />
-              <span className="font-medium">Bank Installment</span>
+              <span className="font-medium">
+                {t('payment.bankInstallment')}
+              </span>
             </label>
           </div>
         </RadioGroup>
@@ -232,12 +241,14 @@ function AccordionPaymentForm({
   onPayWithSavedCard,
   onGooglePayClick,
 }: PaymentFormProps) {
+  const { t, i18n } = useTranslation();
+  const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
   const [isSelectingMethod, setIsSelectingMethod] = useState<string | null>(
     null,
   );
 
   const handleMethodSelection = (methodId: string) => {
-    if (isSelectingMethod) return;
+    if (isSelectingMethod && isSelectingMethod !== 'BANK_INSTALLMENT') return;
     setIsSelectingMethod(methodId);
     onSelectMethod(methodId).finally(() => setIsSelectingMethod(null));
   };
@@ -252,7 +263,9 @@ function AccordionPaymentForm({
     <>
       {!!expressMethods?.length && (
         <div className="mb-8">
-          <p className="text-sm text-center font-medium">Express checkout</p>
+          <p className="text-sm text-center font-medium">
+            {t('payment.expressCheckout')}
+          </p>
           <div className="grid grid-cols-1 gap-3 mt-2">
             {expressMethods.map(method => (
               <Fragment key={method.id}>
@@ -271,9 +284,7 @@ function AccordionPaymentForm({
                   onPayWithGooglePay={googlePayReceipt => {
                     setIsSelectingMethod(method.id);
                     onGooglePayClick(googlePayReceipt).catch(e => {
-                      toast.error(
-                        'Failed to process Google Pay payment. Please try again. Check console for details.',
-                      );
+                      toast.error(t('errors.googlePayFailed'));
                       logJSON.error('Google Pay Error', e);
                       setIsSelectingMethod(null);
                     });
@@ -296,10 +307,8 @@ function AccordionPaymentForm({
         </div>
       )}
       <div>
-        <h2 className="font-medium">Payment</h2>
-        <p className="text-subtler text-sm">
-          All transactions are secure and encrypted.
-        </p>
+        <h2 className="font-medium">{t('payment.title')}</h2>
+        <p className="text-subtler text-sm">{t('payment.secureMessage')}</p>
       </div>
 
       {savedCards && savedCards?.length > 0 && (
@@ -309,6 +318,7 @@ function AccordionPaymentForm({
       )}
 
       <RadioGroup
+        dir={dir}
         className="gap-0 border border-input rounded-md divide-y divide-input mt-2"
         value={
           isSelectingMethod === 'BANK_INSTALLMENT'
@@ -335,6 +345,7 @@ function AccordionPaymentForm({
               )}
             >
               <RadioGroupItem
+                dir={dir}
                 id={method.id}
                 value={method.id}
                 disabled={
@@ -349,7 +360,7 @@ function AccordionPaymentForm({
                   alt=""
                   className="w-[34px] h-[24px] object-contain"
                 />
-                <span>{method.title}</span>
+                <span>{translatePaymentMethod(method.title, t)}</span>
               </div>
             </label>
             {isSelectingMethod !== 'BANK_INSTALLMENT' &&
@@ -372,6 +383,7 @@ function AccordionPaymentForm({
             className="p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed"
           >
             <RadioGroupItem
+              dir={dir}
               id="BANK_INSTALLMENT"
               value="BANK_INSTALLMENT"
               disabled={
@@ -382,7 +394,7 @@ function AccordionPaymentForm({
             />
             <div className="text-bolder flex items-center gap-3">
               <BankIcon className="w-[34px] h-[24px] text-foreground" />
-              <span>Bank Installment</span>
+              <span>{t('payment.bankInstallment')}</span>
             </div>
           </label>
           {intentDetails && isSelectingMethod === 'BANK_INSTALLMENT' && (
@@ -417,6 +429,7 @@ function ExpressButton({
   onPayWithGooglePay: (googlePayReceipt: NativeReceiptData) => void;
   onCancelGooglePay: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   if (googlePayNativeData && method.id === 'GOOGLE_PAY') {
     return (
       <GooglePayButton
@@ -424,6 +437,7 @@ function ExpressButton({
         buttonColor="white"
         buttonSizeMode="fill"
         buttonType="pay"
+        buttonLocale={i18n.language}
         buttonRadius={4}
         className="[&_#gpay-button-online-api-id]:block [&_#gpay-button-online-api-id]:outline-none [&_#gpay-button-online-api-id]:border [&_#gpay-button-online-api-id]:border-input [&_#gpay-button-online-api-id]:border-solid"
         paymentRequest={{
@@ -493,7 +507,10 @@ function ExpressButton({
         />
       ) : (
         <p>
-          Pay with <span className="font-medium">{method.title}</span>
+          Pay with{' '}
+          <span className="font-medium">
+            {translatePaymentMethod(method.title, t)}
+          </span>
         </p>
       )}
     </button>

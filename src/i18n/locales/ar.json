@@ -1,0 +1,185 @@
+{
+  "nav": {
+    "shop": "المتجر",
+    "shirts": "قمصان",
+    "bags": "حقائب",
+    "currency": "العملة"
+  },
+  "home": {
+    "hero": {
+      "title": "أنماط الصيف وصلت أخيراً",
+      "description": "هذا العام، ستحميك مجموعتنا الصيفية الجديدة من العناصر القاسية لعالم لا يهتم إذا كنت تعيش أو تموت.",
+      "shopCollection": "تسوق المجموعة"
+    }
+  },
+  "cart": {
+    "title": "عربة التسوق",
+    "empty": "عربة التسوق فارغة",
+    "itemsInCart": "عناصر في العربة، عرض الحقيبة",
+    "quantity": "الكمية",
+    "remove": "إزالة",
+    "checkout": "الدفع"
+  },
+  "checkout": {
+    "title": "الدفع",
+    "paymentAndShipping": "تفاصيل الدفع والشحن",
+    "orderSummary": "ملخص الطلب",
+    "total": "الإجمالي",
+    "contact": {
+      "title": "التواصل",
+      "description": "أدخل معلومات التواصل الخاصة بك",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "phoneNumber": "رقم الهاتف",
+      "email": "البريد الإلكتروني"
+    },
+    "address": {
+      "title": "العنوان",
+      "description": "أدخل معلومات العنوان الخاصة بك",
+      "address": "العنوان",
+      "city": "المدينة",
+      "state": "المنطقة",
+      "postalCode": "الرمز البريدي"
+    },
+    "proceedToPayment": "المتابعة إلى الدفع",
+    "continueShopping": "متابعة التسوق"
+  },
+  "payment": {
+    "title": "الدفع",
+    "expressCheckout": "الدفع السريع",
+    "savedCards": "البطاقات المحفوظة",
+    "orPayWith": "أو ادفع بواسطة",
+    "payWith": "ادفع بواسطة",
+    "bankInstallment": "التقسيط البنكي",
+    "secureMessage": "جميع المعاملات آمنة ومشفرة.",
+    "cardNumber": "رقم البطاقة",
+    "cvv": "CVV",
+    "expiry": "تاريخ الانتهاء (MM/YY)",
+    "nameOnCard": "الاسم على البطاقة",
+    "billingDetails": "تفاصيل الفواتير",
+    "pay": "ادفع",
+    "subscribe": "اشترك",
+    "cvvError": "الرجاء إدخال CVV صالح",
+    "enterCardForPlans": "أدخل معلومات بطاقتك لعرض خطط التقسيط.",
+    "selectSavedCard": "اختر بطاقة محفوظة",
+    "cardNumberPlaceholder": "رقم البطاقة",
+    "cvvPlaceholder": "CVV",
+    "monthPlaceholder": "MM",
+    "yearPlaceholder": "YY"
+  },
+  "installments": {
+    "title": "اختر خطة الدفع الخاصة بك",
+    "description": "اختر خيار الدفع الأنسب لك",
+    "fullPayment": "الدفع الكامل",
+    "months": "أشهر",
+    "payInFull": "ادفع بالكامل اليوم",
+    "monthlyPayments": "دفعات شهرية بقيمة",
+    "interest": "فائدة",
+    "interestFree": "بدون فوائد",
+    "upfrontFee": "رسوم مقدمة",
+    "perPayment": "لكل دفعة",
+    "continuePayment": "متابعة الدفع"
+  },
+  "errors": {
+    "somethingWentWrong": "حدث خطأ ما",
+    "pleaseTryAgain": "حدث خطأ ما، يرجى المحاولة مرة أخرى",
+    "googlePayFailed": "فشل معالجة دفع Google Pay. يرجى المحاولة مرة أخرى. تحقق من وحدة التحكم للحصول على التفاصيل."
+  },
+  "paymentMethods": {
+    "Card": "بطاقة بنكية",
+    "Pay At Fawry": "الدفع عبر فوري",
+    "ValU": "ڤاليو",
+    "Mobile Wallet": "المحفظة الإلكترونية",
+    "Aman & Masary": "أمان و مصاري",
+    "Cash On Delivery": "الدفع عند الاستلام",
+    "Reference Number": "رقم المرجع",
+    "Shahry": "شهري"
+  },
+  "product": {
+    "categories": {
+      "shirts": "قمصان",
+      "bags": "حقائب"
+    },
+    "items": {
+      "basicTee": "تيشيرت أساسي",
+      "artworkTee": "تيشيرت فني",
+      "nomadPouch": "حقيبة نوماد",
+      "zipToteBasket": "حقيبة بسحاب",
+      "mediumStuffSatchel": "حقيبة متوسطة",
+      "highWallTote": "حقيبة عالية"
+    },
+    "colors": {
+      "black": "أسود",
+      "aspenWhite": "أبيض أسبن",
+      "charcoal": "فحمي",
+      "whiteAndBlack": "أبيض وأسود",
+      "washedBlack": "أسود باهت",
+      "blue": "أزرق",
+      "blackAndOrange": "أسود وبرتقالي"
+    }
+  },
+  "language": {
+    "select": "اختر اللغة",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "theme": {
+    "toggle": "تبديل المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
+  },
+  "productModal": {
+    "productInformation": "معلومات المنتج",
+    "reviews": "التقييمات",
+    "outOfStars": "من 5 نجوم",
+    "inStock": "متوفر وجاهز للشحن",
+    "productOptions": "خيارات المنتج",
+    "addToBag": "أضف إلى الحقيبة",
+    "lifetimeGuarantee": "ضمان مدى الحياة"
+  },
+  "order": {
+    "thankYou": "شكراً لك!",
+    "onTheWay": "في الطريق إليك!",
+    "congratulations": "تهانينا",
+    "orderShipped": "طلبك رقم #{{orderId}} تم شحنه وسيصل إليك قريباً.",
+    "subscriptionActive": "اشتراكك رقم #{{subscriptionId}} مُفعل الآن.",
+    "checkActionsRequired": "يرجى مراجعة الإجراءات المطلوبة ↓",
+    "trackingId": "رقم التتبع",
+    "yourOrder": "طلبك",
+    "items": "العناصر",
+    "quantity": "الكمية",
+    "price": "السعر",
+    "actionsRequired": "إجراءات مطلوبة",
+    "yourInformation": "معلوماتك",
+    "addresses": "العناوين",
+    "shippingAddress": "عنوان الشحن",
+    "contactInformation": "معلومات التواصل",
+    "payment": "الدفع",
+    "paymentMethod": "طريقة الدفع",
+    "shippingMethod": "طريقة الشحن",
+    "dhlShipping": "DHL",
+    "dhlDescription": "يستغرق حتى 3 أيام عمل",
+    "summary": "الملخص",
+    "total": "الإجمالي",
+    "paymentClosed": "تم إغلاق دفعتك"
+  },
+  "subscription": {
+    "subscribed": "مُشترك",
+    "cycles": "دورات",
+    "setupFee": "رسوم الإعداد",
+    "daysTrial": "أيام تجربة",
+    "off": "خصم",
+    "backToPlans": "← العودة للخطط",
+    "alreadySubscribed": "مُشترك بالفعل",
+    "subscribeNow": "اشترك الآن",
+    "every": "كل",
+    "day": "يوم",
+    "month": "شهر"
+  },
+  "transactionFailed": {
+    "title": "عذراً، فشل في الدفع",
+    "message": "لا تقلق، يمكنك المحاولة مرة أخرى بطريقة دفع مختلفة.",
+    "checkoutButton": "الدفع"
+  }
+}

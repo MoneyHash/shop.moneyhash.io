@@ -6,6 +6,7 @@ import {
   type Card,
 } from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import NavBar from '@/components/navbar';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
@@ -30,6 +31,7 @@ const fawryBankInstallment = {
 };
 
 export default function Checkout() {
+  const { t } = useTranslation();
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
   const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
   const [savedCards, setSavedCards] = useState<Card[] | null>(null);
@@ -65,8 +67,8 @@ export default function Checkout() {
         currency,
         userInfo,
         product_items: cart.map((product, index) => ({
-          name: product.name,
-          description: product.description,
+          name: product.nameKey,
+          description: product.descriptionKey,
           quantity: product.quantity,
           amount: product.price[currency],
           category: 'Electronics',
@@ -85,7 +87,7 @@ export default function Checkout() {
       if (key) {
         toast.error(`${key}: ${message}`);
       } else {
-        toast.error((message as string) || 'Something went wrong');
+        toast.error((message as string) || t('errors.somethingWentWrong'));
       }
 
       return Promise.reject(error);
@@ -104,7 +106,7 @@ export default function Checkout() {
       })
       .catch(err => {
         logJSON.error('getIntentDetails', err);
-        toast.error('Something went wrong, please try again');
+        toast.error(t('errors.pleaseTryAgain'));
         return Promise.reject(err);
       });
   };
@@ -128,7 +130,7 @@ export default function Checkout() {
       })
       .catch(error => {
         logJSON.error('proceedWith', error);
-        toast.error('Something went wrong, please try again');
+        toast.error(t('errors.pleaseTryAgain'));
       });
   };
 
@@ -168,7 +170,7 @@ export default function Checkout() {
       logJSON.response('proceedWith:savedCard', intentDetails);
       setIntentDetails(intentDetails);
     } catch (error: any) {
-      toast.error(error.message || 'Something went wrong');
+      toast.error(error.message || t('errors.somethingWentWrong'));
     }
   };
 
@@ -227,13 +229,13 @@ export default function Checkout() {
         if (key) {
           toast.error(`${key}: ${message}`);
         } else {
-          toast.error((message as string) || 'Something went wrong');
+          toast.error((message as string) || t('errors.somethingWentWrong'));
         }
       }
     }
 
     fetchMethods();
-  }, [userInfo, currency, jsonConfig, totalPrice]);
+  }, [userInfo, currency, jsonConfig, totalPrice, t]);
 
   const googlePayNativeData = useMemo(
     () =>
@@ -250,16 +252,16 @@ export default function Checkout() {
       <div className="flex-1 flex flex-col">
         {/* Background color split screen for large screens */}
         <div
-          className="fixed left-0 top-0 hidden h-full w-1/2 bg-background lg:block"
+          className="fixed start-0 top-0 hidden h-full w-1/2 bg-background lg:block"
           aria-hidden="true"
         />
         <div
-          className="fixed right-0 top-0 hidden h-full w-1/2 bg-accent lg:block"
+          className="fixed end-0 top-0 hidden h-full w-1/2 bg-accent lg:block"
           aria-hidden="true"
         />
 
         <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-x-16 lg:grid-cols-2 lg:px-8 lg:pt-16 flex-1 w-full">
-          <h1 className="sr-only">Checkout</h1>
+          <h1 className="sr-only">{t('checkout.title')}</h1>
 
           <OrderSummaryPanel
             cart={cart}
@@ -316,9 +318,7 @@ export default function Checkout() {
                         .catch(() => {
                           session.completeMerchantValidation({});
                           onError();
-                          toast.error(
-                            'Something went wrong, please try again!',
-                          );
+                          toast.error(t('errors.pleaseTryAgain'));
                         });
 
                     session.onpaymentauthorized = async e => {

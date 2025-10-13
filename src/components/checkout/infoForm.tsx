@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import * as v from 'valibot';
 import { isValidPhoneNumber } from 'react-phone-number-input/max';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PhoneInput } from '@/components/ui/phoneInput';
@@ -30,6 +31,7 @@ export function InfoForm({
 }: {
   onSubmit: (data: InfoFormValues) => void;
 }) {
+  const { t } = useTranslation();
   const {
     register,
     control,
@@ -53,26 +55,28 @@ export function InfoForm({
   return (
     <>
       <h2 id="payment-and-shipping-heading" className="sr-only">
-        Payment and shipping details
+        {t('checkout.title')}
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mx-auto max-w-2xl px-4 lg:max-w-none lg:px-0">
           <div>
-            <h3 className="font-medium text-bolder">Contact</h3>
+            <h3 className="font-medium text-bolder">
+              {t('checkout.contact.title')}
+            </h3>
             <p className="text-subtle text-sm">
-              Enter your contact information
+              {t('checkout.contact.description')}
             </p>
 
             <div className="mt-4 grid md:grid-cols-2 gap-4">
               <Input
-                label="First name"
+                label={t('checkout.contact.firstName')}
                 {...register('first_name')}
                 isError={!!errors?.first_name}
               />
               <Input
                 id="last_name"
-                label="Last name"
+                label={t('checkout.contact.lastName')}
                 {...register('last_name')}
                 isError={!!errors?.last_name}
               />
@@ -80,12 +84,16 @@ export function InfoForm({
                 control={control}
                 name="phone_number"
                 render={({ field, fieldState }) => (
-                  <PhoneInput {...field} isError={!!fieldState.error} />
+                  <PhoneInput
+                    {...field}
+                    label={t('checkout.contact.phoneNumber')}
+                    isError={!!fieldState.error}
+                  />
                 )}
               />
               <Input
                 id="email"
-                label="Email address"
+                label={t('checkout.contact.email')}
                 {...register('email')}
                 isError={!!errors?.email}
               />
@@ -93,30 +101,32 @@ export function InfoForm({
           </div>
 
           <div className="mt-10">
-            <h3 className="font-medium text-bolder">Address</h3>
+            <h3 className="font-medium text-bolder">
+              {t('checkout.address.title')}
+            </h3>
             <p className="text-subtle text-sm">
-              Enter your address information
+              {t('checkout.address.description')}
             </p>
 
             <div className="mt-4 grid md:grid-cols-3 gap-4">
               <Input
-                label="Address"
+                label={t('checkout.address.address')}
                 {...register('address')}
                 isError={!!errors?.address}
                 containerClassName="col-span-full"
               />
               <Input
-                label="City"
+                label={t('checkout.address.city')}
                 {...register('city')}
                 isError={!!errors?.city}
               />
               <Input
-                label="State"
+                label={t('checkout.address.state')}
                 {...register('state')}
                 isError={!!errors?.state}
               />
               <Input
-                label="Postal code"
+                label={t('checkout.address.postalCode')}
                 {...register('postal_code')}
                 isError={!!errors?.postal_code}
               />
@@ -130,10 +140,10 @@ export function InfoForm({
               size="lg"
               disabled={isSubmitting}
             >
-              Proceed to payment
+              {t('checkout.proceedToPayment')}
             </Button>
             <Button asChild className="w-full" size="lg" variant="ghost">
-              <Link to="/">Continue Shopping</Link>
+              <Link to="/">{t('checkout.continueShopping')}</Link>
             </Button>
           </div>
         </div>

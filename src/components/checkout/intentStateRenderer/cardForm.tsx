@@ -19,6 +19,7 @@ import { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import * as v from 'valibot';
 import { CreditCardIcon } from 'lucide-react';
 import { isValidPhoneNumber } from 'react-phone-number-input/max';
+import { useTranslation } from 'react-i18next';
 
 import { Controller, useForm, type Control } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
@@ -255,6 +256,7 @@ const MoneyHashFormField = forwardRef<
 });
 
 function ExpiryFormField({ onComplete }: { onComplete: () => void }) {
+  const { t } = useTranslation();
   const {
     field: monthField,
     isMounted: monthIsMounted,
@@ -325,31 +327,41 @@ function ExpiryFormField({ onComplete }: { onComplete: () => void }) {
       </div>
       <Label
         className={cn(
-          'pointer-events-none absolute text-sm bg-background duration-150 transform z-10 origin-left px-2 text-subtle scale-100 -translate-y-1/2 top-1/2 peer-focus: peer-focus:scale-75 peer-focus:  start-1',
+          'pointer-events-none absolute text-sm bg-background duration-150 transform z-10 origin-[0] px-2 text-subtle scale-100 -translate-y-1/2 top-1/2 peer-focus: peer-focus:scale-75 peer-focus:  start-1',
           isError && 'text-red-500',
-          (isFocused || hasValue) &&
-            'top-2 scale-75 -translate-y-4 rtl:translate-x-1/4 rtl:left-auto',
+          (isFocused || hasValue) && 'top-2 scale-75 -translate-y-4',
           isFocused && !isError && 'text-ring',
         )}
       >
-        Expiry (MM/YY)
+        {t('payment.expiry')}
       </Label>
     </div>
   );
 }
 
 function ExpandedCardForm() {
+  const { t } = useTranslation();
   const cvvRef = useRef<FormFieldRef | null>(null);
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="col-span-full">
-        <MoneyHashFormField elementType="cardNumber" label="Card number" />
+        <MoneyHashFormField
+          elementType="cardNumber"
+          label={t('payment.cardNumber')}
+        />
       </div>
       <ExpiryFormField onComplete={() => cvvRef.current?.focus()} />
-      <MoneyHashFormField ref={cvvRef} elementType="cardCvv" label="CVV" />
+      <MoneyHashFormField
+        ref={cvvRef}
+        elementType="cardCvv"
+        label={t('payment.cvv')}
+      />
       <div className="col-span-full">
-        <MoneyHashFormField elementType="cardHolderName" label="Name on card" />
+        <MoneyHashFormField
+          elementType="cardHolderName"
+          label={t('payment.nameOnCard')}
+        />
       </div>
     </div>
   );
@@ -361,15 +373,19 @@ function CompactCardForm() {
     brandIconUrl: string;
   } | null>(null);
 
+  const { t, i18n } = useTranslation();
+
   const {
     field: cardNumberField,
     isMounted: cardNumberIsMounted,
     isFocused: cardNumberIsFocused,
   } = useMoneyHashFormField({
     elementType: 'cardNumber',
-    placeholder: 'Card number',
+    placeholder: t('payment.cardNumberPlaceholder'),
     styles: {
-      padding: '0px 5px 0px 40px',
+      padding: i18n.language === 'ar' ? '0px 40px 0px 5px' : '0px 5px 0px 40px',
+      textAlign: i18n.language === 'ar' ? 'right' : 'left',
+      direction: 'ltr',
     },
     onCardBrandChange: setCardInfo,
   });
@@ -382,7 +398,7 @@ function CompactCardForm() {
     isValid: monthIsValid,
   } = useMoneyHashFormField({
     elementType: 'cardExpiryMonth',
-    placeholder: 'MM',
+    placeholder: t('payment.monthPlaceholder'),
     styles: { padding: '0px 5px' },
     onComplete: () => yearField.focus(),
     onBackspace: () => {
@@ -399,8 +415,11 @@ function CompactCardForm() {
     length: yearLength,
   } = useMoneyHashFormField({
     elementType: 'cardExpiryYear',
-    placeholder: 'YY',
-    styles: { padding: '0px 5px' },
+    placeholder: t('payment.yearPlaceholder'),
+    styles: {
+      padding: '0px 5px',
+      direction: 'ltr',
+    },
     onBackspace: () => {
       if (yearLength === 0) {
         monthField.focus();
@@ -416,8 +435,11 @@ function CompactCardForm() {
     length: cvvLength,
   } = useMoneyHashFormField({
     elementType: 'cardCvv',
-    placeholder: 'CVV',
-    styles: { padding: '0px 0px 0px 10px' },
+    placeholder: t('payment.cvvPlaceholder'),
+    styles: {
+      padding: '0px 0px 0px 10px',
+      direction: 'ltr',
+    },
     onBackspace: () => {
       if (cvvLength === 0) {
         yearField.focus();
@@ -444,7 +466,7 @@ function CompactCardForm() {
       >
         <div className="relative col-span-6 sm:col-span-7">
           <div id="cardNumber" className="!ring-0 !border-none" />
-          <div className="absolute top-1/2 -translate-y-1/2 left-2 ">
+          <div className="absolute top-1/2 -translate-y-1/2 start-2">
             {!cardInfo || cardInfo.brand === 'Unknown' ? (
               <CreditCardIcon className="text-subtler pointer-events-none" />
             ) : (
@@ -456,6 +478,7 @@ function CompactCardForm() {
         <div className="grid grid-cols-2 col-span-5 sm:col-span-3">
           <div className="flex items-center *:shrink-0">
             <div
+              dir="ltr"
               id="cardExpiryMonth"
               className="!ring-0 !border-none basis-[38px]"
             />
@@ -464,11 +487,12 @@ function CompactCardForm() {
               /
             </p>
             <div
+              dir="ltr"
               id="cardExpiryYear"
               className="!ring-0 !border-none basis-[38px]"
             />
           </div>
-          <div id="cardCvv" className="!ring-0 !border-none" />
+          <div dir="ltr" id="cardCvv" className="!ring-0 !border-none" />
         </div>
       </div>
     </div>
@@ -490,6 +514,7 @@ export function CardForm({
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
   isSubscription?: boolean;
 }) {
+  const { t, i18n } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidCardForm, setIsValidCardForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -607,11 +632,14 @@ export function CardForm({
   };
 
   return (
-    <CardFormProvider key={theme} onValidityChange={setIsValidCardForm}>
+    <CardFormProvider
+      key={`${theme}-${i18n.language}`}
+      onValidityChange={setIsValidCardForm}
+    >
       <div className="p-4 space-y-4">
         {billingFields && (
           <DynamicFields
-            title="Billing Details"
+            title={t('payment.billingDetails')}
             fields={billingFields}
             control={control}
           />
@@ -628,10 +656,10 @@ export function CardForm({
             }
           >
             {isSubscription ? (
-              'Subscribe '
+              t('payment.subscribe')
             ) : (
               <>
-                Pay{' '}
+                {t('payment.pay')}{' '}
                 {formatCurrency({
                   currency,
                   amount: totalPrice,
@@ -678,8 +706,12 @@ function DynamicField({ field, control }: { field: Field; control: Control }) {
       <Controller
         control={control}
         name={field.name}
-        render={({ field, fieldState }) => (
-          <PhoneInput {...field} isError={!!fieldState.error} />
+        render={({ field: rhfField, fieldState }) => (
+          <PhoneInput
+            {...rhfField}
+            label={field.label}
+            isError={!!fieldState.error}
+          />
         )}
       />
     );

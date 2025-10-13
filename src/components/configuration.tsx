@@ -21,8 +21,9 @@ export function Configuration() {
   );
 
   const { theme, setTheme } = useTheme();
+
   return (
-    <div className="bg-muted">
+    <div className="bg-muted" dir="ltr">
       <div className="mx-auto max-w-7xl sm:px-6 lg:px-8  py-3 px-4 flex items-center justify-end">
         <div className="flex items-center ml-3 overflow-x-auto py-3 -my-3 px-3 -mx-3 *:shrink-0">
           <div className="flex items-center">

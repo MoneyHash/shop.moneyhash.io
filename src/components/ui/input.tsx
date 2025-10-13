@@ -33,7 +33,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <Label
         htmlFor={id}
         className={cn(
-          'pointer-events-none absolute text-sm bg-background duration-150 transform -translate-y-4 scale-75 top-2 z-10 origin-left px-2 peer-focus:px-2 text-subtle peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1',
+          'pointer-events-none absolute text-sm bg-background duration-150 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2 peer-focus:px-2 text-subtle peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1',
           isError ? 'text-red-500' : ' peer-focus:text-ring',
         )}
       >

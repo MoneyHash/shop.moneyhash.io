@@ -28,12 +28,12 @@ import {
 import { cn } from '@/utils/cn';
 
 const InputComponent = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, ...props }, ref) => (
+  ({ className, label, ...props }, ref) => (
     <Input
       className={cn('rounded-e-sm rounded-s-none', className)}
       containerClassName="w-full flex-1"
       {...props}
-      label="Phone number"
+      label={label || 'Phone number'}
       ref={ref}
     />
   ),
@@ -140,18 +140,30 @@ type PhoneInputProps = Omit<
     onChange?: (value: string) => void;
     value?: string;
     isError?: boolean;
+    label?: string;
   };
+
+const PhoneInputInputComponent = React.forwardRef<HTMLInputElement, InputProps>(
+  (inputProps, ref) => (
+    <InputComponent
+      {...inputProps}
+      label={inputProps.label || 'Phone number'}
+      ref={ref}
+    />
+  ),
+);
+PhoneInputInputComponent.displayName = 'PhoneInputInputComponent';
 
 const PhoneInput = React.forwardRef<
   React.ElementRef<typeof RPNInput>,
   PhoneInputProps
->(({ className, onChange, ...props }, ref) => (
+>(({ className, onChange, label, ...props }, ref) => (
   <RPNInput
     ref={ref}
     className={cn('flex', className)}
     flagComponent={FlagComponent}
     countrySelectComponent={CountrySelect}
-    inputComponent={InputComponent}
+    inputComponent={PhoneInputInputComponent}
     /**
      * Handles the onChange event.
      *
@@ -162,6 +174,7 @@ const PhoneInput = React.forwardRef<
      * @param {E164Number | undefined} value - The entered value
      */
     onChange={value => onChange?.(value || '')}
+    label={label || 'Phone number'}
     {...props}
   />
 ));

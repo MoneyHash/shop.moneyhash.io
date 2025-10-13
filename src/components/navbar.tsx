@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { SelectValue } from '@radix-ui/react-select';
 import { lazy } from 'react';
+import { useTranslation } from 'react-i18next';
 import useCurrency from '@/store/useCurrency';
 import ShoppingCart from '@/components/shoppingCart';
 import { MoneyHashLogo } from '@/components/moneyHashLogo';
@@ -11,17 +12,13 @@ import {
   SelectTrigger,
 } from '@/components/ui/select';
 import { ThemeToggleMenu } from '@/components/themeToggleMenu';
+import { LanguageSwitcher } from '@/components/languageSwitcher';
 
 const Configuration = lazy(() =>
   import('@/components/configuration').then(mod => ({
     default: mod.Configuration,
   })),
 );
-
-const navigation = [
-  { name: 'Shirts', href: '#Shirts' },
-  { name: 'Bags', href: '#Bags' },
-];
 
 export default function NavBar({
   hideCurrency = false,
@@ -32,7 +29,14 @@ export default function NavBar({
   hideCart?: boolean;
   hideConfig?: boolean;
 }) {
+  const { t } = useTranslation();
   const { currency, setCurrency } = useCurrency(state => state);
+
+  const navigation = [
+    { name: t('nav.shirts'), href: '#Shirts' },
+    { name: t('nav.bags'), href: '#Bags' },
+  ];
+
   return (
     <div className="fixed top-0 w-full z-30">
       {!hideConfig && <Configuration />}
@@ -42,18 +46,14 @@ export default function NavBar({
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center">
           <div className="flex items-center">
-            <Link
-              to="/"
-              className="flex-shrink-0 flex items-center space-x-1 mr-3"
-            >
+            <Link to="/" className="flex-shrink-0 flex items-center gap-1 me-3">
               <MoneyHashLogo />
               <span className="font-semibold text-lg hidden sm:block">
-                {' '}
-                Shop
+                {t('nav.shop')}
               </span>
             </Link>
 
-            <ul className="flex space-x-1 sm:space-x-3 px-px sm:px-4">
+            <ul className="flex gap-1 sm:gap-3 px-px sm:px-4">
               {navigation.map(navItem => (
                 <li
                   key={navItem.name}
@@ -70,11 +70,11 @@ export default function NavBar({
             </ul>
           </div>
 
-          <div className="ml-auto flex items-center space-x-2">
+          <div className="ms-auto flex items-center gap-2">
             {!hideCurrency && (
               <>
                 <label htmlFor="currency" className="sr-only">
-                  Currency
+                  {t('nav.currency')}
                 </label>
                 <Select
                   value={currency}
@@ -95,6 +95,9 @@ export default function NavBar({
             )}
 
             {!hideCart && <ShoppingCart />}
+            <div className="shrink-0">
+              <LanguageSwitcher />
+            </div>
             <div className="shrink-0">
               <ThemeToggleMenu />
             </div>

@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import { LinkItUrl } from 'react-linkify-it';
+import { useTranslation } from 'react-i18next';
 import Loader from '@/components/loader';
 import NavBar from '@/components/navbar';
 import { moneyHash } from '@/utils/moneyHash';
@@ -13,6 +14,7 @@ import { logJSON } from '@/utils/logJSON';
 import { SubscriptionPlanCard } from '@/components/subscriptionPlanCard';
 
 export default function Order() {
+  const { t } = useTranslation();
   const [intentDetails, setIntentDetails] =
     useState<IntentDetails<'payment'> | null>(null);
   const [error, setError] = useState();
@@ -38,7 +40,7 @@ export default function Order() {
 
     return intentDetails.productItems.map(productItem => {
       const product = products.find(
-        product => product.name === productItem.name,
+        product => product.nameKey === productItem.name,
       );
 
       return {
@@ -75,7 +77,7 @@ export default function Order() {
     return (
       <div>
         <NavBar hideCurrency hideCart />
-        <TransactionFailed message="Your payment was closed" />
+        <TransactionFailed message={t('order.paymentClosed')} />
       </div>
     );
   }
@@ -90,39 +92,38 @@ export default function Order() {
         <div className="bg-background">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
             <div className="max-w-xl">
-              <h1 className="text-base font-medium text-primary">Thank you!</h1>
+              <h1 className="text-base font-medium text-primary">
+                {t('order.thankYou')}
+              </h1>
               <p className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
-                {intentDetails.subscription ? (
-                  'Congratulations'
-                ) : (
-                  <>It&apos;s on the way!</>
-                )}
+                {intentDetails.subscription
+                  ? t('order.congratulations')
+                  : t('order.onTheWay')}
               </p>
               <div className="mt-2 text-base text-subtle">
                 {intentDetails.subscription ? (
                   <p>
-                    Your subscription #
-                    <span className="uppercase">
-                      {intentDetails.subscription.id}
-                    </span>{' '}
-                    is now active.
+                    {t('order.subscriptionActive', {
+                      subscriptionId: intentDetails.subscription.id,
+                    })}
                   </p>
                 ) : (
                   <p>
-                    Your order #<span className="uppercase">{orderId}</span> has
-                    shipped and will be with you soon.
+                    {t('order.orderShipped', {
+                      orderId,
+                    })}
                   </p>
                 )}
                 {externalActionMessage?.length > 0 && (
                   <a href="#actions" className="underline text-sm text-primary">
-                    Please check the actions required ↓
+                    {t('order.checkActionsRequired')}
                   </a>
                 )}
               </div>
 
               <dl className="mt-12 text-sm font-medium">
-                <dt className="text-bolder">Tracking id</dt>
-                <dd className="mt-2  text-primary dark:text-subtler">
+                <dt className="text-bolder">{t('order.trackingId')}</dt>
+                <dd className="mt-2 text-primary dark:text-subtler">
                   {intentDetails.transaction?.id}
                 </dd>
               </dl>
@@ -135,12 +136,12 @@ export default function Order() {
             )}
 
             <div className="mt-10 border-t">
-              <h2 className="sr-only">Your order</h2>
-              <h3 className="sr-only">Items</h3>
+              <h2 className="sr-only">{t('order.yourOrder')}</h2>
+              <h3 className="sr-only">{t('order.items')}</h3>
               {orderedProducts.map(product => (
                 <div
                   key={product.reference_id}
-                  className="flex space-x-6 border-b py-10"
+                  className="flex gap-6 border-b py-10"
                 >
                   <img
                     src={product.imageSrc}
@@ -149,36 +150,40 @@ export default function Order() {
                   />
                   <div className="flex flex-auto flex-col">
                     <div>
-                      <h4 className="font-medium">{product.name}</h4>
+                      <h4 className="font-medium">{t(product.name)}</h4>
                       <p className="mt-2 text-sm text-subtle">
-                        {product.description}
+                        {t(product.description)}
                       </p>
                     </div>
                     <div className="mt-6 flex flex-1 items-end">
-                      <dl className="flex space-x-4 divide-x text-sm sm:space-x-6">
+                      <dl className="flex gap-4 text-sm sm:gap-6 divide-x rtl:divide-x-reverse">
                         <div className="flex">
-                          <dt className="font-medium text-subtler">Quantity</dt>
-                          <dd className="ml-2 text-bolder">
+                          <dt className="font-medium text-subtler">
+                            {t('order.quantity')}
+                          </dt>
+                          <dd className="ms-2 text-bolder">
                             {product.quantity}
                           </dd>
                         </div>
-                        <div className="flex pl-4 sm:pl-6">
-                          <dt className="font-medium text-subtler">Price</dt>
-                          <dd className="ml-2 text-bolder">{product.amount}</dd>
+                        <div className="flex ps-4 sm:ps-6">
+                          <dt className="font-medium text-subtler">
+                            {t('order.price')}
+                          </dt>
+                          <dd className="ms-2 text-bolder">{product.amount}</dd>
                         </div>
                       </dl>
                     </div>
                   </div>
                 </div>
               ))}
-              <div className="sm:ml-40 sm:pl-6">
+              <div className="sm:ms-40 sm:ps-6">
                 {externalActionMessage?.length > 0 && (
                   <div className="border-b mt-10 pb-10">
                     <h4
                       className="text-lg font-medium text-subtle mb-2 scroll-mt-20"
                       id="actions"
                     >
-                      Actions required
+                      {t('order.actionsRequired')}
                     </h4>
                     <ul className="list-decimal list-inside space-y-1">
                       {externalActionMessage.map(message => (
@@ -192,14 +197,14 @@ export default function Order() {
                   </div>
                 )}
 
-                <h3 className="sr-only">Your information</h3>
+                <h3 className="sr-only">{t('order.yourInformation')}</h3>
 
-                <h4 className="sr-only">Addresses</h4>
-                <dl className="grid grid-cols-2 gap-x-6 py-10 text-sm">
+                <h4 className="sr-only">{t('order.addresses')}</h4>
+                <dl className="grid grid-cols-1 gap-x-6 gap-y-6 py-10 text-sm sm:grid-cols-2">
                   {intentDetails.shippingData && (
                     <div>
                       <dt className="font-medium text-subtle">
-                        Shipping address
+                        {t('order.shippingAddress')}
                       </dt>
                       <dd className="mt-2">
                         <address className="not-italic">
@@ -216,7 +221,7 @@ export default function Order() {
                   )}
                   <div>
                     <dt className="font-medium text-subtle">
-                      Contact Information
+                      {t('order.contactInformation')}
                     </dt>
                     <dd className="mt-2">
                       <address className="not-italic">
@@ -235,29 +240,35 @@ export default function Order() {
                   </div>
                 </dl>
 
-                <h4 className="sr-only">Payment</h4>
-                <dl className="grid grid-cols-2 gap-x-6 border-t py-10 text-sm">
+                <h4 className="sr-only">{t('order.payment')}</h4>
+                <dl className="grid grid-cols-1 gap-x-6 gap-y-6 border-t py-10 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="font-medium text-subtle">Payment method</dt>
+                    <dt className="font-medium text-subtle">
+                      {t('order.paymentMethod')}
+                    </dt>
                     <dd className="mt-2">
                       <p>{intentDetails.transaction?.paymentMethodName}</p>
                     </dd>
                   </div>
                   <div>
-                    <dt className="font-medium text-subtle">Shipping method</dt>
+                    <dt className="font-medium text-subtle">
+                      {t('order.shippingMethod')}
+                    </dt>
                     <dd className="mt-2">
-                      <p>DHL</p>
-                      <p>Takes up to 3 working days</p>
+                      <p>{t('order.dhlShipping')}</p>
+                      <p>{t('order.dhlDescription')}</p>
                     </dd>
                   </div>
                 </dl>
 
-                <h3 className="sr-only">Summary</h3>
+                <h3 className="sr-only">{t('order.summary')}</h3>
 
                 {!!totalPrice && (
                   <dl className="space-y-6 border-t pt-10 text-sm">
                     <div className="flex justify-between">
-                      <dt className="font-medium text-bolder">Total</dt>
+                      <dt className="font-medium text-bolder">
+                        {t('order.total')}
+                      </dt>
                       <dd>
                         {formatCurrency({
                           currency,

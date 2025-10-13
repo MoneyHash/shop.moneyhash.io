@@ -6,6 +6,7 @@ import {
 } from '@moneyhash/js-sdk/headless';
 import { Navigate } from 'react-router-dom';
 import { useShallow } from 'zustand/react/shallow';
+import { useTranslation } from 'react-i18next';
 
 import useConfiguration from '@/store/useConfiguration';
 import { UrlToRender } from './urlToRender';
@@ -34,6 +35,7 @@ export function IntentStateRenderer({
   isSubscription?: boolean;
   isInstallment?: boolean;
 }) {
+  const { t } = useTranslation();
   const { cardForm, fontFamily } = useConfiguration(
     useShallow(({ cardForm, fontFamily }) => ({ cardForm, fontFamily })),
   );
@@ -69,7 +71,7 @@ export function IntentStateRenderer({
       <div>
         {isInstallment && (
           <p className="px-2 pt-4 text-sm text-muted-foreground text-center">
-            Enter your card information to view plans.
+            {t('payment.enterCardForPlans')}
           </p>
         )}
 

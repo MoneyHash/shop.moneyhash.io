@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import formatCurrency from '@/utils/formatCurrency';
 import type { Currency, Product } from '@/utils/productSections';
 import twoFixedDigit from '@/utils/twoFixedDigits';
@@ -11,6 +12,7 @@ export function OrderSummaryPanel({
   cart: (Product & { quantity: number })[];
   currency: Currency;
 }) {
+  const { t } = useTranslation();
   return (
     <section
       aria-labelledby="summary-heading"
@@ -18,11 +20,11 @@ export function OrderSummaryPanel({
     >
       <div className="mx-auto max-w-2xl px-4 lg:max-w-none lg:px-0">
         <h2 id="summary-heading" className="sr-only">
-          Order summary
+          {t('checkout.orderSummary')}
         </h2>
 
         <dl className="flex items-center justify-between border-b dark:border-gray-700/50 pb-6 ">
-          <dt className="text-base">Total</dt>
+          <dt className="text-base">{t('checkout.total')}</dt>
           <dd className="text-base">
             {formatCurrency({
               currency,
@@ -31,18 +33,20 @@ export function OrderSummaryPanel({
           </dd>
         </dl>
 
-        <ul className="divide-y divide-border dark:divide-gray-700/50 text-sm font-medium">
+        <ul className="divide-y divide-border dark:border-gray-700/50 text-sm font-medium">
           {cart.map(product => (
-            <li key={product.id} className="flex items-start space-x-4 py-6">
+            <li key={product.id} className="flex items-start gap-4 py-6">
               <img
                 src={product.imageSrc}
                 alt={product.imageAlt}
                 className="h-20 w-20 flex-none rounded-md object-cover object-center"
               />
               <div className="flex-auto space-y-1">
-                <h3>{product.name}</h3>
-                <p className="text-subtle">{product.description}</p>
-                <p className="text-subtle">Qty {product.quantity}</p>
+                <h3>{t(product.nameKey)}</h3>
+                <p className="text-subtle">{t(product.descriptionKey)}</p>
+                <p className="text-subtle">
+                  {t('cart.quantity')} {product.quantity}
+                </p>
               </div>
               <p className="flex-none text-base font-medium ">
                 {formatCurrency({

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ShoppingBagIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 
 import useShoppingCart from '@/store/useShoppingCart';
@@ -16,6 +17,7 @@ import {
 import { cn } from '@/utils/cn';
 
 export default function ShoppingCart() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const currency = useCurrency(state => state.currency);
   const {
@@ -38,22 +40,22 @@ export default function ShoppingCart() {
             className="h-[1.2rem] w-[1.2rem] flex-shrink-0"
             aria-hidden="true"
           />
-          <span className="ml-2 text-sm font-medium tabular-nums">
+          <span className="ms-2 text-sm font-medium tabular-nums">
             {totalProductsCount}
           </span>
-          <span className="sr-only">items in cart, view bag</span>
+          <span className="sr-only">{t('cart.itemsInCart')}</span>
         </Button>
       </PopoverTrigger>
 
       <PopoverContent align="end" className="w-96 p-0">
-        <h2 className="sr-only">Shopping Cart</h2>
+        <h2 className="sr-only">{t('cart.title')}</h2>
 
         <div className="mx-auto max-w-2xl max-h-96 overflow-y-auto">
           <div className="px-4">
             {cart.length === 0 && (
               <div className="flex flex-col items-center space-y-1 py-6">
                 <ShoppingCartIcon className="w-10 h-10" />
-                <p className="mt-1 text-sm text-subtle">Your Cart is Empty</p>
+                <p className="mt-1 text-sm text-subtle">{t('cart.empty')}</p>
               </div>
             )}
             <ul className="divide-y">
@@ -67,11 +69,11 @@ export default function ShoppingCart() {
                     />
                   </div>
 
-                  <div className="ml-4 flex flex-1 flex-col">
+                  <div className="ms-4 flex flex-1 flex-col">
                     <div>
                       <div className="flex justify-between text-base font-medium">
-                        <h3>{product.name}</h3>
-                        <p className="ml-4">
+                        <h3>{t(product.nameKey)}</h3>
+                        <p className="ms-4">
                           {formatCurrency({
                             currency,
                             amount: twoFixedDigit(
@@ -81,11 +83,11 @@ export default function ShoppingCart() {
                         </p>
                       </div>
                       <p className="mt-1 text-sm text-subtle">
-                        {product.description}
+                        {t(product.descriptionKey)}
                       </p>
                     </div>
                     <div className="flex flex-1 items-end justify-between text-sm">
-                      <div className="flex items-center space-x-1 border rounded-md text-foreground">
+                      <div className="flex items-center gap-1 border rounded-md text-foreground">
                         <button
                           type="button"
                           onClick={() => decrementProductQuantity(product.id)}
@@ -95,7 +97,7 @@ export default function ShoppingCart() {
                           -
                         </button>
                         <span className="tabular-nums text-subtle">
-                          Qty {product.quantity}
+                          {t('cart.quantity')} {product.quantity}
                         </span>
                         <button
                           type="button"
@@ -113,7 +115,7 @@ export default function ShoppingCart() {
                           variant="ghost"
                           size="sm"
                         >
-                          Remove
+                          {t('cart.remove')}
                         </Button>
                       </div>
                     </div>
@@ -133,7 +135,7 @@ export default function ShoppingCart() {
             size="lg"
             onClick={() => setOpen(false)}
           >
-            <Link to="/checkout">Checkout</Link>
+            <Link to="/checkout">{t('cart.checkout')}</Link>
           </Button>
         </div>
       </PopoverContent>

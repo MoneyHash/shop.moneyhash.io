@@ -1,6 +1,7 @@
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { CheckIcon, StarIcon } from '@heroicons/react/20/solid';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 
 import type { Product } from '@/utils/productSections';
 import useCurrency from '@/store/useCurrency';
@@ -24,6 +25,7 @@ export default function ProductModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const currency = useCurrency(state => state.currency);
   const addProductToCart = useShoppingCart(state => state.addProductToCart);
 
@@ -48,11 +50,11 @@ export default function ProductModal({
           </div>
 
           <div className="sm:col-span-8 lg:col-span-7 h-full flex flex-col ">
-            <DialogTitle>{product.name}</DialogTitle>
+            <DialogTitle>{t(product.nameKey)}</DialogTitle>
 
             <section aria-labelledby="information-heading" className="mt-4">
               <h3 id="information-heading" className="sr-only">
-                Product information
+                {t('productModal.productInformation')}
               </h3>
 
               <div className="flex items-center">
@@ -63,8 +65,8 @@ export default function ProductModal({
                   })}
                 </DialogDescription>
 
-                <div className="ml-4 border-l pl-4">
-                  <h4 className="sr-only">Reviews</h4>
+                <div className="ms-4 border-s ps-4">
+                  <h4 className="sr-only">{t('productModal.reviews')}</h4>
                   <div className="flex items-center">
                     <div className="flex items-center">
                       {[0, 1, 2, 3, 4].map(rating => (
@@ -80,7 +82,9 @@ export default function ProductModal({
                         />
                       ))}
                     </div>
-                    <p className="sr-only">{product.rating} out of 5 stars</p>
+                    <p className="sr-only">
+                      {product.rating} {t('productModal.outOfStars')}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -90,8 +94,8 @@ export default function ProductModal({
                   className="h-5 w-5 flex-shrink-0 text-green-500"
                   aria-hidden="true"
                 />
-                <p className="ml-2 font-medium text-subtler">
-                  In stock and ready to ship
+                <p className="ms-2 font-medium text-subtler">
+                  {t('productModal.inStock')}
                 </p>
               </div>
             </section>
@@ -101,7 +105,7 @@ export default function ProductModal({
               className="pt-6 mt-auto"
             >
               <h3 id="options-heading" className="sr-only">
-                Product options
+                {t('productModal.productOptions')}
               </h3>
 
               <div className="mt-auto flex flex-col w-full">
@@ -113,15 +117,15 @@ export default function ProductModal({
                       onClose();
                     }}
                   >
-                    Add to bag
+                    {t('productModal.addToBag')}
                   </Button>
                 </div>
                 <div className="mt-4 text-center group flex items-center justify-center text-sm font-medium text-subtle hover:text-foreground">
                   <ShieldCheckIcon
-                    className="mr-2 h-5 w-5 flex-shrink-0 "
+                    className="me-2 h-5 w-5 flex-shrink-0 "
                     aria-hidden="true"
                   />
-                  <span>Lifetime Guarantee</span>
+                  <span>{t('productModal.lifetimeGuarantee')}</span>
                 </div>
               </div>
             </DialogFooter>

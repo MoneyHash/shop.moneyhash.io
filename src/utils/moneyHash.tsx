@@ -56,4 +56,5 @@ export const moneyHash = new MoneyHashHeadless({
   },
   publicApiKey:
     safeLocalStorage.getItem('publicApiKey') || ACCOUNT_PUBLIC_API_KEY,
+  locale: safeLocalStorage.getItem('language') || 'en',
 });

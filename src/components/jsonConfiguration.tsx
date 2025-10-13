@@ -83,7 +83,7 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <>
+    <div dir="ltr">
       <div>
         <p className="text-sm text-subtle mb-2">Environment</p>
 
@@ -141,6 +141,6 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
       <Button className="mt-4 w-full" size="sm" onClick={saveConfig}>
         Save Configuration
       </Button>
-    </>
+    </div>
   );
 }
