@@ -6,6 +6,7 @@ export default function Banner() {
   const location = useLocation();
   return (
     <div
+      dir="ltr"
       className={clsx(
         'fixed bottom-4 px-2 flex justify-center w-full pointer-events-none z-10',
         location.pathname === '/checkout' && 'max-xl:bottom-16',
