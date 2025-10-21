@@ -17,6 +17,8 @@ import { SavedCards } from './savedCards';
 import { logJSON } from '@/utils/logJSON';
 import { BankIcon } from '../icons/bankIcon';
 import { translatePaymentMethod } from '@/utils/translatePaymentMethod';
+import { useTheme } from '@/context/themeProvider';
+import { type InfoFormValues } from './infoForm';
 
 type PaymentFormProps = {
   methods: Method[];
@@ -25,6 +27,7 @@ type PaymentFormProps = {
   googlePayNativeData: Record<string, any> | null;
   onSelectMethod: (methodId: string) => Promise<any>;
   onSelectBankInstallment: () => Promise<any>;
+  createClick2PayIntent?: (methodId: string) => Promise<string>;
   onPayWithSavedCard: (options: {
     cardId: string;
     cvv: string;
@@ -36,6 +39,7 @@ type PaymentFormProps = {
   onGooglePayClick: (googlePayReceipt: NativeReceiptData) => Promise<void>;
   intentDetails?: IntentDetails<'payment'> | null;
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
+  userInfo?: InfoFormValues;
 };
 
 export function PaymentForm(props: PaymentFormProps) {
@@ -56,6 +60,8 @@ function TabsPaymentForm({
   onPayWithSavedCard,
   onGooglePayClick,
   onIntentDetailsChange,
+  userInfo,
+  createClick2PayIntent,
 }: PaymentFormProps) {
   const { t, i18n } = useTranslation();
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
@@ -263,13 +269,12 @@ function TabsPaymentForm({
         {intentDetails?.selectedMethod && (
           <div className="pt-4 -m-4">
             <IntentStateRenderer
-              intentId={intentDetails?.intent.id}
-              state={intentDetails?.state}
-              stateDetails={intentDetails?.stateDetails}
               onIntentDetailsChange={onIntentDetailsChange}
               paymentMethod={intentDetails?.selectedMethod}
-              paymentStatus={intentDetails.paymentStatus}
+              intentDetails={intentDetails}
               isInstallment={Boolean(isSelectingMethod === 'BANK_INSTALLMENT')}
+              userInfo={userInfo}
+              createClick2PayIntent={createClick2PayIntent}
             />
           </div>
         )}
@@ -290,23 +295,26 @@ function AccordionPaymentForm({
   onSelectBankInstallment,
   onPayWithSavedCard,
   onGooglePayClick,
+  userInfo,
+  createClick2PayIntent,
 }: PaymentFormProps) {
   const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
   const dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
-  const [isSelectingMethod, setIsSelectingMethod] = useState<string | null>(
-    null,
-  );
+  const [isSelectingMethod, setIsSelectingMethod] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
 
   const handleMethodSelection = (methodId: string) => {
-    if (isSelectingMethod && isSelectingMethod !== 'BANK_INSTALLMENT') return;
-    setIsSelectingMethod(methodId);
-    onSelectMethod(methodId).finally(() => setIsSelectingMethod(null));
+    setSelectedMethod(methodId);
+    setIsSelectingMethod(true);
+    onSelectMethod(methodId).finally(() => setIsSelectingMethod(false));
   };
 
   const handleBankInstallmentSelection = () => {
-    if (isSelectingMethod) return;
-    setIsSelectingMethod('BANK_INSTALLMENT');
-    onSelectBankInstallment();
+    // Custom FE only method
+    setSelectedMethod('BANK_INSTALLMENT');
+    setIsSelectingMethod(true);
+    onSelectBankInstallment().finally(() => setIsSelectingMethod(false));
   };
 
   // Separate methods into priority order: CARD, then others, maintaining sorted order
@@ -317,6 +325,10 @@ function AccordionPaymentForm({
     m =>
       m.id !== 'CARD' && m.id !== 'PAY_AT_FAWRY' && m.id !== 'CASH_ON_DELIVERY',
   );
+
+  const click2payNativeData = expressMethods?.find(
+    m => m.id === 'CLICK2PAY',
+  )?.nativePayData;
 
   return (
     <>
@@ -334,32 +346,30 @@ function AccordionPaymentForm({
                   googlePayNativeData={googlePayNativeData}
                   isSelected={false}
                   onApplePayClick={async () => {
-                    setIsSelectingMethod(method.id);
+                    setIsSelectingMethod(true);
                     onApplePayClick({
-                      onCancel: () => setIsSelectingMethod(null),
-                      onError: () => setIsSelectingMethod(null),
+                      onCancel: () => setIsSelectingMethod(false),
+                      onError: () => setIsSelectingMethod(false),
                     });
                   }}
                   onPayWithGooglePay={googlePayReceipt => {
-                    setIsSelectingMethod(method.id);
+                    setIsSelectingMethod(true);
                     onGooglePayClick(googlePayReceipt).catch(e => {
                       toast.error(t('errors.googlePayFailed'));
                       logJSON.error('Google Pay Error', e);
-                      setIsSelectingMethod(null);
+                      setIsSelectingMethod(false);
                     });
                   }}
-                  onCancelGooglePay={() => setIsSelectingMethod(null)}
+                  onCancelGooglePay={() => setIsSelectingMethod(false)}
                 />
-                {intentDetails?.selectedMethod === method.id && (
-                  <IntentStateRenderer
-                    intentId={intentDetails.intent.id}
-                    state={intentDetails.state}
-                    stateDetails={intentDetails.stateDetails}
-                    onIntentDetailsChange={onIntentDetailsChange}
-                    paymentMethod={intentDetails.selectedMethod}
-                    paymentStatus={intentDetails.paymentStatus}
-                  />
-                )}
+                {!isSelectingMethod &&
+                  intentDetails?.selectedMethod === method.id && (
+                    <IntentStateRenderer
+                      onIntentDetailsChange={onIntentDetailsChange}
+                      intentDetails={intentDetails}
+                      paymentMethod={intentDetails.selectedMethod}
+                    />
+                  )}
               </Fragment>
             ))}
           </div>
@@ -379,18 +389,17 @@ function AccordionPaymentForm({
       <RadioGroup
         dir={dir}
         className="gap-0 border border-input rounded-md divide-y divide-input mt-2"
-        value={
-          isSelectingMethod === 'BANK_INSTALLMENT'
-            ? 'BANK_INSTALLMENT'
-            : intentDetails?.selectedMethod || ''
-        }
+        value={selectedMethod || ''}
         onValueChange={method => {
-          if (method === 'BANK_INSTALLMENT') {
+          if (method === 'C2P-CARD') {
+            setSelectedMethod(method);
+          } else if (method === 'BANK_INSTALLMENT') {
             handleBankInstallmentSelection();
           } else {
             handleMethodSelection(method);
           }
         }}
+        disabled={isSelectingMethod}
       >
         {/* Render CARD first */}
         {cardMethod && (
@@ -400,38 +409,58 @@ function AccordionPaymentForm({
               className={cn(
                 'p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed',
                 isSelectingMethod &&
-                  cardMethod.id === isSelectingMethod &&
+                  cardMethod.id === selectedMethod &&
                   'animate-pulse',
               )}
             >
               <RadioGroupItem
                 dir={dir}
                 id={cardMethod.id}
-                value={cardMethod.id}
-                disabled={
-                  isSelectingMethod === 'BANK_INSTALLMENT'
-                    ? false
-                    : !!isSelectingMethod
-                }
+                value={click2payNativeData ? 'C2P-CARD' : cardMethod.id} // C2P-CARD custom method FE only, handle C2P & CARD together
               />
-              <div className="text-bolder flex items-center gap-3">
-                <img
-                  src={cardMethod.icons[0]}
-                  alt=""
-                  className="w-[34px] h-[24px] object-contain"
-                />
-                <span>{translatePaymentMethod(cardMethod.title, t)}</span>
+              <div className="text-bolder flex items-center gap-3 flex-1">
+                {click2payNativeData ? (
+                  <>
+                    <img
+                      src={
+                        theme === 'dark'
+                          ? '/images/c2p-dark.svg'
+                          : '/images/c2p-light.svg'
+                      }
+                      alt=""
+                      className="h-[24px] origin-left scale-125"
+                    />
+                    <span>Credit/Debit</span>
+                    <div className="ml-auto">
+                      <src-mark
+                        dark={theme === 'dark'}
+                        card-brands="mastercard,visa,amex"
+                        height={32}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <img
+                      src={cardMethod.icons[0]}
+                      alt=""
+                      className="w-[34px] h-[24px] object-contain"
+                    />
+                    <span>{translatePaymentMethod(cardMethod.title, t)}</span>
+                  </>
+                )}
               </div>
             </label>
-            {isSelectingMethod !== 'BANK_INSTALLMENT' &&
-              intentDetails?.selectedMethod === cardMethod.id && (
+            {!isSelectingMethod &&
+              selectedMethod ===
+                (click2payNativeData ? 'C2P-CARD' : cardMethod.id) && (
                 <IntentStateRenderer
-                  intentId={intentDetails.intent.id}
-                  state={intentDetails.state}
-                  stateDetails={intentDetails.stateDetails}
+                  intentDetails={intentDetails}
                   onIntentDetailsChange={onIntentDetailsChange}
-                  paymentMethod={intentDetails.selectedMethod}
-                  paymentStatus={intentDetails.paymentStatus}
+                  click2payNativeData={click2payNativeData}
+                  userInfo={userInfo}
+                  paymentMethod={selectedMethod}
+                  createClick2PayIntent={createClick2PayIntent}
                 />
               )}
           </Fragment>
@@ -447,28 +476,22 @@ function AccordionPaymentForm({
               dir={dir}
               id="BANK_INSTALLMENT"
               value="BANK_INSTALLMENT"
-              disabled={
-                !!(
-                  isSelectingMethod && isSelectingMethod !== 'BANK_INSTALLMENT'
-                )
-              }
             />
             <div className="text-bolder flex items-center gap-3">
               <BankIcon className="w-[34px] h-[24px] text-foreground" />
               <span>{t('payment.bankInstallment')}</span>
             </div>
           </label>
-          {intentDetails && isSelectingMethod === 'BANK_INSTALLMENT' && (
-            <IntentStateRenderer
-              intentId={intentDetails.intent.id}
-              state={intentDetails.state}
-              stateDetails={intentDetails.stateDetails}
-              onIntentDetailsChange={onIntentDetailsChange}
-              paymentMethod={intentDetails.selectedMethod!}
-              paymentStatus={intentDetails.paymentStatus}
-              isInstallment
-            />
-          )}
+          {!isSelectingMethod &&
+            intentDetails &&
+            selectedMethod === 'BANK_INSTALLMENT' && (
+              <IntentStateRenderer
+                intentDetails={intentDetails}
+                onIntentDetailsChange={onIntentDetailsChange}
+                paymentMethod={selectedMethod}
+                isInstallment
+              />
+            )}
         </>
 
         {/* Render remaining methods: PAY_AT_FAWRY, CASH_ON_DELIVERY, others */}
@@ -481,20 +504,11 @@ function AccordionPaymentForm({
                 className={cn(
                   'p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed',
                   isSelectingMethod &&
-                    method!.id === isSelectingMethod &&
+                    method!.id === selectedMethod &&
                     'animate-pulse',
                 )}
               >
-                <RadioGroupItem
-                  dir={dir}
-                  id={method!.id}
-                  value={method!.id}
-                  disabled={
-                    isSelectingMethod === 'BANK_INSTALLMENT'
-                      ? false
-                      : !!isSelectingMethod
-                  }
-                />
+                <RadioGroupItem dir={dir} id={method!.id} value={method!.id} />
                 <div className="text-bolder flex items-center gap-3">
                   <img
                     src={method!.icons[0]}
@@ -504,17 +518,13 @@ function AccordionPaymentForm({
                   <span>{translatePaymentMethod(method!.title, t)}</span>
                 </div>
               </label>
-              {isSelectingMethod !== 'BANK_INSTALLMENT' &&
-                intentDetails?.selectedMethod === method!.id && (
-                  <IntentStateRenderer
-                    intentId={intentDetails.intent.id}
-                    state={intentDetails.state}
-                    stateDetails={intentDetails.stateDetails}
-                    onIntentDetailsChange={onIntentDetailsChange}
-                    paymentMethod={intentDetails.selectedMethod}
-                    paymentStatus={intentDetails.paymentStatus}
-                  />
-                )}
+              {!isSelectingMethod && selectedMethod === method!.id && (
+                <IntentStateRenderer
+                  intentDetails={intentDetails}
+                  onIntentDetailsChange={onIntentDetailsChange}
+                  paymentMethod={selectedMethod}
+                />
+              )}
             </Fragment>
           ))}
       </RadioGroup>
@@ -597,30 +607,34 @@ function ExpressButton({
     );
   }
 
-  return (
-    <button
-      type="button"
-      className={cn(
-        'flex justify-center items-center rounded-sm hover:opacity-90 border border-input h-[40px] py-1 focus:outline-none focus-visible:ring-2 focus-visible:border-ring focus-visible:ring-ring/30 overflow-hidden bg-white',
-        isSelected && 'border-ring ring-2 ring-ring/30 bg-primary/5',
-      )}
-      onClick={onApplePayClick}
-    >
-      {method.id === 'APPLE_PAY' ? (
-        <img
-          src={method.icons[0]}
-          alt=""
-          className="h-full filter-invert"
-          draggable={false}
-        />
-      ) : (
-        <p>
-          Pay with{' '}
-          <span className="font-medium">
-            {translatePaymentMethod(method.title, t)}
-          </span>
-        </p>
-      )}
-    </button>
-  );
+  if (method.id === 'APPLE_PAY') {
+    return (
+      <button
+        type="button"
+        className={cn(
+          'flex justify-center items-center rounded-sm hover:opacity-90 border border-input h-[40px] py-1 focus:outline-none focus-visible:ring-2 focus-visible:border-ring focus-visible:ring-ring/30 overflow-hidden bg-white',
+          isSelected && 'border-ring ring-2 ring-ring/30 bg-primary/5',
+        )}
+        onClick={onApplePayClick}
+      >
+        {method.id === 'APPLE_PAY' ? (
+          <img
+            src={method.icons[0]}
+            alt=""
+            className="h-full filter-invert"
+            draggable={false}
+          />
+        ) : (
+          <p>
+            Pay with{' '}
+            <span className="font-medium">
+              {translatePaymentMethod(method.title, t)}
+            </span>
+          </p>
+        )}
+      </button>
+    );
+  }
+
+  return null;
 }

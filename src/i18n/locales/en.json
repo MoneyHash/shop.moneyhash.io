@@ -42,7 +42,8 @@
       "postalCode": "Postal code"
     },
     "proceedToPayment": "Proceed to payment",
-    "continueShopping": "Continue Shopping"
+    "continueShopping": "Continue Shopping",
+    "continue": "Continue"
   },
   "payment": {
     "title": "Payment",

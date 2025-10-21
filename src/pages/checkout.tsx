@@ -145,6 +145,13 @@ export default function Checkout() {
     });
   };
 
+  const handleClick2PayIntentCreation = async (methodId: string) =>
+    handleCreateIntent({
+      userInfo: userInfo!,
+      methodId,
+      disableIntentDetails: true,
+    });
+
   const handlePayWithSavedCard = async ({
     cardId,
     cvv,
@@ -298,6 +305,7 @@ export default function Checkout() {
             <MoneyHashProvider moneyHash={moneyHash}>
               {userInfo && paymentMethods && (
                 <PaymentForm
+                  userInfo={userInfo}
                   intentDetails={intentDetails}
                   onIntentDetailsChange={setIntentDetails}
                   methods={paymentMethods}
@@ -305,6 +313,7 @@ export default function Checkout() {
                   savedCards={savedCards}
                   googlePayNativeData={googlePayNativeData}
                   onSelectMethod={handleSelectMethod}
+                  createClick2PayIntent={handleClick2PayIntentCreation}
                   onSelectBankInstallment={handleSelectBankInstallment}
                   onPayWithSavedCard={handlePayWithSavedCard}
                   onApplePayClick={async ({ onCancel, onError }) => {

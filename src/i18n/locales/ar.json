@@ -42,7 +42,8 @@
       "postalCode": "الرمز البريدي"
     },
     "proceedToPayment": "المتابعة إلى الدفع",
-    "continueShopping": "متابعة التسوق"
+    "continueShopping": "متابعة التسوق",
+    "continue": "متابعة"
   },
   "payment": {
     "title": "الدفع",

@@ -147,12 +147,9 @@ function SubscriptionEmbed({
         <MoneyHashProvider moneyHash={moneyHash}>
           <IntentStateRenderer
             isSubscription
-            intentId={intentDetails.intent.id}
-            paymentStatus={intentDetails.paymentStatus}
             onIntentDetailsChange={setIntentDetails}
-            state={intentDetails.state}
-            stateDetails={intentDetails.stateDetails}
             paymentMethod={intentDetails.selectedMethod!}
+            intentDetails={intentDetails}
           />
         </MoneyHashProvider>
       </div>

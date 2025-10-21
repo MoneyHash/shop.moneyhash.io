@@ -14,6 +14,7 @@ import type {
   ElementType,
   Field,
   PaymentMethodSlugs,
+  MaskedCard,
 } from '@moneyhash/js-sdk';
 import { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import * as v from 'valibot';
@@ -23,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Controller, useForm, type Control } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
+import toast from 'react-hot-toast';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/utils/cn';
 import { getColorFromCssVariable } from '@/utils/getColorFromCssVariable';
@@ -37,6 +39,7 @@ import { PhoneInput } from '@/components/ui/phoneInput';
 import { Input } from '@/components/ui/input';
 import { logJSON } from '@/utils/logJSON';
 import { useMoneyHash } from '@/context/moneyHashProvider';
+import type { InfoFormValues } from '../infoForm';
 
 const CardFormContext = createContext<Elements | null>(null);
 
@@ -507,7 +510,7 @@ export function CardForm({
   billingFields,
   isSubscription = false,
 }: {
-  paymentMethod: PaymentMethodSlugs;
+  paymentMethod: string;
   accessToken: string | null;
   billingFields: Field[] | null;
   intentId: string;
@@ -595,7 +598,7 @@ export function CardForm({
     } else {
       apiMethod = moneyHash
         .submitForm({
-          paymentMethod,
+          paymentMethod: paymentMethod as PaymentMethodSlugs,
           intentId,
           billingData: getBillingValues(),
         })
@@ -735,4 +738,416 @@ function DynamicField({ field, control }: { field: Field; control: Control }) {
     );
   }
   return null;
+}
+
+export function Click2PayCardForm({
+  onIntentDetailsChange,
+  click2payNativeData,
+  userInfo,
+  createClick2PayIntent,
+}: {
+  onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
+  click2payNativeData: Record<string, any>;
+  userInfo: InfoFormValues;
+  createClick2PayIntent: (methodId: string) => Promise<string>;
+}) {
+  const { t, i18n } = useTranslation();
+  const [isLoading, setIsLoading] = useState(true);
+  const [maskedCards, setMaskedCards] = useState<MaskedCard[] | null>(null);
+  const [scenario, setScenario] = useState<'VERIFY_USER' | 'NEW_EMAIL' | null>(
+    null,
+  );
+  const [payWith, setPayWith] = useState<
+    (MaskedCard['srcDigitalCardId'] & {}) | 'NEW_CARD' | null
+  >(null);
+  const [checkoutAsGuest, setCheckoutAsGuest] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isValidCardForm, setIsValidCardForm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const currency = useCurrency(state => state.currency);
+  const totalPrice = useTotalPrice();
+  const { theme } = useTheme();
+  const cardForm = useConfiguration(state => state.cardForm);
+  const moneyHash = useMoneyHash();
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    let apiMethod;
+
+    let intentId: string;
+
+    try {
+      intentId = await createClick2PayIntent(
+        payWith === 'NEW_CARD' && !checkoutAsGuest ? 'CARD' : 'CLICK2PAY',
+      );
+    } catch (error) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (payWith === 'NEW_CARD' && !checkoutAsGuest) {
+      apiMethod = moneyHash.cardForm
+        .collect()
+        .then(cardData => {
+          logJSON.response('cardForm.collect', cardData);
+          return cardData;
+        })
+        .catch(error => {
+          logJSON.error('cardForm.collect', error);
+          return Promise.reject(error);
+        })
+        .then(cardData =>
+          moneyHash.cardForm.pay({
+            cardData,
+            intentId,
+          }),
+        )
+        .then(response => {
+          logJSON.response('cardForm.pay', response);
+          return response;
+        })
+        .catch(error => {
+          logJSON.error('cardForm.pay', error);
+          return Promise.reject(error);
+        });
+    } else if (payWith === 'NEW_CARD' && checkoutAsGuest) {
+      apiMethod = moneyHash.click2Pay
+        .checkoutWithNewCard({
+          consumer: {
+            emailAddress: userInfo.email,
+            firstName: userInfo.first_name,
+            lastName: userInfo.last_name,
+          },
+          dpaTransactionOptions: {
+            transactionAmount: {
+              transactionAmount: totalPrice,
+              transactionCurrencyCode: currency,
+            },
+          },
+          rememberMe,
+        })
+        .then(checkoutResponse =>
+          moneyHash.click2Pay.pay({ intentId, checkoutResponse }),
+        );
+    } else {
+      apiMethod = moneyHash.click2Pay
+        .checkoutWithCard({
+          srcDigitalCardId: payWith!,
+          rememberMe,
+          dpaTransactionOptions: {
+            transactionAmount: {
+              transactionAmount: totalPrice,
+              transactionCurrencyCode: currency,
+            },
+          },
+        })
+        .then(checkoutResponse =>
+          moneyHash.click2Pay.pay({ intentId, checkoutResponse }),
+        );
+    }
+
+    apiMethod
+      .then(intentDetails => {
+        const { stateDetails } = intentDetails;
+        if (
+          // Skip rendering the redirection loader and redirect directly
+          // You can use paymentStatus.status === 'CAPTURED' if you're not using redirection on intent creation
+          stateDetails &&
+          'url' in stateDetails &&
+          stateDetails.renderStrategy === 'REDIRECT'
+        ) {
+          window.location.href = stateDetails.url;
+        } else {
+          onIntentDetailsChange(intentDetails);
+        }
+      })
+      .catch(errors => {
+        const [error] = Object.values(errors);
+        setError(error as string);
+        setIsSubmitting(false);
+      });
+  };
+
+  const handleUnrecognizedUser = useCallbackRef(
+    async ({
+      email,
+      onConsumerNotPreset,
+    }: {
+      email: string;
+      onConsumerNotPreset: () => void;
+    }) => {
+      const { consumerPresent } = await moneyHash.click2Pay.lookUp({
+        email,
+      });
+
+      if (consumerPresent) {
+        setScenario('VERIFY_USER');
+        moneyHash.click2Pay
+          .authenticate({
+            loadSupportedValidationChannels: true,
+            notYouRequestedCallback: ({ close }) => {
+              setScenario('NEW_EMAIL');
+              close();
+            },
+          })
+          .then(result => {
+            if (result.action === 'AUTHENTICATED') {
+              setMaskedCards(result.maskedCards);
+              setScenario(null);
+            }
+          })
+          .catch((error: any) => {
+            setPayWith('NEW_CARD');
+            setScenario(null);
+            toast.error(error.message);
+          });
+      } else {
+        onConsumerNotPreset();
+      }
+    },
+  );
+
+  useEffect(() => {
+    async function initializeC2P() {
+      try {
+        await moneyHash.click2Pay.init({
+          env: 'sandbox',
+          dpaLocale: 'en_US',
+          srcDpaId: click2payNativeData.dpa_id,
+          dpaData: {
+            dpaName: click2payNativeData.dpa_name,
+          },
+          cardBrands: ['mastercard', 'visa', 'amex'],
+        });
+
+        const cards = await moneyHash.click2Pay.getCards();
+        logJSON.response('click2Pay.getCards', cards);
+        if (cards.length > 0) {
+          setMaskedCards(cards);
+        } else {
+          handleUnrecognizedUser({
+            email: userInfo.email,
+            onConsumerNotPreset: () => setPayWith('NEW_CARD'),
+          });
+        }
+      } catch (error: any) {
+        setError(error.message);
+      }
+      setIsLoading(false);
+    }
+
+    initializeC2P();
+  }, [moneyHash, click2payNativeData, userInfo.email, handleUnrecognizedUser]);
+
+  useEffect(() => {
+    if (maskedCards?.length) {
+      moneyHash.click2Pay.cardList.loadCards({ maskedCards });
+
+      const selectSrcDigitalCardIdCleanup =
+        moneyHash.click2Pay.cardList.addEventListener(
+          'selectSrcDigitalCardId',
+          e => {
+            setPayWith(e.detail);
+          },
+        );
+
+      const clickAddCardLinkCleanup =
+        moneyHash.click2Pay.cardList.addEventListener('clickAddCardLink', () =>
+          setPayWith('NEW_CARD'),
+        );
+
+      const clickSignOutLinkCleanup =
+        moneyHash.click2Pay.cardList.addEventListener(
+          'clickSignOutLink',
+          async () => {
+            await moneyHash.click2Pay.signOut();
+            setMaskedCards(null);
+            setScenario('NEW_EMAIL');
+            setPayWith(null);
+          },
+        );
+
+      return () => {
+        selectSrcDigitalCardIdCleanup();
+        clickAddCardLinkCleanup();
+        clickSignOutLinkCleanup();
+      };
+    }
+  }, [moneyHash, maskedCards]);
+
+  useEffect(() => {
+    if (payWith === 'NEW_CARD') {
+      const controller = new AbortController();
+      document
+        .getElementById('mh-src-consent')
+        ?.addEventListener(
+          'checkoutAsGuest',
+          (event: any) => setCheckoutAsGuest(event.detail.checkoutAsGuest),
+          { signal: controller.signal },
+        );
+
+      document.getElementById('mh-src-consent')?.addEventListener(
+        'rememberMe',
+        (event: any) => {
+          setRememberMe(event.detail.rememberMe);
+        },
+        { signal: controller.signal },
+      );
+
+      return () => {
+        controller.abort();
+      };
+    }
+  }, [payWith]);
+
+  if (isLoading) {
+    return <src-loader dark={theme === 'dark' ? true : undefined} />;
+  }
+
+  return (
+    <div className="p-4 space-y-4">
+      {maskedCards?.length ? (
+        <src-card-list
+          id="mh-src-card-list"
+          background="transparent"
+          dark={theme === 'dark' ? true : undefined}
+          display-preferred-card
+          display-sign-out
+          display-header={false}
+          card-selection-type="radioButton"
+          display-add-card
+          card-brands="mastercard,visa,amex"
+        />
+      ) : null}
+
+      <src-otp-input
+        id="mh-src-otp-input"
+        card-brands="mastercard,visa,amex"
+        style={{ display: 'none' }}
+        dark={theme === 'dark' ? true : undefined}
+      />
+
+      {scenario === 'NEW_EMAIL' && (
+        <NewEmailClick2PayCardForm
+          onSubmit={async ({ email }) => {
+            await handleUnrecognizedUser({
+              email,
+              onConsumerNotPreset: () =>
+                toast.error(
+                  'No email found in Click2Pay system. Please enter a different email.',
+                ),
+            });
+          }}
+        />
+      )}
+
+      {(scenario === 'VERIFY_USER' || scenario === 'NEW_EMAIL') && (
+        <div className="flex flex-col">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 border-t border-b" /> OR{' '}
+            <div className="flex-1 border-t border-b" />
+          </div>
+          <button
+            type="button"
+            className="text-primary underline mt-4"
+            onClick={() => {
+              setPayWith('NEW_CARD');
+              setScenario(null);
+            }}
+          >
+            Enter card manually
+          </button>
+        </div>
+      )}
+
+      {payWith === 'NEW_CARD' && (
+        <>
+          <CardFormProvider
+            key={`${theme}-${i18n.language}`}
+            onValidityChange={setIsValidCardForm}
+          >
+            {cardForm === 'compact' ? (
+              <CompactCardForm />
+            ) : (
+              <ExpandedCardForm />
+            )}
+          </CardFormProvider>
+
+          <src-consent
+            dark={theme === 'dark' ? true : undefined}
+            display-remember-me={checkoutAsGuest}
+            id="mh-src-consent"
+          />
+        </>
+      )}
+
+      {payWith && (
+        <Button
+          className="w-full"
+          onClick={handleSubmit}
+          disabled={
+            (payWith === 'NEW_CARD' && !isValidCardForm) || isSubmitting
+          }
+        >
+          <>
+            {t('payment.pay')}{' '}
+            {formatCurrency({
+              currency,
+              amount: totalPrice,
+            })}
+          </>
+        </Button>
+      )}
+
+      {error && <p className="text-sm text-center text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+function NewEmailClick2PayCardForm({
+  onSubmit,
+}: {
+  onSubmit: (data: { email: string }) => void;
+}) {
+  const { t } = useTranslation();
+  const {
+    register,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useForm<InfoFormValues>({
+    mode: 'onTouched',
+    resolver: valibotResolver(
+      v.object({
+        email: v.pipe(v.string(), v.trim(), v.nonEmpty(), v.email()),
+      }),
+    ),
+    defaultValues: {
+      email: '',
+    },
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <p className="text-sm text-center">
+        Enter another email to access a different set of linked cards.
+      </p>
+      <Input
+        id="email"
+        label={t('checkout.contact.email')}
+        {...register('email')}
+        isError={!!errors?.email}
+      />
+      <Button
+        type="submit"
+        className="disabled:opacity-50 disabled:cursor-progress w-full"
+        size="lg"
+        disabled={isSubmitting}
+      >
+        {t('checkout.continue')}
+      </Button>
+    </form>
+  );
 }
