@@ -777,18 +777,11 @@ export function Click2PayCardForm({
 
     let apiMethod;
 
-    let intentId: string;
-
-    try {
-      intentId = await createClick2PayIntent(
+    if (payWith === 'NEW_CARD' && !checkoutAsGuest) {
+      const intentId = await createClick2PayIntent(
         payWith === 'NEW_CARD' && !checkoutAsGuest ? 'CARD' : 'CLICK2PAY',
       );
-    } catch (error) {
-      setIsSubmitting(false);
-      return;
-    }
 
-    if (payWith === 'NEW_CARD' && !checkoutAsGuest) {
       apiMethod = moneyHash.cardForm
         .collect()
         .then(cardData => {
@@ -826,12 +819,36 @@ export function Click2PayCardForm({
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
             },
+            authenticationPreferences: {
+              payloadRequested: 'AUTHENTICATED',
+            },
+            paymentOptions: [
+              {
+                dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
+              },
+            ],
+            acquirerData: [
+              {
+                cardBrand: 'mastercard',
+                acquirerMerchantId: 'SRC3DS',
+                acquirerBIN: '545301',
+              },
+              {
+                cardBrand: 'visa',
+                acquirerMerchantId: '33334444',
+                acquirerBIN: '432104',
+              },
+            ],
           },
           rememberMe,
         })
-        .then(checkoutResponse =>
-          moneyHash.click2Pay.pay({ intentId, checkoutResponse }),
-        );
+        .then(async checkoutResponse => {
+          if (checkoutResponse.checkoutActionCode !== 'COMPLETE') return;
+          const intentId = await createClick2PayIntent(
+            payWith === 'NEW_CARD' && !checkoutAsGuest ? 'CARD' : 'CLICK2PAY',
+          );
+          return moneyHash.click2Pay.pay({ intentId, checkoutResponse });
+        });
     } else {
       apiMethod = moneyHash.click2Pay
         .checkoutWithCard({
@@ -842,15 +859,41 @@ export function Click2PayCardForm({
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
             },
+            paymentOptions: [
+              {
+                dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
+              },
+            ],
+            acquirerData: [
+              {
+                cardBrand: 'mastercard',
+                acquirerMerchantId: 'SRC3DS',
+                acquirerBIN: '545301',
+              },
+              {
+                cardBrand: 'visa',
+                acquirerMerchantId: '33334444',
+                acquirerBIN: '432104',
+              },
+            ],
           },
         })
-        .then(checkoutResponse =>
-          moneyHash.click2Pay.pay({ intentId, checkoutResponse }),
-        );
+        .then(async checkoutResponse => {
+          if (checkoutResponse.checkoutActionCode !== 'COMPLETE') return;
+          const intentId = await createClick2PayIntent(
+            payWith === 'NEW_CARD' && !checkoutAsGuest ? 'CARD' : 'CLICK2PAY',
+          );
+          return moneyHash.click2Pay.pay({ intentId, checkoutResponse });
+        });
     }
 
     apiMethod
       .then(intentDetails => {
+        if (!intentDetails) {
+          setIsSubmitting(false);
+          return;
+        }
+
         const { stateDetails } = intentDetails;
         if (
           // Skip rendering the redirection loader and redirect directly
@@ -920,6 +963,32 @@ export function Click2PayCardForm({
           dpaData: {
             dpaName: click2payNativeData.dpa_name,
           },
+          dpaTransactionOptions: {
+            transactionAmount: {
+              transactionAmount: totalPrice,
+              transactionCurrencyCode: currency,
+            },
+            authenticationPreferences: {
+              payloadRequested: 'AUTHENTICATED',
+            },
+            paymentOptions: [
+              {
+                dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
+              },
+            ],
+            acquirerData: [
+              {
+                cardBrand: 'mastercard',
+                acquirerMerchantId: 'SRC3DS',
+                acquirerBIN: '545301',
+              },
+              {
+                cardBrand: 'visa',
+                acquirerMerchantId: '33334444',
+                acquirerBIN: '432104',
+              },
+            ],
+          },
           cardBrands: ['mastercard', 'visa', 'amex'],
         });
 
@@ -940,7 +1009,14 @@ export function Click2PayCardForm({
     }
 
     initializeC2P();
-  }, [moneyHash, click2payNativeData, userInfo.email, handleUnrecognizedUser]);
+  }, [
+    moneyHash,
+    click2payNativeData,
+    userInfo.email,
+    handleUnrecognizedUser,
+    totalPrice,
+    currency,
+  ]);
 
   useEffect(() => {
     if (maskedCards?.length) {

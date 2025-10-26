@@ -35,7 +35,7 @@ type PaymentFormProps = {
   onApplePayClick: (options: {
     onCancel: () => void;
     onError: () => void;
-  }) => void;
+  }) => Promise<void>;
   onGooglePayClick: (googlePayReceipt: NativeReceiptData) => Promise<void>;
   intentDetails?: IntentDetails<'payment'> | null;
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
@@ -347,20 +347,33 @@ function AccordionPaymentForm({
                   isSelected={false}
                   onApplePayClick={async () => {
                     setIsSelectingMethod(true);
+                    setSelectedMethod('APPLE_PAY');
                     onApplePayClick({
-                      onCancel: () => setIsSelectingMethod(false),
-                      onError: () => setIsSelectingMethod(false),
-                    });
+                      onCancel: () => {
+                        setIsSelectingMethod(false);
+                        setSelectedMethod(null);
+                      },
+                      onError: () => {
+                        setIsSelectingMethod(false);
+                        setSelectedMethod(null);
+                      },
+                    }).finally(() => setIsSelectingMethod(false));
                   }}
                   onPayWithGooglePay={googlePayReceipt => {
                     setIsSelectingMethod(true);
-                    onGooglePayClick(googlePayReceipt).catch(e => {
-                      toast.error(t('errors.googlePayFailed'));
-                      logJSON.error('Google Pay Error', e);
-                      setIsSelectingMethod(false);
-                    });
+                    setSelectedMethod('GOOGLE_PAY');
+                    onGooglePayClick(googlePayReceipt)
+                      .catch(e => {
+                        toast.error(t('errors.googlePayFailed'));
+                        logJSON.error('Google Pay Error', e);
+                        setSelectedMethod(null);
+                      })
+                      .finally(() => setIsSelectingMethod(false));
                   }}
-                  onCancelGooglePay={() => setIsSelectingMethod(false)}
+                  onCancelGooglePay={() => {
+                    setIsSelectingMethod(false);
+                    setSelectedMethod(null);
+                  }}
                 />
                 {!isSelectingMethod &&
                   intentDetails?.selectedMethod === method.id && (
