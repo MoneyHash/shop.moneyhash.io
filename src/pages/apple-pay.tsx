@@ -331,7 +331,7 @@ export default function ApplePay() {
                     countryCode: nativePayData.country_code,
                     currencyCode: nativePayData.currency_code,
                     supportedNetworks: nativePayData.supported_networks,
-                    merchantCapabilities: ['supports3DS'],
+                    merchantCapabilities: nativePayData.supported_capabilities,
                     total: {
                       label: 'Apple Pay',
                       type: 'final',
@@ -339,20 +339,20 @@ export default function ApplePay() {
                     },
                     requiredShippingContactFields: ['email'],
                     recurringPaymentRequest: {
-                      paymentDescription: 'Monthly Description',
+                      paymentDescription: 'Payment Description',
                       managementURL: window.location.href,
                       tokenNotificationURL:
                         'https://vault-staging.moneyhash.io/api/v1/apple_pay_decryption/merchant-token-events',
                       regularBilling: {
-                        label: '5 Minutes recurring subscription for 6 times',
-                        amount: `${nativePayData.amount / 6}`,
+                        label: '5 Minutes recurring subscription',
+                        amount: `${nativePayData.amount}`,
                         paymentTiming: 'recurring',
                         recurringPaymentStartDate: new Date(),
                         recurringPaymentIntervalUnit: 'minute',
                         recurringPaymentIntervalCount: 5,
-                        recurringPaymentEndDate: new Date(
-                          Date.now() + 30 * 60 * 1000,
-                        ), // after 30 mins
+                        // recurringPaymentEndDate: new Date(
+                        //   Date.now() + 30 * 60 * 1000,
+                        // ), // after 30 mins
                       },
                     },
                   });
@@ -363,6 +363,9 @@ export default function ApplePay() {
                   logJSON.error('Create ApplePay Session', error);
                   return;
                 }
+
+                // eslint-disable-next-line
+                console.log(session);
 
                 session.onvalidatemerchant = e =>
                   moneyHash
