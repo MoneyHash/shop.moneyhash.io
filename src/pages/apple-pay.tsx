@@ -318,6 +318,250 @@ export default function ApplePay() {
             >
               Bin Lookup
             </AppleButton>
+
+            <AppleButton
+              disabled={!nativePayData}
+              className={isLoading ? 'animate-pulse' : ''}
+              onClick={async () => {
+                if (!nativePayData) return;
+
+                let session: ApplePaySession;
+                try {
+                  session = new ApplePaySession(3, {
+                    countryCode: nativePayData.country_code,
+                    currencyCode: nativePayData.currency_code,
+                    supportedNetworks: nativePayData.supported_networks,
+                    merchantCapabilities: ['supports3DS'],
+                    total: {
+                      label: 'Apple Pay',
+                      type: 'final',
+                      amount: `${nativePayData.amount}`,
+                    },
+                    requiredShippingContactFields: ['email'],
+                    recurringPaymentRequest: {
+                      paymentDescription: 'Monthly Description',
+                      managementURL: window.location.href,
+                      tokenNotificationURL:
+                        'https://vault-staging.moneyhash.io/api/v1/apple_pay_decryption/merchant-token-events',
+                      regularBilling: {
+                        label: '5 Minutes recurring subscription for 6 times',
+                        amount: `${nativePayData.amount / 6}`,
+                        paymentTiming: 'recurring',
+                        recurringPaymentStartDate: new Date(),
+                        recurringPaymentIntervalUnit: 'minute',
+                        recurringPaymentIntervalCount: 5,
+                        recurringPaymentEndDate: new Date(
+                          Date.now() + 30 * 60 * 1000,
+                        ), // after 30 mins
+                      },
+                    },
+                  });
+                } catch (error) {
+                  toast.error(
+                    'Failed to create Apple Pay session, check logs.',
+                  );
+                  logJSON.error('Create ApplePay Session', error);
+                  return;
+                }
+
+                session.onvalidatemerchant = e =>
+                  moneyHash
+                    .validateApplePayMerchantSession({
+                      methodId: nativePayData.method_id,
+                      validationUrl: e.validationURL,
+                    })
+                    .then(merchantSession =>
+                      session.completeMerchantValidation(merchantSession),
+                    )
+                    .catch(e => {
+                      session.completeMerchantValidation({});
+                      toast.error(
+                        'Failed to validate merchant session, check logs',
+                      );
+                      logJSON.error('Validate ApplePay Merchant Session', e);
+                    });
+
+                session.onpaymentauthorized = async e => {
+                  const applePayReceipt = {
+                    receipt: JSON.stringify({ token: e.payment.token }),
+                    receiptBillingData: {
+                      email: e.payment.shippingContact?.emailAddress,
+                    },
+                  };
+                  session.completePayment(ApplePaySession.STATUS_SUCCESS);
+                  logJSON.response('ApplePay Receipt', applePayReceipt);
+
+                  let intentId;
+
+                  try {
+                    const baseUrl =
+                      config.env === 'production'
+                        ? 'https://web.moneyhash.io/api/v1.1'
+                        : 'https://staging-web.moneyhash.io/api/v1.1';
+                    intentId = await axios
+                      .post(
+                        `${baseUrl}/payments/intent/`,
+                        JSON.parse(config.intentConfig),
+                        {
+                          headers: {
+                            'x-api-key': config.apiKey,
+                          },
+                        },
+                      )
+                      .then(res => res.data.data.id);
+                  } catch (error) {
+                    toast.error('Failed to create intent, check logs');
+                    logJSON.error('Create Intent', error);
+                    return;
+                  }
+
+                  try {
+                    await moneyHash.proceedWith({
+                      type: 'method',
+                      id: 'APPLE_PAY',
+                      intentId,
+                    });
+
+                    const intentDetails = await moneyHash.submitPaymentReceipt({
+                      nativeReceiptData: applePayReceipt,
+                      intentId,
+                      saveCard: true,
+                    });
+                    logJSON.response('Submit Receipt', intentDetails);
+                    toast.success(
+                      `Submitted receipt successfully, check logs.`,
+                    );
+                  } catch (error) {
+                    toast.error('Failed to submit receipt, check logs');
+                    logJSON.error('Submit Receipt', error);
+                  }
+                };
+
+                session.begin();
+              }}
+            >
+              Recurring with Apple Pay
+            </AppleButton>
+
+            <AppleButton
+              disabled={!nativePayData}
+              className={isLoading ? 'animate-pulse' : ''}
+              onClick={async () => {
+                if (!nativePayData) return;
+
+                let session: ApplePaySession;
+                try {
+                  session = new ApplePaySession(3, {
+                    countryCode: nativePayData.country_code,
+                    currencyCode: nativePayData.currency_code,
+                    supportedNetworks: nativePayData.supported_networks,
+                    merchantCapabilities: ['supports3DS'],
+                    total: {
+                      label: 'Apple Pay',
+                      type: 'final',
+                      amount: `0`,
+                    },
+                    requiredShippingContactFields: ['email'],
+                    automaticReloadPaymentRequest: {
+                      paymentDescription: 'Coffee Card Auto-Reload',
+                      automaticReloadBilling: {
+                        label: 'Auto-Reload Amount',
+                        amount: `${nativePayData.amount}`,
+                        type: 'final',
+                        paymentTiming: 'automaticReload',
+                        automaticReloadPaymentThresholdAmount: '5',
+                      },
+                      managementURL: window.location.href,
+                      tokenNotificationURL:
+                        'https://vault-staging.moneyhash.io/api/v1/apple_pay_decryption/merchant-token-events',
+                    },
+                  });
+                } catch (error) {
+                  toast.error(
+                    'Failed to create Apple Pay session, check logs.',
+                  );
+                  logJSON.error('Create ApplePay Session', error);
+                  return;
+                }
+
+                session.onvalidatemerchant = e =>
+                  moneyHash
+                    .validateApplePayMerchantSession({
+                      methodId: nativePayData.method_id,
+                      validationUrl: e.validationURL,
+                    })
+                    .then(merchantSession =>
+                      session.completeMerchantValidation(merchantSession),
+                    )
+                    .catch(e => {
+                      session.completeMerchantValidation({});
+                      toast.error(
+                        'Failed to validate merchant session, check logs',
+                      );
+                      logJSON.error('Validate ApplePay Merchant Session', e);
+                    });
+
+                session.onpaymentauthorized = async e => {
+                  const applePayReceipt = {
+                    receipt: JSON.stringify({ token: e.payment.token }),
+                    receiptBillingData: {
+                      email: e.payment.shippingContact?.emailAddress,
+                    },
+                  };
+                  session.completePayment(ApplePaySession.STATUS_SUCCESS);
+                  logJSON.response('ApplePay Receipt', applePayReceipt);
+
+                  let intentId;
+
+                  try {
+                    const baseUrl =
+                      config.env === 'production'
+                        ? 'https://web.moneyhash.io/api/v1.1'
+                        : 'https://staging-web.moneyhash.io/api/v1.1';
+                    intentId = await axios
+                      .post(
+                        `${baseUrl}/payments/intent/`,
+                        JSON.parse(config.intentConfig),
+                        {
+                          headers: {
+                            'x-api-key': config.apiKey,
+                          },
+                        },
+                      )
+                      .then(res => res.data.data.id);
+                  } catch (error) {
+                    toast.error('Failed to create intent, check logs');
+                    logJSON.error('Create Intent', error);
+                    return;
+                  }
+
+                  try {
+                    await moneyHash.proceedWith({
+                      type: 'method',
+                      id: 'APPLE_PAY',
+                      intentId,
+                    });
+
+                    const intentDetails = await moneyHash.submitPaymentReceipt({
+                      nativeReceiptData: applePayReceipt,
+                      intentId,
+                      saveCard: true,
+                    });
+                    logJSON.response('Submit Receipt', intentDetails);
+                    toast.success(
+                      `Submitted receipt successfully, check logs.`,
+                    );
+                  } catch (error) {
+                    toast.error('Failed to submit receipt, check logs');
+                    logJSON.error('Submit Receipt', error);
+                  }
+                };
+
+                session.begin();
+              }}
+            >
+              Automatic Reload with Apple Pay
+            </AppleButton>
           </div>
 
           <ConfigurationForm
