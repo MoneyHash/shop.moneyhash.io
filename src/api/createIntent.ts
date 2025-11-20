@@ -44,6 +44,7 @@ export default function createIntent({
       city: userInfo.city,
       state: userInfo.state,
       postal_code: userInfo.postal_code,
+      country: 'SA',
     },
     shipping_data: {
       address: userInfo.address,
