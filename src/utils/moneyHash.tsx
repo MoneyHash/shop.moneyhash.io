@@ -46,12 +46,17 @@ if (localEnv === 'staging') {
   window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
 }
 
+const bodyStyles = window.getComputedStyle(document.body);
+const loaderColor = `hsl(${window
+  .getComputedStyle(document.documentElement)
+  .getPropertyValue('--primary')})`;
+
 export const moneyHash = new MoneyHashHeadless({
   type: 'payment',
   styles: {
     loader: {
-      backgroundColor: 'white',
-      color: 'black',
+      backgroundColor: bodyStyles.backgroundColor,
+      color: loaderColor,
     },
   },
   publicApiKey:
