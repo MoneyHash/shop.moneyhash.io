@@ -344,15 +344,12 @@ export default function ApplePay() {
                       tokenNotificationURL:
                         'https://vault-staging.moneyhash.io/api/v1/apple_pay_decryption/merchant-token-events',
                       regularBilling: {
-                        label: '5 Minutes recurring subscription',
+                        label: 'Dummy data',
                         amount: `${nativePayData.amount}`,
                         paymentTiming: 'recurring',
                         recurringPaymentStartDate: new Date(),
                         recurringPaymentIntervalUnit: 'minute',
                         recurringPaymentIntervalCount: 5,
-                        // recurringPaymentEndDate: new Date(
-                        //   Date.now() + 30 * 60 * 1000,
-                        // ), // after 30 mins
                       },
                     },
                   });
@@ -363,9 +360,6 @@ export default function ApplePay() {
                   logJSON.error('Create ApplePay Session', error);
                   return;
                 }
-
-                // eslint-disable-next-line
-                console.log(session);
 
                 session.onvalidatemerchant = e =>
                   moneyHash
@@ -394,17 +388,20 @@ export default function ApplePay() {
                   session.completePayment(ApplePaySession.STATUS_SUCCESS);
                   logJSON.response('ApplePay Receipt', applePayReceipt);
 
-                  let intentId;
+                  let cardTokenIntentId;
 
                   try {
                     const baseUrl =
                       config.env === 'production'
-                        ? 'https://web.moneyhash.io/api/v1.1'
-                        : 'https://staging-web.moneyhash.io/api/v1.1';
-                    intentId = await axios
+                        ? 'https://web.moneyhash.io/api/v1.4'
+                        : 'https://staging-web.moneyhash.io/api/v1.4';
+                    cardTokenIntentId = await axios
                       .post(
-                        `${baseUrl}/payments/intent/`,
-                        JSON.parse(config.intentConfig),
+                        `${baseUrl}/tokens/cards/`,
+                        {
+                          ...JSON.parse(config.intentConfig),
+                          card_token_type: 'UNIVERSAL',
+                        },
                         {
                           headers: {
                             'x-api-key': config.apiKey,
@@ -414,28 +411,23 @@ export default function ApplePay() {
                       .then(res => res.data.data.id);
                   } catch (error) {
                     toast.error('Failed to create intent, check logs');
-                    logJSON.error('Create Intent', error);
+                    logJSON.error('Create Card Token Intent', error);
                     return;
                   }
 
                   try {
-                    await moneyHash.proceedWith({
-                      type: 'method',
-                      id: 'APPLE_PAY',
-                      intentId,
+                    const tokenId = await moneyHash.tokenizeReceipt({
+                      receipt: applePayReceipt.receipt,
+                      methodId: nativePayData.method_id,
+                      cardTokenIntentId,
                     });
 
-                    const intentDetails = await moneyHash.submitPaymentReceipt({
-                      nativeReceiptData: applePayReceipt,
-                      intentId,
-                      saveCard: true,
-                    });
-                    logJSON.response('Submit Receipt', intentDetails);
+                    logJSON.response('Tokenize Receipt', tokenId);
                     toast.success(
-                      `Submitted receipt successfully, check logs.`,
+                      `Tokenized receipt successfully, check logs.`,
                     );
                   } catch (error) {
-                    toast.error('Failed to submit receipt, check logs');
+                    toast.error('Failed to tokenize receipt, check logs');
                     logJSON.error('Submit Receipt', error);
                   }
                 };
@@ -514,17 +506,20 @@ export default function ApplePay() {
                   session.completePayment(ApplePaySession.STATUS_SUCCESS);
                   logJSON.response('ApplePay Receipt', applePayReceipt);
 
-                  let intentId;
+                  let cardTokenIntentId;
 
                   try {
                     const baseUrl =
                       config.env === 'production'
-                        ? 'https://web.moneyhash.io/api/v1.1'
-                        : 'https://staging-web.moneyhash.io/api/v1.1';
-                    intentId = await axios
+                        ? 'https://web.moneyhash.io/api/v1.4'
+                        : 'https://staging-web.moneyhash.io/api/v1.4';
+                    cardTokenIntentId = await axios
                       .post(
-                        `${baseUrl}/payments/intent/`,
-                        JSON.parse(config.intentConfig),
+                        `${baseUrl}/tokens/cards/`,
+                        {
+                          ...JSON.parse(config.intentConfig),
+                          card_token_type: 'UNIVERSAL',
+                        },
                         {
                           headers: {
                             'x-api-key': config.apiKey,
@@ -534,28 +529,23 @@ export default function ApplePay() {
                       .then(res => res.data.data.id);
                   } catch (error) {
                     toast.error('Failed to create intent, check logs');
-                    logJSON.error('Create Intent', error);
+                    logJSON.error('Create Card Token Intent', error);
                     return;
                   }
 
                   try {
-                    await moneyHash.proceedWith({
-                      type: 'method',
-                      id: 'APPLE_PAY',
-                      intentId,
+                    const tokenId = await moneyHash.tokenizeReceipt({
+                      receipt: applePayReceipt.receipt,
+                      methodId: nativePayData.method_id,
+                      cardTokenIntentId,
                     });
 
-                    const intentDetails = await moneyHash.submitPaymentReceipt({
-                      nativeReceiptData: applePayReceipt,
-                      intentId,
-                      saveCard: true,
-                    });
-                    logJSON.response('Submit Receipt', intentDetails);
+                    logJSON.response('Tokenize Receipt', tokenId);
                     toast.success(
-                      `Submitted receipt successfully, check logs.`,
+                      `Tokenized receipt successfully, check logs.`,
                     );
                   } catch (error) {
-                    toast.error('Failed to submit receipt, check logs');
+                    toast.error('Failed to tokenize receipt, check logs');
                     logJSON.error('Submit Receipt', error);
                   }
                 };
