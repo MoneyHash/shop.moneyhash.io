@@ -519,6 +519,9 @@ export default function ApplePay() {
                         {
                           ...JSON.parse(config.intentConfig),
                           card_token_type: 'UNIVERSAL',
+                          metadata: {
+                            source: 'apple_pay_network_token',
+                          },
                         },
                         {
                           headers: {
