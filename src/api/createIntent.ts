@@ -20,6 +20,7 @@ export default function createIntent({
   userInfo,
   product_items,
   extraConfig,
+  customFields,
 }: {
   methodId?: string;
   paymentProvider?: string;
@@ -28,6 +29,7 @@ export default function createIntent({
   userInfo: InfoFormValues;
   product_items: ProductItem[];
   extraConfig?: Record<string, any>;
+  customFields?: Record<string, any>;
   operation?: string;
 }): Promise<{ data: { id: string } }> {
   return axiosInstance.post('/payments/intent/', {
@@ -79,6 +81,8 @@ export default function createIntent({
       size: 200,
       animate: 'pulse',
     },
+    allow_tokenize_card: methodId === 'CARD',
+    custom_fields: customFields,
     ...(!extraConfig?.flow_id && {
       operation: authorizedMethods.includes(methodId!)
         ? 'authorize'

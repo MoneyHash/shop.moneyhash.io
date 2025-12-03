@@ -12,6 +12,7 @@ import NotFound from '@/components/notFound';
 import TransactionFailed from '@/components/transactionFailed';
 import { logJSON } from '@/utils/logJSON';
 import { SubscriptionPlanCard } from '@/components/subscriptionPlanCard';
+import { useTheme } from '@/context/themeProvider';
 
 export default function Order() {
   const { t } = useTranslation();
@@ -20,6 +21,7 @@ export default function Order() {
   const [error, setError] = useState();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('intent_id');
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!orderId) return;
@@ -84,6 +86,8 @@ export default function Order() {
 
   const externalActionMessage =
     intentDetails?.transaction?.externalActionMessage || [];
+
+  const customFields = intentDetails?.transaction?.customFields;
 
   return (
     <div>
@@ -248,6 +252,15 @@ export default function Order() {
                     </dt>
                     <dd className="mt-2">
                       <p>{intentDetails.transaction?.paymentMethodName}</p>
+
+                      {customFields && (customFields?.artUri as any) && (
+                        <src-card
+                          descriptor-name={customFields.descriptorName}
+                          account-number-suffix={customFields.panLastFour}
+                          card-art={customFields.artUri}
+                          dark={theme === 'dark' ? true : undefined}
+                        />
+                      )}
                     </dd>
                   </div>
                   <div>

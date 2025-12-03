@@ -50,11 +50,13 @@ export default function Checkout() {
     paymentProvider,
     userInfo,
     disableIntentDetails = false,
+    customFields,
   }: {
     userInfo: InfoFormValues;
     methodId?: string;
     paymentProvider?: string;
     disableIntentDetails?: boolean;
+    customFields?: Record<string, any>;
   }) => {
     const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
 
@@ -78,6 +80,7 @@ export default function Checkout() {
           tax: 1,
         })),
         extraConfig,
+        customFields,
       });
       intentId = response.data.id;
       logJSON.BE('Create Intent', response);
@@ -145,11 +148,15 @@ export default function Checkout() {
     });
   };
 
-  const handleClick2PayIntentCreation = async (methodId: string) =>
+  const handleClick2PayIntentCreation = async (
+    methodId: string,
+    customFields?: Record<string, any>,
+  ) =>
     handleCreateIntent({
       userInfo: userInfo!,
       methodId,
       disableIntentDetails: true,
+      customFields,
     });
 
   const handlePayWithSavedCard = async ({
@@ -175,6 +182,17 @@ export default function Checkout() {
         intentId,
       });
       logJSON.response('proceedWith:savedCard', intentDetails);
+      const { stateDetails } = intentDetails;
+      if (
+        stateDetails &&
+        'url' in stateDetails &&
+        stateDetails.renderStrategy === 'REDIRECT'
+      ) {
+        window.location.href = stateDetails.url;
+      } else {
+        navigate(`/checkout/order?intent_id=${intentId}`);
+      }
+
       setIntentDetails(intentDetails);
     } catch (error: any) {
       toast.error(error.message || t('errors.somethingWentWrong'));

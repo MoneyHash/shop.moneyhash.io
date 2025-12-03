@@ -25,5 +25,9 @@ declare namespace JSX {
       React.HTMLAttributes<HTMLElement>,
       HTMLElement
     > & { dark?: boolean };
+    'src-card': React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement>,
+      HTMLElement
+    > & { dark?: boolean };
   }
 }

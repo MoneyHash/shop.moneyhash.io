@@ -27,7 +27,10 @@ export function IntentStateRenderer({
   isInstallment?: boolean;
   click2payNativeData?: Record<string, any> | null;
   userInfo?: InfoFormValues;
-  createClick2PayIntent?: (methodId: string) => Promise<string>;
+  createClick2PayIntent?: (
+    methodId: string,
+    customFields?: Record<string, any>,
+  ) => Promise<string>;
 }) {
   const { state, stateDetails, paymentStatus } = intentDetails || {};
   const intentId = intentDetails?.intent.id;

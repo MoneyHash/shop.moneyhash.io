@@ -19,7 +19,10 @@ import type {
 import { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import * as v from 'valibot';
 import { CreditCardIcon } from 'lucide-react';
-import { isValidPhoneNumber } from 'react-phone-number-input/max';
+import {
+  isValidPhoneNumber,
+  parsePhoneNumber,
+} from 'react-phone-number-input/max';
 import { useTranslation } from 'react-i18next';
 
 import { Controller, useForm, type Control } from 'react-hook-form';
@@ -40,6 +43,8 @@ import { Input } from '@/components/ui/input';
 import { logJSON } from '@/utils/logJSON';
 import { useMoneyHash } from '@/context/moneyHashProvider';
 import type { InfoFormValues } from '../infoForm';
+import useJsonConfig from '@/store/useJsonConfig';
+import axiosInstance from '@/api';
 
 const CardFormContext = createContext<Elements | null>(null);
 
@@ -749,7 +754,10 @@ export function Click2PayCardForm({
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
   click2payNativeData: Record<string, any>;
   userInfo: InfoFormValues;
-  createClick2PayIntent: (methodId: string) => Promise<string>;
+  createClick2PayIntent: (
+    methodId: string,
+    customField?: Record<string, any>,
+  ) => Promise<string>;
 }) {
   const { t, i18n } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
@@ -760,6 +768,7 @@ export function Click2PayCardForm({
   const [payWith, setPayWith] = useState<
     (MaskedCard['srcDigitalCardId'] & {}) | 'NEW_CARD' | null
   >(null);
+  const [saveCardToMoneyHash, setSaveCardToMoneyHash] = useState(false);
   const [checkoutAsGuest, setCheckoutAsGuest] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -770,6 +779,15 @@ export function Click2PayCardForm({
   const { theme } = useTheme();
   const cardForm = useConfiguration(state => state.cardForm);
   const moneyHash = useMoneyHash();
+  const { jsonConfig } = useJsonConfig();
+
+  const hasCustomer = useMemo(() => {
+    try {
+      return !!JSON.parse(jsonConfig).customer;
+    } catch (error) {
+      return false;
+    }
+  }, [jsonConfig]);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -778,9 +796,7 @@ export function Click2PayCardForm({
     let apiMethod;
 
     if (payWith === 'NEW_CARD' && !checkoutAsGuest) {
-      const intentId = await createClick2PayIntent(
-        payWith === 'NEW_CARD' && !checkoutAsGuest ? 'CARD' : 'CLICK2PAY',
-      );
+      const intentId = await createClick2PayIntent('CARD');
 
       apiMethod = moneyHash.cardForm
         .collect()
@@ -796,6 +812,7 @@ export function Click2PayCardForm({
           moneyHash.cardForm.pay({
             cardData,
             intentId,
+            saveCard: saveCardToMoneyHash,
           }),
         )
         .then(response => {
@@ -807,12 +824,19 @@ export function Click2PayCardForm({
           return Promise.reject(error);
         });
     } else if (payWith === 'NEW_CARD' && checkoutAsGuest) {
+      const phone = parsePhoneNumber(userInfo.phone_number);
       apiMethod = moneyHash.click2Pay
         .checkoutWithNewCard({
           consumer: {
             emailAddress: userInfo.email,
             firstName: userInfo.first_name,
             lastName: userInfo.last_name,
+            ...(phone && {
+              mobileNumber: {
+                countryCode: phone.countryCallingCode,
+                phoneNumber: phone.nationalNumber,
+              },
+            }),
           },
           dpaTransactionOptions: {
             transactionAmount: {
@@ -844,9 +868,20 @@ export function Click2PayCardForm({
         })
         .then(async checkoutResponse => {
           if (checkoutResponse.checkoutActionCode !== 'COMPLETE') return;
-          const intentId = await createClick2PayIntent(
-            payWith === 'NEW_CARD' && !checkoutAsGuest ? 'CARD' : 'CLICK2PAY',
-          );
+
+          const artUri =
+            checkoutResponse.checkoutResponseData?.maskedCard.digitalCardData
+              .artUri;
+          const descriptorName =
+            checkoutResponse.checkoutResponseData?.maskedCard.digitalCardData
+              .descriptorName;
+          const panLastFour =
+            checkoutResponse.checkoutResponseData?.maskedCard.panLastFour;
+          const intentId = await createClick2PayIntent('CLICK2PAY', {
+            artUri,
+            descriptorName,
+            panLastFour,
+          });
           return moneyHash.click2Pay.pay({ intentId, checkoutResponse });
         });
     } else {
@@ -880,18 +915,58 @@ export function Click2PayCardForm({
         })
         .then(async checkoutResponse => {
           if (checkoutResponse.checkoutActionCode !== 'COMPLETE') return;
-          const intentId = await createClick2PayIntent(
-            payWith === 'NEW_CARD' && !checkoutAsGuest ? 'CARD' : 'CLICK2PAY',
-          );
+          const {
+            digitalCardData: { artUri, descriptorName },
+            panLastFour,
+          } = maskedCards!.find(card => card.srcDigitalCardId === payWith)!;
+
+          const intentId = await createClick2PayIntent('CLICK2PAY', {
+            artUri,
+            descriptorName,
+            panLastFour,
+          });
           return moneyHash.click2Pay.pay({ intentId, checkoutResponse });
         });
     }
 
     apiMethod
-      .then(intentDetails => {
+      .then(async intentDetails => {
         if (!intentDetails) {
           setIsSubmitting(false);
           return;
+        }
+
+        // Store card data in MoneyHash vault as well (skip if failed)
+        try {
+          if (
+            payWith === 'NEW_CARD' &&
+            checkoutAsGuest &&
+            saveCardToMoneyHash
+          ) {
+            const cardTokenIntentId = await axiosInstance
+              .post(
+                'https://staging-web.moneyhash.io/api/v1.4/tokens/cards/',
+                {
+                  card_token_type: 'UNIVERSAL',
+                  webhook_url:
+                    'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
+                  customer: JSON.parse(jsonConfig).customer,
+                  metadata: {
+                    source: 'apple_pay_network_token',
+                  },
+                },
+                {},
+              )
+              .then(res => res.data.id);
+
+            const cardData = await moneyHash.cardForm.collect();
+            await moneyHash.cardForm.createCardToken({
+              cardData,
+              cardIntentId: cardTokenIntentId,
+            });
+          }
+        } catch (error) {
+          //
         }
 
         const { stateDetails } = intentDetails;
@@ -908,8 +983,12 @@ export function Click2PayCardForm({
         }
       })
       .catch(errors => {
-        const [error] = Object.values(errors);
-        setError(error as string);
+        if (errors.type === 'network') {
+          setError(errors.message || 'Something Went Wrong');
+        } else {
+          const [error] = Object.values(errors);
+          setError(error as string);
+        }
         setIsSubmitting(false);
       });
   };
@@ -1151,6 +1230,19 @@ export function Click2PayCardForm({
               <ExpandedCardForm />
             )}
           </CardFormProvider>
+
+          {hasCustomer && (
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="save-card"
+                className="ml-1 size-5 text-primary accent-current"
+                checked={saveCardToMoneyHash}
+                onChange={e => setSaveCardToMoneyHash(e.target.checked)}
+              />
+              <label htmlFor="save-card">Save this card for future use.</label>
+            </div>
+          )}
 
           <src-consent
             dark={theme === 'dark' ? true : undefined}

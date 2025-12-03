@@ -43,7 +43,8 @@ export function JsonConfiguration() {
 }
 
 function ConfigurationContent({ onClose }: { onClose: () => void }) {
-  const { jsonConfig, setJsonConfig } = useJsonConfig();
+  const { jsonConfig } = useJsonConfig();
+  const [internalJsonConfig, setInternalJsonConfig] = useState(jsonConfig);
   const [apiKey, setApiKey] = useState(
     () => safeLocalStorage.getItem('apiKey') || '',
   );
@@ -52,7 +53,7 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
   );
 
   const saveConfig = () => {
-    if (!jsonConfig) {
+    if (!internalJsonConfig) {
       toast.error('No configuration to save.');
       return;
     }
@@ -68,8 +69,8 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    if (isJsonValid(jsonConfig)) {
-      safeLocalStorage.setItem('jsonConfig', jsonConfig);
+    if (isJsonValid(internalJsonConfig)) {
+      safeLocalStorage.setItem('jsonConfig', internalJsonConfig);
       safeLocalStorage.setItem('apiKey', apiKey);
       safeLocalStorage.setItem('publicApiKey', publicApiKey);
       toast.success('Configuration saved successfully.');
@@ -136,7 +137,10 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
       <hr />
       <div>
         <p className="text-sm mb-2 text-subtle">Intent configuration</p>
-        <JsonEditor value={jsonConfig} onChange={setJsonConfig} />
+        <JsonEditor
+          value={internalJsonConfig}
+          onChange={setInternalJsonConfig}
+        />
       </div>
       <Button className="mt-4 w-full" size="sm" onClick={saveConfig}>
         Save Configuration

@@ -97,8 +97,10 @@
     --src-color-background: transparent;
     --src-checkbox-label-font-size: 0.2rem;
     --src-checkbox-width: 2px;
+  }
 
-    /* --src-legal-font-size: 25px; */
+  src-mark {
+    --src-section-border-width: 0;
   }
 }
 
