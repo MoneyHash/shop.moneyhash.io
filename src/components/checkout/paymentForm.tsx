@@ -447,7 +447,7 @@ function AccordionPaymentForm({
                     <div className="ml-auto -mb-4">
                       <src-mark
                         dark={theme === 'dark'}
-                        card-brands="mastercard,visa,amex"
+                        card-brands="mastercard,visa,amex,discover"
                         height={32}
                       />
                     </div>

@@ -929,6 +929,12 @@ export function Click2PayCardForm({
         });
     }
 
+    await new Promise(res => {
+      setTimeout(() => {
+        res(undefined);
+      }, 3000);
+    });
+
     apiMethod
       .then(async intentDetails => {
         if (!intentDetails) {
@@ -1068,7 +1074,7 @@ export function Click2PayCardForm({
               },
             ],
           },
-          cardBrands: ['mastercard', 'visa', 'amex'],
+          cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
         });
 
         const cards = await moneyHash.click2Pay.getCards();
@@ -1174,13 +1180,13 @@ export function Click2PayCardForm({
           display-header={false}
           card-selection-type="radioButton"
           display-add-card
-          card-brands="mastercard,visa,amex"
+          card-brands="mastercard,visa,amex,discover"
         />
       ) : null}
 
       <src-otp-input
         id="mh-src-otp-input"
-        card-brands="mastercard,visa,amex"
+        card-brands="mastercard,visa,amex,discover"
         style={{ display: 'none' }}
         dark={theme === 'dark' ? true : undefined}
       />
