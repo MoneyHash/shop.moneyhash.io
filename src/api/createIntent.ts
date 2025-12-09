@@ -81,7 +81,7 @@ export default function createIntent({
       size: 200,
       animate: 'pulse',
     },
-    allow_tokenize_card: methodId === 'CARD',
+    allow_tokenize_card: methodId === 'CARD' && !!extraConfig?.customer,
     custom_fields: customFields,
     ...(!extraConfig?.flow_id && {
       operation: authorizedMethods.includes(methodId!)
