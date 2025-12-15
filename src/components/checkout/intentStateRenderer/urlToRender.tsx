@@ -24,8 +24,7 @@ export function UrlToRender({
     moneyHash
       .renderUrl({
         intentId,
-        renderStrategy:
-          renderStrategy === 'IFRAME' ? 'REDIRECT' : renderStrategy,
+        renderStrategy,
         url,
       })
       .then(onIntentDetailsChangeRef);
