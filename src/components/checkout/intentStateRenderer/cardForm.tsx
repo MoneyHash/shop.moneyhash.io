@@ -1,3 +1,4 @@
+/* eslint-disable no-console, func-names */
 import {
   createContext,
   forwardRef,
@@ -16,7 +17,7 @@ import type {
   PaymentMethodSlugs,
   MaskedCard,
 } from '@moneyhash/js-sdk';
-import { type IntentDetails } from '@moneyhash/js-sdk/headless';
+import MoneyHash, { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import * as v from 'valibot';
 import { CreditCardIcon } from 'lucide-react';
 import {
@@ -761,6 +762,7 @@ export function Click2PayCardForm({
 }) {
   const { t, i18n } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
+  const [isC2pError, setIsC2pError] = useState(false);
   const [maskedCards, setMaskedCards] = useState<MaskedCard[] | null>(null);
   const [scenario, setScenario] = useState<'VERIFY_USER' | 'NEW_EMAIL' | null>(
     null,
@@ -989,7 +991,14 @@ export function Click2PayCardForm({
         }
       })
       .catch(errors => {
-        if (errors.type === 'network') {
+        if (errors.message === 'checkoutWithCard forced failure') {
+          toast.error(
+            'Click2Pay Checkout Failed. Please continue with a card.',
+          );
+          setCheckoutAsGuest(false);
+          setPayWith('NEW_CARD');
+          setIsC2pError(true);
+        } else if (errors.type === 'network') {
           setError(errors.message || 'Something Went Wrong');
         } else {
           const [error] = Object.values(errors);
@@ -1039,6 +1048,15 @@ export function Click2PayCardForm({
   );
 
   useEffect(() => {
+    if (window.FAILED_C2P_INIT) {
+      c2pInitFailure(moneyHash);
+    } else if (window.FAILED_C2P_CKO) {
+      c2pCKOFailure(moneyHash);
+    } else if (window.FAILED_C2P_UNK) {
+      c2pUnknownFailure(moneyHash);
+    }
+
+    // c2pCKOFailure(moneyHash);
     async function initializeC2P() {
       try {
         await moneyHash.click2Pay.init({
@@ -1088,7 +1106,9 @@ export function Click2PayCardForm({
           });
         }
       } catch (error: any) {
-        setError(error.message);
+        setPayWith('NEW_CARD');
+        setCheckoutAsGuest(false);
+        setIsC2pError(true);
       }
       setIsLoading(false);
     }
@@ -1250,11 +1270,13 @@ export function Click2PayCardForm({
             </div>
           )}
 
-          <src-consent
-            dark={theme === 'dark' ? true : undefined}
-            display-remember-me={checkoutAsGuest}
-            id="mh-src-consent"
-          />
+          {!isC2pError && (
+            <src-consent
+              dark={theme === 'dark' ? true : undefined}
+              display-remember-me={checkoutAsGuest}
+              id="mh-src-consent"
+            />
+          )}
         </>
       )}
 
@@ -1324,4 +1346,174 @@ function NewEmailClick2PayCardForm({
       </Button>
     </form>
   );
+}
+
+declare global {
+  interface Window {
+    FAILED_C2P_INIT?: boolean;
+    FAILED_C2P_CKO?: boolean;
+    FAILED_C2P_UNK?: boolean;
+  }
+}
+
+function c2pInitFailure(moneyHash: MoneyHash<'payment'>) {
+  const prototype = Object.getPrototypeOf(moneyHash.click2Pay);
+  const WRAPPED = Symbol('wrapped');
+
+  Object.getOwnPropertyNames(prototype).forEach(methodName => {
+    if (methodName === 'constructor') return;
+
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, methodName);
+    if (!descriptor || typeof descriptor.value !== 'function') return;
+
+    const originalFn = descriptor.value;
+
+    // prevent double wrapping
+    if ((originalFn as any)[WRAPPED]) return;
+
+    const wrappedFn = async function override(this: any, ...params: any[]) {
+      console.warn(
+        `[MA SV2] Invoking SV2 method: ${methodName} with params`,
+        params,
+      );
+
+      // example forced error
+      if (methodName === 'init') {
+        throw new Error('SV2 init forced failure');
+      }
+
+      try {
+        const response = await originalFn.apply(this, params);
+        console.warn(
+          `[MA SV2] SV2 method: ${methodName} resolved with`,
+          response,
+        );
+        return response;
+      } catch (error) {
+        console.error(
+          `[MA SV2] SV2 method: ${methodName} rejected with`,
+          error,
+        );
+        throw error;
+      }
+    };
+
+    // mark as wrapped
+    (wrappedFn as any)[WRAPPED] = true;
+
+    Object.defineProperty(prototype, methodName, {
+      ...descriptor,
+      value: wrappedFn,
+    });
+  });
+}
+
+function c2pCKOFailure(moneyHash: MoneyHash<'payment'>) {
+  const prototype = Object.getPrototypeOf(moneyHash.click2Pay);
+  const WRAPPED = Symbol('wrapped');
+
+  Object.getOwnPropertyNames(prototype).forEach(methodName => {
+    if (methodName === 'constructor') return;
+
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, methodName);
+    if (!descriptor || typeof descriptor.value !== 'function') return;
+
+    const originalFn = descriptor.value;
+
+    // prevent double wrapping
+    if ((originalFn as any)[WRAPPED]) return;
+
+    const wrappedFn = async function (this: any, ...params: any[]) {
+      console.warn(
+        `[MA SV2] Invoking SV2 method: ${methodName} with params`,
+        params,
+      );
+
+      // force error for specific method
+      if (methodName === 'checkoutWithCard') {
+        throw new Error('checkoutWithCard forced failure');
+      }
+
+      try {
+        const response = await originalFn.apply(this, params);
+        console.warn(
+          `[MA SV2] SV2 method: ${methodName} resolved with`,
+          response,
+        );
+        return response;
+      } catch (error) {
+        console.error(
+          `[MA SV2] SV2 method: ${methodName} rejected with`,
+          error,
+        );
+        throw error;
+      }
+    };
+
+    (wrappedFn as any)[WRAPPED] = true;
+
+    Object.defineProperty(prototype, methodName, {
+      ...descriptor,
+      value: wrappedFn,
+    });
+  });
+}
+
+function c2pUnknownFailure(moneyHash: MoneyHash<'payment'>) {
+  const prototype = Object.getPrototypeOf(moneyHash.click2Pay);
+  const WRAPPED = Symbol('wrapped');
+
+  Object.getOwnPropertyNames(prototype).forEach(methodName => {
+    if (methodName === 'constructor') return;
+
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, methodName);
+    if (!descriptor || typeof descriptor.value !== 'function') return;
+
+    const originalFn = descriptor.value;
+
+    // prevent double wrapping
+    if ((originalFn as any)[WRAPPED]) return;
+
+    const wrappedFn = async function (this: any, ...params: any[]) {
+      console.warn(
+        `[MA SV2] Invoking SV2 method: ${methodName} with params`,
+        params,
+      );
+
+      // force error for specific method
+      if (methodName === 'getCards') {
+        throw Object.assign(
+          new Error(
+            'This indicates that the server is not able to establish communication with any of the requested card networks.',
+          ),
+          {
+            reason: 'UNKNOWN_ERROR',
+            details: [],
+          },
+        );
+      }
+
+      try {
+        const response = await originalFn.apply(this, params);
+        console.warn(
+          `[MA SV2] SV2 method: ${methodName} resolved with`,
+          response,
+        );
+        return response;
+      } catch (error) {
+        console.error(
+          `[MA SV2] SV2 method: ${methodName} rejected with`,
+          error,
+        );
+        throw error;
+      }
+    };
+
+    (wrappedFn as any)[WRAPPED] = true;
+
+    Object.defineProperty(prototype, methodName, {
+      ...descriptor,
+      value: wrappedFn,
+    });
+  });
 }
