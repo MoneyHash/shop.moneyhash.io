@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';
 import { logJSON } from '@/utils/logJSON';
 
-type Env = 'production' | 'staging';
+type Env = 'production' | 'staging' | 'preprod';
 
 type FormConfiguration = {
   intentConfig: string;
@@ -47,11 +47,13 @@ const defaultConfig = JSON.stringify(
 const defaultApiKey: Record<Env, string> = {
   production: 'NMyQeKCE.PE1ibNHTXepIxg0hyYrmU4LzK4sNdUS1',
   staging: 'wocSeGMI.e3l92r5b9NYXVgTLfBXvED88oppdsi3H',
+  preprod: 'wocSeGMI.e3l92r5b9NYXVgTLfBXvED88oppdsi3H',
 };
 
 const defaultPublicApiKey: Record<Env, string> = {
   production: 'public.WsCZwBVz.mUyakj73ByciUGMOE1UYvGSFDJC7uu6ftLs4C5fy',
   staging: 'public.nFsXq2BS.rwzwRJAZaq8jEEPZcnMldOSFXIqklPOe9QXaOwW1',
+  preprod: 'public.nFsXq2BS.rwzwRJAZaq8jEEPZcnMldOSFXIqklPOe9QXaOwW1',
 };
 
 const storedEnv =
@@ -59,6 +61,12 @@ const storedEnv =
 if (storedEnv === 'staging') {
   window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
   window.API_URL = 'https://staging-web.moneyhash.io';
+  window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
+    'https://vault-staging-form.moneyhash.io';
+  window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
+} else if (storedEnv === 'preprod') {
+  window.MONEYHASH_IFRAME_URL = 'https://preprod-embed.moneyhash.io';
+  window.API_URL = 'https://preprod-web.moneyhash.io';
   window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
     'https://vault-staging-form.moneyhash.io';
   window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
@@ -614,6 +622,7 @@ function ConfigurationForm({
         <SelectContent>
           <SelectItem value="production">Production</SelectItem>
           <SelectItem value="staging">Staging</SelectItem>
+          <SelectItem value="preprod">Pre-Prod</SelectItem>
         </SelectContent>
       </Select>
       <div>

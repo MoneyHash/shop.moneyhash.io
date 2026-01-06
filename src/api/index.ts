@@ -3,7 +3,8 @@ import safeLocalStorage from '@/utils/safeLocalStorage';
 
 const localEnv = (localStorage.getItem('env') || 'production') as
   | 'staging'
-  | 'production';
+  | 'production'
+  | 'preprod';
 
 const config = {
   staging: {
@@ -17,6 +18,12 @@ const config = {
     accountApiKey: 'NMyQeKCE.PE1ibNHTXepIxg0hyYrmU4LzK4sNdUS1',
     accountPublicApiKey:
       'public.WsCZwBVz.mUyakj73ByciUGMOE1UYvGSFDJC7uu6ftLs4C5fy',
+  },
+  preprod: {
+    baseURL: 'https://preprod-web.moneyhash.io/api/v1.1',
+    accountApiKey: 'wocSeGMI.e3l92r5b9NYXVgTLfBXvED88oppdsi3H',
+    accountPublicApiKey:
+      'public.nFsXq2BS.rwzwRJAZaq8jEEPZcnMldOSFXIqklPOe9QXaOwW1',
   },
 } as const;
 

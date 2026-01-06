@@ -17,11 +17,11 @@ declare global {
 }
 
 window.switchEnvironment = env => {
-  const isValidEnv = ['staging', 'production'].includes(env);
+  const isValidEnv = ['staging', 'production', 'preprod'].includes(env);
 
   if (env && !isValidEnv) {
     console.error(
-      `Invalid environment: ${env}, Allowed "staging" "production"`,
+      `Invalid environment: ${env}, Allowed "staging" "production" "preprod"`,
     );
     return;
   }
@@ -41,6 +41,13 @@ if (localEnv === 'staging') {
   // window.MONEYHASH_IFRAME_URL = 'http://localhost:8080';
 
   window.API_URL = 'https://staging-web.moneyhash.io';
+  window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
+    'https://vault-staging-form.moneyhash.io';
+  window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
+} else if (localEnv === 'preprod') {
+  window.MONEYHASH_IFRAME_URL = 'https://preprod-embed.moneyhash.io';
+  window.API_URL = 'https://preprod-web.moneyhash.io';
+
   window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
     'https://vault-staging-form.moneyhash.io';
   window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';

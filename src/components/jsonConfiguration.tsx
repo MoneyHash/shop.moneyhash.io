@@ -101,6 +101,9 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
           <ToggleGroupItem value="production" className="flex-1">
             Production
           </ToggleGroupItem>
+          <ToggleGroupItem value="preprod" className="flex-1">
+            Pre-Prod
+          </ToggleGroupItem>
         </ToggleGroup>
       </div>
       <hr />
