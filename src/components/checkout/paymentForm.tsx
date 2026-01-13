@@ -480,7 +480,7 @@ function AccordionPaymentForm({
         )}
 
         {/* Render BANK_INSTALLMENT second */}
-        <>
+        {/* <>
           <label
             htmlFor="BANK_INSTALLMENT"
             className="p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed"
@@ -505,7 +505,7 @@ function AccordionPaymentForm({
                 isInstallment
               />
             )}
-        </>
+        </> */}
 
         {/* Render remaining methods: PAY_AT_FAWRY, CASH_ON_DELIVERY, others */}
         {[fawryMethod, cashOnDeliveryMethod, ...otherMethods]
