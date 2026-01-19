@@ -58,6 +58,11 @@ const defaultPublicApiKey: Record<Env, string> = {
 
 const storedEnv =
   (localStorage.getItem('apple-pay-env') as Env) || 'production';
+const API_URLS: Record<Env, string> = {
+  production: 'https://web.moneyhash.io/api/v1.1',
+  staging: 'https://staging-web.moneyhash.io/api/v1.1',
+  preprod: 'https://preprod-web.moneyhash.io/api/v1.1',
+};
 if (storedEnv === 'staging') {
   window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
   window.API_URL = 'https://staging-web.moneyhash.io';
@@ -198,7 +203,7 @@ export default function ApplePay() {
                   try {
                     intentId = await axios
                       .post(
-                        `${window.API_URL}/payments/intent/`,
+                        `${API_URLS[config.env]}/payments/intent/`,
                         JSON.parse(config.intentConfig),
                         {
                           headers: {
