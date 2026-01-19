@@ -199,13 +199,9 @@ export default function GooglePay() {
                 let intentId;
 
                 try {
-                  const baseUrl =
-                    config.env === 'production'
-                      ? 'https://web.moneyhash.io/api/v1.1'
-                      : 'https://staging-web.moneyhash.io/api/v1.1';
                   intentId = await axios
                     .post(
-                      `${baseUrl}/payments/intent/`,
+                      `${window.API_URL}/api/v1.1/payments/intent/`,
                       JSON.parse(config.intentConfig),
                       {
                         headers: {
