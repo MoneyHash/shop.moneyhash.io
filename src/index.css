@@ -94,7 +94,6 @@
   }
 
   src-consent {
-    --src-color-background: transparent;
     --src-checkbox-label-font-size: 0.2rem;
     --src-checkbox-width: 2px;
   }
