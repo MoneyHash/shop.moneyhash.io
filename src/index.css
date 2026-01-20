@@ -102,6 +102,10 @@
   src-mark {
     --src-section-border-width: 0;
   }
+
+  src-learn-more {
+    --src-color-background: transparent;
+  }
 }
 
 @layer base {

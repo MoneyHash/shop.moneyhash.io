@@ -29,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 import { Controller, useForm, type Control } from 'react-hook-form';
 import { valibotResolver } from '@hookform/resolvers/valibot';
 import toast from 'react-hot-toast';
+import { DialogTitle } from '@radix-ui/react-dialog';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/utils/cn';
 import { getColorFromCssVariable } from '@/utils/getColorFromCssVariable';
@@ -46,6 +47,9 @@ import { useMoneyHash } from '@/context/moneyHashProvider';
 import type { InfoFormValues } from '../infoForm';
 import useJsonConfig from '@/store/useJsonConfig';
 import axiosInstance from '@/api';
+import { getCookie, setCookie } from '@/utils/cookies';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { getCardBrand } from '@/utils/getCardBrand';
 
 const CardFormContext = createContext<Elements | null>(null);
 
@@ -117,6 +121,7 @@ function useMoneyHashFormField({
   onCardBrandChange?: (cardInfo: {
     brand: string;
     brandIconUrl: string;
+    first6Digits: string | null;
   }) => void;
 }) {
   const elements = useCardFormContext();
@@ -185,7 +190,13 @@ function useMoneyHashFormField({
     }
 
     if (onCardBrandChangeRef) {
-      field.on('cardNumberChange', onCardBrandChangeRef);
+      field.on('cardNumberChange', data => {
+        onCardBrandChangeRef({
+          brand: data.brand,
+          brandIconUrl: data.brandIconUrl,
+          first6Digits: data.first6Digits as string | null,
+        });
+      });
     }
 
     field.mount();
@@ -376,10 +387,15 @@ function ExpandedCardForm() {
   );
 }
 
-function CompactCardForm() {
+function CompactCardForm({
+  onCardChange,
+}: {
+  onCardChange?: (firstSixDigits: string | null) => void;
+}) {
   const [cardInfo, setCardInfo] = useState<{
     brand: string;
     brandIconUrl: string;
+    first6Digits: string | null;
   } | null>(null);
 
   const { t, i18n } = useTranslation();
@@ -396,7 +412,10 @@ function CompactCardForm() {
       textAlign: i18n.language === 'ar' ? 'right' : 'left',
       direction: 'ltr',
     },
-    onCardBrandChange: setCardInfo,
+    onCardBrandChange: v => {
+      setCardInfo(v);
+      onCardChange?.(v.first6Digits);
+    },
   });
 
   const {
@@ -770,6 +789,8 @@ export function Click2PayCardForm({
   const [payWith, setPayWith] = useState<
     (MaskedCard['srcDigitalCardId'] & {}) | 'NEW_CARD' | null
   >(null);
+  const [firstSixDigits, setFirstSixDigits] = useState<string | null>(null);
+  const [isLearnMoreOpen, setIsLearnMoreOpen] = useState(false);
   const [saveCardToMoneyHash, setSaveCardToMoneyHash] = useState(false);
   const [checkoutAsGuest, setCheckoutAsGuest] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
@@ -841,6 +862,7 @@ export function Click2PayCardForm({
             }),
           },
           dpaTransactionOptions: {
+            confirmPayment: false,
             transactionAmount: {
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
@@ -866,10 +888,29 @@ export function Click2PayCardForm({
               },
             ],
           },
+          complianceSettings: {
+            privacy: {
+              acceptedVersion: 'LATEST',
+              latestVersion: 'LATEST',
+              latestVersionUri:
+                'https://www.mastercard.com/global/click-to-pay/country-listing/privacy.html',
+            },
+            tnc: {
+              acceptedVersion: 'LATEST',
+              latestVersion: 'LATEST',
+              latestVersionUri:
+                'https://www.mastercard.com/global/click-to-pay/country-listing/terms.html',
+            },
+          },
           rememberMe,
+          recognitionTokenRequested: rememberMe,
         })
         .then(async checkoutResponse => {
           if (checkoutResponse.checkoutActionCode !== 'COMPLETE') return;
+
+          if (checkoutResponse.recognitionToken) {
+            setCookie('c2p', checkoutResponse.recognitionToken);
+          }
 
           const artUri =
             checkoutResponse.checkoutResponseData?.maskedCard.digitalCardData
@@ -892,9 +933,13 @@ export function Click2PayCardForm({
           srcDigitalCardId: payWith!,
           rememberMe,
           dpaTransactionOptions: {
+            confirmPayment: false,
             transactionAmount: {
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
+            },
+            authenticationPreferences: {
+              payloadRequested: 'AUTHENTICATED',
             },
             paymentOptions: [
               {
@@ -914,9 +959,24 @@ export function Click2PayCardForm({
               },
             ],
           },
+          complianceSettings: {
+            privacy: {
+              acceptedVersion: 'LATEST',
+              latestVersion: 'LATEST',
+              latestVersionUri:
+                'https://www.mastercard.com/global/click-to-pay/country-listing/privacy.html',
+            },
+            tnc: {
+              acceptedVersion: 'LATEST',
+              latestVersion: 'LATEST',
+              latestVersionUri:
+                'https://www.mastercard.com/global/click-to-pay/country-listing/terms.html',
+            },
+          },
         })
         .then(async checkoutResponse => {
           if (checkoutResponse.checkoutActionCode !== 'COMPLETE') return;
+
           const {
             digitalCardData: { artUri, descriptorName },
             panLastFour,
@@ -930,12 +990,6 @@ export function Click2PayCardForm({
           return moneyHash.click2Pay.pay({ intentId, checkoutResponse });
         });
     }
-
-    await new Promise(res => {
-      setTimeout(() => {
-        res(undefined);
-      }, 3000);
-    });
 
     apiMethod
       .then(async intentDetails => {
@@ -992,12 +1046,11 @@ export function Click2PayCardForm({
       })
       .catch(errors => {
         if (errors.message === 'checkoutWithCard forced failure') {
-          toast.error(
-            'Click2Pay Checkout Failed. Please continue with a card.',
-          );
           setCheckoutAsGuest(false);
-          setPayWith('NEW_CARD');
           setIsC2pError(true);
+          setError(
+            'Something went wrong, please choose another card or payment method',
+          );
         } else if (errors.type === 'network') {
           setError(errors.message || 'Something Went Wrong');
         } else {
@@ -1016,33 +1069,42 @@ export function Click2PayCardForm({
       email: string;
       onConsumerNotPreset: () => void;
     }) => {
-      const { consumerPresent } = await moneyHash.click2Pay.lookUp({
-        email,
-      });
+      try {
+        const { consumerPresent } = await moneyHash.click2Pay.lookUp({
+          email,
+        });
 
-      if (consumerPresent) {
-        setScenario('VERIFY_USER');
-        moneyHash.click2Pay
-          .authenticate({
-            loadSupportedValidationChannels: true,
-            notYouRequestedCallback: ({ close }) => {
-              setScenario('NEW_EMAIL');
-              close();
-            },
-          })
-          .then(result => {
-            if (result.action === 'AUTHENTICATED') {
-              setMaskedCards(result.maskedCards);
+        if (consumerPresent) {
+          setScenario('VERIFY_USER');
+          moneyHash.click2Pay
+            .authenticate({
+              loadSupportedValidationChannels: true,
+              notYouRequestedCallback: ({ close }) => {
+                setScenario('NEW_EMAIL');
+                close();
+              },
+            })
+            .then(result => {
+              if (result.action === 'AUTHENTICATED') {
+                setMaskedCards(result.maskedCards);
+                setScenario(null);
+              }
+            })
+            .catch((error: any) => {
+              setPayWith('NEW_CARD');
               setScenario(null);
-            }
-          })
-          .catch((error: any) => {
-            setPayWith('NEW_CARD');
-            setScenario(null);
-            toast.error(error.message);
-          });
-      } else {
-        onConsumerNotPreset();
+              toast.error(error.message);
+            });
+        } else {
+          onConsumerNotPreset();
+        }
+      } catch (error) {
+        toast.error(
+          'Click to Pay is unavailable at the moment. Please proceed with another payment method',
+        );
+        setPayWith('NEW_CARD');
+        setCheckoutAsGuest(false);
+        setIsC2pError(true);
       }
     },
   );
@@ -1056,17 +1118,18 @@ export function Click2PayCardForm({
       c2pUnknownFailure(moneyHash);
     }
 
-    // c2pCKOFailure(moneyHash);
     async function initializeC2P() {
       try {
         await moneyHash.click2Pay.init({
           env: 'sandbox',
           dpaLocale: 'en_US',
+          checkoutExperience: 'PAYMENT_SETTINGS',
           srcDpaId: click2payNativeData.dpa_id,
           dpaData: {
             dpaName: click2payNativeData.dpa_name,
           },
           dpaTransactionOptions: {
+            confirmPayment: false,
             transactionAmount: {
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
@@ -1093,6 +1156,7 @@ export function Click2PayCardForm({
             ],
           },
           cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
+          recognitionToken: getCookie('c2p') || undefined,
         });
 
         const cards = await moneyHash.click2Pay.getCards();
@@ -1178,6 +1242,21 @@ export function Click2PayCardForm({
         { signal: controller.signal },
       );
 
+      document.getElementById('mh-src-consent')?.addEventListener(
+        'learnMore',
+        () => {
+          setIsLearnMoreOpen(true);
+        },
+        { signal: controller.signal },
+      );
+      document.getElementById('mh-src-consent')?.addEventListener(
+        'rememberMe',
+        (event: any) => {
+          setRememberMe(event.detail.rememberMe);
+        },
+        { signal: controller.signal },
+      );
+
       return () => {
         controller.abort();
       };
@@ -1251,7 +1330,7 @@ export function Click2PayCardForm({
             onValidityChange={setIsValidCardForm}
           >
             {cardForm === 'compact' ? (
-              <CompactCardForm />
+              <CompactCardForm onCardChange={setFirstSixDigits} />
             ) : (
               <ExpandedCardForm />
             )}
@@ -1271,11 +1350,26 @@ export function Click2PayCardForm({
           )}
 
           {!isC2pError && (
-            <src-consent
-              dark={theme === 'dark' ? true : undefined}
-              display-remember-me={checkoutAsGuest}
-              id="mh-src-consent"
-            />
+            <>
+              <src-consent
+                dark={theme === 'dark' ? true : undefined}
+                display-remember-me={checkoutAsGuest}
+                dcf-suppressed={!maskedCards?.length}
+                id="mh-src-consent"
+                card-brands={
+                  firstSixDigits ? getCardBrand(firstSixDigits) : 'mastercard'
+                }
+              />
+
+              <Dialog open={isLearnMoreOpen} onOpenChange={setIsLearnMoreOpen}>
+                <DialogContent hideClose className="p-0">
+                  <DialogTitle className="sr-only">
+                    Click 2 Pay Learn more
+                  </DialogTitle>
+                  <C2PLearnMore onClose={() => setIsLearnMoreOpen(false)} />
+                </DialogContent>
+              </Dialog>
+            </>
           )}
         </>
       )}
@@ -1481,7 +1575,7 @@ function c2pUnknownFailure(moneyHash: MoneyHash<'payment'>) {
       );
 
       // force error for specific method
-      if (methodName === 'getCards') {
+      if (methodName === 'lookUp') {
         throw Object.assign(
           new Error(
             'This indicates that the server is not able to establish communication with any of the requested card networks.',
@@ -1516,4 +1610,40 @@ function c2pUnknownFailure(moneyHash: MoneyHash<'payment'>) {
       value: wrappedFn,
     });
   });
+}
+
+function C2PLearnMore({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const controller = new AbortController();
+    document.getElementById('mh-src-learn-more')?.addEventListener(
+      'close',
+      () => {
+        onClose();
+      },
+      { signal: controller.signal },
+    );
+    document.getElementById('mh-src-learn-more')?.addEventListener(
+      'ok',
+      () => {
+        onClose();
+      },
+      { signal: controller.signal },
+    );
+
+    return () => {
+      controller.abort();
+    };
+    // eslint-disable-next-line
+  }, []);
+
+  const { theme } = useTheme();
+
+  return (
+    <src-learn-more
+      id="mh-src-learn-more"
+      card-brands="mastercard,visa,amex,discover"
+      dark={theme === 'dark' ? true : undefined}
+      display-close-button="true"
+    />
+  );
 }

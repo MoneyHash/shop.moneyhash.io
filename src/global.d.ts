@@ -29,5 +29,9 @@ declare namespace JSX {
       React.HTMLAttributes<HTMLElement>,
       HTMLElement
     > & { dark?: boolean };
+    'src-learn-more': React.DetailedHTMLProps<
+      React.HTMLAttributes<HTMLElement>,
+      HTMLElement
+    > & { dark?: boolean };
   }
 }
