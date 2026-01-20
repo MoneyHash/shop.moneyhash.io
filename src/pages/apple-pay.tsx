@@ -63,6 +63,7 @@ const API_URLS: Record<Env, string> = {
   staging: 'https://staging-web.moneyhash.io/api/v1.1',
   preprod: 'https://preprod-web.moneyhash.io/api/v1.1',
 };
+
 if (storedEnv === 'staging') {
   window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
   window.API_URL = 'https://staging-web.moneyhash.io';
@@ -400,10 +401,10 @@ export default function ApplePay() {
                   let cardTokenIntentId;
 
                   try {
-                    const baseUrl =
-                      config.env === 'production'
-                        ? 'https://web.moneyhash.io/api/v1.4'
-                        : 'https://staging-web.moneyhash.io/api/v1.4';
+                    const baseUrl = API_URLS[config.env].replace(
+                      'v1.1',
+                      'v1.4',
+                    );
                     cardTokenIntentId = await axios
                       .post(
                         `${baseUrl}/tokens/cards/`,
@@ -521,10 +522,10 @@ export default function ApplePay() {
                   let cardTokenIntentId;
 
                   try {
-                    const baseUrl =
-                      config.env === 'production'
-                        ? 'https://web.moneyhash.io/api/v1.4'
-                        : 'https://staging-web.moneyhash.io/api/v1.4';
+                    const baseUrl = API_URLS[config.env].replace(
+                      'v1.1',
+                      'v1.4',
+                    );
                     cardTokenIntentId = await axios
                       .post(
                         `${baseUrl}/tokens/cards/`,
