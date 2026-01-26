@@ -9,13 +9,14 @@ import {
   useRef,
   useState,
 } from 'react';
-import type {
-  ElementStyles,
-  Elements,
-  ElementType,
-  Field,
-  PaymentMethodSlugs,
-  MaskedCard,
+import {
+  type ElementStyles,
+  type Elements,
+  type ElementType,
+  type Field,
+  type PaymentMethodSlugs,
+  type MaskedCard,
+  type CardBrand,
 } from '@moneyhash/js-sdk';
 import MoneyHash, { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import * as v from 'valibot';
@@ -783,6 +784,7 @@ export function Click2PayCardForm({
   const [isLoading, setIsLoading] = useState(true);
   const [isC2pError, setIsC2pError] = useState(false);
   const [maskedCards, setMaskedCards] = useState<MaskedCard[] | null>(null);
+  const [availableCards, setAvailableCards] = useState<CardBrand[]>([]);
   const [scenario, setScenario] = useState<'VERIFY_USER' | 'NEW_EMAIL' | null>(
     null,
   );
@@ -1070,33 +1072,34 @@ export function Click2PayCardForm({
       onConsumerNotPreset: () => void;
     }) => {
       try {
-        const { consumerPresent } = await moneyHash.click2Pay.lookUp({
-          email,
+        const result = await moneyHash.click2Pay.authenticate({
+          identityType: 'EMAIL_ADDRESS',
+          identityValue: email,
         });
 
-        if (consumerPresent) {
-          setScenario('VERIFY_USER');
-          moneyHash.click2Pay
-            .authenticate({
-              loadSupportedValidationChannels: true,
-              notYouRequestedCallback: ({ close }) => {
-                setScenario('NEW_EMAIL');
-                close();
-              },
-            })
-            .then(result => {
-              if (result.action === 'AUTHENTICATED') {
-                setMaskedCards(result.maskedCards);
-                setScenario(null);
-              }
-            })
-            .catch((error: any) => {
-              setPayWith('NEW_CARD');
-              setScenario(null);
-              toast.error(error.message);
-            });
-        } else {
+        logJSON.info('click2Pay.authenticate', result);
+
+        if (result.action === 'AUTHENTICATED') {
+          setMaskedCards(result.cards);
+          setScenario(null);
+          result.recognitionToken && setCookie('c2p', result.recognitionToken);
+        } else if (result.action === 'CONSUMER_NOT_PRESENT') {
           onConsumerNotPreset();
+        } else if (result.action === 'NOT_YOU') {
+          setScenario('NEW_EMAIL');
+        } else if (
+          result.action === 'UNKNOWN_ERROR' ||
+          result.action === 'ACCT_INACCESSIBLE' ||
+          result.action === 'OTP_SEND_FAILED' ||
+          result.action === 'RETRIES_EXCEEDED'
+        ) {
+          toast.error(
+            'Click to Pay is unavailable at the moment. Please proceed with another payment method',
+          );
+          setPayWith('NEW_CARD');
+          setCheckoutAsGuest(false);
+          setIsC2pError(true);
+          setScenario(null);
         }
       } catch (error) {
         toast.error(
@@ -1105,6 +1108,7 @@ export function Click2PayCardForm({
         setPayWith('NEW_CARD');
         setCheckoutAsGuest(false);
         setIsC2pError(true);
+        setScenario(null);
       }
     },
   );
@@ -1120,7 +1124,7 @@ export function Click2PayCardForm({
 
     async function initializeC2P() {
       try {
-        await moneyHash.click2Pay.init({
+        const { availableCardBrands } = await moneyHash.click2Pay.init({
           env: 'sandbox',
           dpaLocale: 'en_US',
           checkoutExperience: 'PAYMENT_SETTINGS',
@@ -1159,15 +1163,23 @@ export function Click2PayCardForm({
           recognitionToken: getCookie('c2p') || undefined,
         });
 
+        setAvailableCards(availableCardBrands);
+
         const cards = await moneyHash.click2Pay.getCards();
         logJSON.response('click2Pay.getCards', cards);
         if (cards.length > 0) {
           setMaskedCards(cards);
         } else {
-          handleUnrecognizedUser({
-            email: userInfo.email,
-            onConsumerNotPreset: () => setPayWith('NEW_CARD'),
-          });
+          setTimeout(() => {
+            setScenario('VERIFY_USER');
+            handleUnrecognizedUser({
+              email: userInfo.email,
+              onConsumerNotPreset: () => {
+                setScenario(null);
+                setPayWith('NEW_CARD');
+              },
+            });
+          }, 50);
         }
       } catch (error: any) {
         setPayWith('NEW_CARD');
@@ -1223,6 +1235,10 @@ export function Click2PayCardForm({
     }
   }, [moneyHash, maskedCards]);
 
+  const cardBrand = firstSixDigits ? getCardBrand(firstSixDigits) : null;
+  const isEligibleForC2p =
+    cardBrand && availableCards.some(card => card === cardBrand);
+
   useEffect(() => {
     if (payWith === 'NEW_CARD') {
       const controller = new AbortController();
@@ -1261,7 +1277,7 @@ export function Click2PayCardForm({
         controller.abort();
       };
     }
-  }, [payWith]);
+  }, [payWith, isEligibleForC2p]);
 
   if (isLoading) {
     return <src-loader dark={theme === 'dark' ? true : undefined} />;
@@ -1283,22 +1299,24 @@ export function Click2PayCardForm({
         />
       ) : null}
 
-      <src-otp-input
-        id="mh-src-otp-input"
-        card-brands="mastercard,visa,amex,discover"
-        style={{ display: 'none' }}
-        dark={theme === 'dark' ? true : undefined}
+      <div
+        id="mh-src-otp-container"
+        style={{ height: 430, width: '100%', display: 'none ' }}
       />
 
       {scenario === 'NEW_EMAIL' && (
         <NewEmailClick2PayCardForm
           onSubmit={async ({ email }) => {
+            setScenario('VERIFY_USER');
             await handleUnrecognizedUser({
               email,
-              onConsumerNotPreset: () =>
+              onConsumerNotPreset: () => {
+                setScenario('NEW_EMAIL');
+
                 toast.error(
                   'No email found in Click2Pay system. Please enter a different email.',
-                ),
+                );
+              },
             });
           }}
         />
@@ -1349,16 +1367,14 @@ export function Click2PayCardForm({
             </div>
           )}
 
-          {!isC2pError && (
+          {!isC2pError && isEligibleForC2p && (
             <>
               <src-consent
                 dark={theme === 'dark' ? true : undefined}
                 display-remember-me={checkoutAsGuest}
                 dcf-suppressed={!maskedCards?.length}
                 id="mh-src-consent"
-                card-brands={
-                  firstSixDigits ? getCardBrand(firstSixDigits) : 'mastercard'
-                }
+                card-brands={cardBrand}
               />
 
               <Dialog open={isLearnMoreOpen} onOpenChange={setIsLearnMoreOpen}>
@@ -1575,7 +1591,7 @@ function c2pUnknownFailure(moneyHash: MoneyHash<'payment'>) {
       );
 
       // force error for specific method
-      if (methodName === 'lookUp') {
+      if (methodName === 'authenticate') {
         throw Object.assign(
           new Error(
             'This indicates that the server is not able to establish communication with any of the requested card networks.',

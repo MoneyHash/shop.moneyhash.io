@@ -2,16 +2,16 @@ export function setCookie(key: string, value: string) {
   const encodedKey = encodeURIComponent(key);
   const encodedValue = encodeURIComponent(value);
 
-  // Set expiration far in the future (e.g., 10 years)
+  // Set expiration to 180 days
   const expires = new Date(
-    Date.now() + 10 * 365 * 24 * 60 * 60 * 1000,
+    Date.now() + 180 * 24 * 60 * 60 * 1000,
   ).toUTCString();
 
   document.cookie =
     `${encodedKey}=${encodedValue}; ` +
     `expires=${expires}; ` +
     `path=/; ` +
-    `SameSite=Lax; ` +
+    `SameSite=Strict; ` +
     `Secure`;
 }
 
