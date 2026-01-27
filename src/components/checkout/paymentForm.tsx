@@ -444,7 +444,7 @@ function AccordionPaymentForm({
                       className="h-[24px] origin-left scale-125"
                     />
                     <span>Credit/Debit</span>
-                    <div className="ml-auto -mb-4">
+                    <div className="ml-auto -mb-1">
                       <src-mark
                         dark={theme === 'dark'}
                         card-brands="mastercard,visa,amex,discover"
