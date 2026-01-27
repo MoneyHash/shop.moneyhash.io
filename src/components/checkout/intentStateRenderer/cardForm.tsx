@@ -1122,6 +1122,8 @@ export function Click2PayCardForm({
       c2pUnknownFailure(moneyHash);
     }
 
+    logJSON.info('C2P Cookie', getCookie('c2p'));
+
     async function initializeC2P() {
       try {
         const { availableCardBrands } = await moneyHash.click2Pay.init({
