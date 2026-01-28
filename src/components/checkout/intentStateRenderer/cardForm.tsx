@@ -20,7 +20,7 @@ import {
 } from '@moneyhash/js-sdk';
 import MoneyHash, { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import * as v from 'valibot';
-import { CreditCardIcon } from 'lucide-react';
+import { CreditCardIcon, LoaderIcon } from 'lucide-react';
 import {
   isValidPhoneNumber,
   parsePhoneNumber,
@@ -1286,20 +1286,22 @@ export function Click2PayCardForm({
   }
 
   return (
-    <div className="p-4 space-y-4">
-      {maskedCards?.length ? (
-        <src-card-list
-          id="mh-src-card-list"
-          background="transparent"
-          dark={theme === 'dark' ? true : undefined}
-          display-preferred-card
-          display-sign-out
-          display-header={false}
-          card-selection-type="radioButton"
-          display-add-card
-          card-brands="mastercard,visa,amex,discover"
-        />
-      ) : null}
+    <div className="p-4 space-y-4 overflow-hidden">
+      <div className="max-w-full overflow-hidden">
+        {maskedCards?.length ? (
+          <src-card-list
+            id="mh-src-card-list"
+            background="transparent"
+            dark={theme === 'dark' ? true : undefined}
+            display-preferred-card
+            display-sign-out
+            display-header={false}
+            card-selection-type="radioButton"
+            display-add-card
+            card-brands="mastercard,visa,amex,discover"
+          />
+        ) : null}
+      </div>
 
       <div
         id="mh-src-otp-container"
@@ -1400,13 +1402,17 @@ export function Click2PayCardForm({
             (payWith === 'NEW_CARD' && !isValidCardForm) || isSubmitting
           }
         >
-          <>
-            {t('payment.pay')}{' '}
-            {formatCurrency({
-              currency,
-              amount: totalPrice,
-            })}
-          </>
+          {isSubmitting ? (
+            <LoaderIcon className="animate-spin" />
+          ) : (
+            <>
+              {t('payment.pay')}{' '}
+              {formatCurrency({
+                currency,
+                amount: totalPrice,
+              })}
+            </>
+          )}
         </Button>
       )}
 
