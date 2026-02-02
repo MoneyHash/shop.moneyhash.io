@@ -423,7 +423,7 @@ function AccordionPaymentForm({
             <label
               htmlFor={cardMethod.id}
               className={cn(
-                'p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed',
+                'p-4 flex items-center gap-4 cursor-pointer has-[:disabled]:opacity-50 has-[:disabled]:cursor-not-allowed h-[57px]',
                 isSelectingMethod &&
                   cardMethod.id === selectedMethod &&
                   'animate-pulse',
