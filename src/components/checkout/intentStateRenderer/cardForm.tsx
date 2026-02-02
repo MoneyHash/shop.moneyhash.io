@@ -48,7 +48,7 @@ import { useMoneyHash } from '@/context/moneyHashProvider';
 import type { InfoFormValues } from '../infoForm';
 import useJsonConfig from '@/store/useJsonConfig';
 import axiosInstance from '@/api';
-import { getCookie, setCookie } from '@/utils/cookies';
+import { deleteCookie, getCookie, setCookie } from '@/utils/cookies';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { getCardBrand } from '@/utils/getCardBrand';
 
@@ -1087,6 +1087,18 @@ export function Click2PayCardForm({
           onConsumerNotPreset();
         } else if (result.action === 'NOT_YOU') {
           setScenario('NEW_EMAIL');
+
+          const c2pCookie = getCookie<string>('c2p');
+          const { recognized } = await moneyHash.click2Pay.signOut(
+            c2pCookie
+              ? {
+                  recognitionToken: c2pCookie,
+                }
+              : undefined,
+          );
+          if (!recognized) {
+            deleteCookie('c2p');
+          }
         } else if (
           result.action === 'UNKNOWN_ERROR' ||
           result.action === 'ACCT_INACCESSIBLE' ||
@@ -1222,7 +1234,18 @@ export function Click2PayCardForm({
         moneyHash.click2Pay.cardList.addEventListener(
           'clickSignOutLink',
           async () => {
-            await moneyHash.click2Pay.signOut();
+            const c2pCookie = getCookie<string>('c2p');
+            const { recognized } = await moneyHash.click2Pay.signOut(
+              c2pCookie
+                ? {
+                    recognitionToken: c2pCookie,
+                  }
+                : undefined,
+            );
+            if (!recognized) {
+              deleteCookie('c2p');
+            }
+
             setMaskedCards(null);
             setScenario('NEW_EMAIL');
             setPayWith(null);

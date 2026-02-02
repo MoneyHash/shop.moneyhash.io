@@ -514,10 +514,10 @@
   dependencies:
     "@monaco-editor/loader" "^1.4.0"
 
-"@moneyhash/js-sdk@2.7.0-c2p.4":
-  version "2.7.0-c2p.4"
-  resolved "https://registry.yarnpkg.com/@moneyhash/js-sdk/-/js-sdk-2.7.0-c2p.4.tgz#bd93dae614827b9f673cfc57cea677d093f88624"
-  integrity sha512-SasENiJEJjjcy9anurMufSPo5TABw8ALZz76K9nyrEjJ7j5XQ6LveKui83ysw2bIzH+63oIQ+ochnV842II9NQ==
+"@moneyhash/js-sdk@2.7.0-c2p.5":
+  version "2.7.0-c2p.5"
+  resolved "https://registry.yarnpkg.com/@moneyhash/js-sdk/-/js-sdk-2.7.0-c2p.5.tgz#171188cdf65cc63276806f8925f390517e10196e"
+  integrity sha512-zsJ11psQ4s0JO64C52ug5YxZdUc+BcpdliVuRjRmawdc61j8fGaBsJ84qPjOhRPi2XT1MpCyuTta32aNWYIhyg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
