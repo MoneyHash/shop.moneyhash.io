@@ -19,7 +19,6 @@ import { BankIcon } from '../icons/bankIcon';
 import { translatePaymentMethod } from '@/utils/translatePaymentMethod';
 import { useTheme } from '@/context/themeProvider';
 import { type InfoFormValues } from './infoForm';
-import useMediaQuery from '@/hooks/useMediaQuery';
 
 type PaymentFormProps = {
   methods: Method[];
@@ -331,8 +330,6 @@ function AccordionPaymentForm({
     m => m.id === 'CLICK2PAY',
   )?.nativePayData;
 
-  const isMobile = useMediaQuery('(max-width: 410px)');
-
   return (
     <>
       {!!expressMethods?.length && (
@@ -447,16 +444,14 @@ function AccordionPaymentForm({
                       className="h-[24px] origin-left scale-125"
                     />
                     <span>Credit/Debit</span>
-                    <div className="ml-auto">
-                      <src-mark
-                        dark={theme === 'dark'}
-                        card-brands={
-                          isMobile
-                            ? 'mastercard'
-                            : 'mastercard,visa,amex,discover'
-                        }
-                        height={32}
-                      />
+                    <div className="ml-auto relative  origin-left overflow-hidden">
+                      <div className="src-mark-container">
+                        <src-mark
+                          dark={theme === 'dark'}
+                          card-brands="mastercard,visa,amex,discover"
+                          height={32}
+                        />
+                      </div>
                     </div>
                   </>
                 ) : (

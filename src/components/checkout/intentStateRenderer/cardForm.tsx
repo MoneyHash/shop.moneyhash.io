@@ -1047,19 +1047,16 @@ export function Click2PayCardForm({
         }
       })
       .catch(errors => {
-        if (errors.message === 'checkoutWithCard forced failure') {
+        setIsSubmitting(false);
+        if (errors.type === 'network') {
+          setError(errors.message || 'Something Went Wrong');
+        } else {
           setCheckoutAsGuest(false);
           setIsC2pError(true);
           setError(
             'Something went wrong, please choose another card or payment method',
           );
-        } else if (errors.type === 'network') {
-          setError(errors.message || 'Something Went Wrong');
-        } else {
-          const [error] = Object.values(errors);
-          setError(error as string);
         }
-        setIsSubmitting(false);
       });
   };
 
@@ -1328,7 +1325,7 @@ export function Click2PayCardForm({
 
       <div
         id="mh-src-otp-container"
-        style={{ height: 430, width: '100%', display: 'none ' }}
+        style={{ height: 480, width: '100%', display: 'none ' }}
       />
 
       {scenario === 'NEW_EMAIL' && (
@@ -1572,7 +1569,7 @@ function c2pCKOFailure(moneyHash: MoneyHash<'payment'>) {
 
       // force error for specific method
       if (methodName === 'checkoutWithCard') {
-        throw new Error('checkoutWithCard forced failure');
+        throw new Error();
       }
 
       try {
