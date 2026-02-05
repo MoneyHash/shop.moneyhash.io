@@ -8,6 +8,7 @@ import { UrlToRender } from './urlToRender';
 import { CardForm, Click2PayCardForm } from './cardForm';
 import { IntentForm } from './intentForm';
 import { InstallmentPlans } from './installmentPlans';
+import { ExpiredState } from './expiredState';
 import { type InfoFormValues } from '../infoForm';
 
 export function IntentStateRenderer({
@@ -46,6 +47,10 @@ export function IntentStateRenderer({
     paymentStatus?.status === 'AUTHORIZE_ATTEMPT_FAILED'
   ) {
     return <Navigate replace to={`/checkout/order?intent_id=${intentId}`} />;
+  }
+
+  if (state === 'EXPIRED') {
+    return <ExpiredState />;
   }
 
   if (
