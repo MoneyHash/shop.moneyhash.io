@@ -1102,12 +1102,8 @@ export function Click2PayCardForm({
           result.action === 'OTP_SEND_FAILED' ||
           result.action === 'RETRIES_EXCEEDED'
         ) {
-          toast.error(
-            'Click to Pay is unavailable at the moment. Please proceed with another payment method',
-          );
           setPayWith('NEW_CARD');
           setCheckoutAsGuest(false);
-          setIsC2pError(true);
           setScenario(null);
         }
       } catch (error) {
