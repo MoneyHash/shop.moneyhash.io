@@ -1056,8 +1056,6 @@ export function Click2PayCardForm({
         if (errors.type === 'network') {
           setError(errors.message || 'Something Went Wrong');
         } else {
-          setMaskedCards(null);
-          setPayWith('NEW_CARD');
           setError(
             'Something went wrong, please choose another card or payment method',
           );
