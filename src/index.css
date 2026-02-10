@@ -160,7 +160,5 @@ apple-pay-button {
 }
 
 .src-mark-container {
-  @media (max-width: 430px) {
-    margin-left: -64px;
-  }
+  margin-left: -62px;
 }

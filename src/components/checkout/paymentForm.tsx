@@ -19,6 +19,7 @@ import { BankIcon } from '../icons/bankIcon';
 import { translatePaymentMethod } from '@/utils/translatePaymentMethod';
 import { useTheme } from '@/context/themeProvider';
 import { type InfoFormValues } from './infoForm';
+import { ClickToPayProvider } from '@/context/clickToPay';
 
 type PaymentFormProps = {
   methods: Method[];
@@ -331,7 +332,7 @@ function AccordionPaymentForm({
   )?.nativePayData;
 
   return (
-    <>
+    <ClickToPayProvider nativePayData={click2payNativeData}>
       {!!expressMethods?.length && (
         <div className="mb-8">
           <p className="text-sm text-center font-medium">
@@ -543,7 +544,7 @@ function AccordionPaymentForm({
             </Fragment>
           ))}
       </RadioGroup>
-    </>
+    </ClickToPayProvider>
   );
 }
 

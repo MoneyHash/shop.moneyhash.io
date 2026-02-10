@@ -16,9 +16,8 @@ import {
   type Field,
   type PaymentMethodSlugs,
   type MaskedCard,
-  type CardBrand,
 } from '@moneyhash/js-sdk';
-import MoneyHash, { type IntentDetails } from '@moneyhash/js-sdk/headless';
+import { type IntentDetails } from '@moneyhash/js-sdk/headless';
 import * as v from 'valibot';
 import { CreditCardIcon, LoaderIcon } from 'lucide-react';
 import {
@@ -51,6 +50,7 @@ import axiosInstance from '@/api';
 import { deleteCookie, getCookie, setCookie } from '@/utils/cookies';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { getCardBrand } from '@/utils/getCardBrand';
+import { useClickToPay } from '@/context/clickToPay';
 
 const CardFormContext = createContext<Elements | null>(null);
 
@@ -781,20 +781,25 @@ export function Click2PayCardForm({
   ) => Promise<string>;
 }) {
   const { t, i18n } = useTranslation();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isC2pError, setIsC2pError] = useState(false);
+  const {
+    isC2pLoading,
+    availableCards,
+    checkoutAsGuest,
+    setCheckoutAsGuest,
+    isC2pError,
+    setIsC2pError,
+    payWith,
+    setPayWith,
+  } = useClickToPay();
+  const [isCardsLoading, setIsCardsLoading] = useState(true);
   const [maskedCards, setMaskedCards] = useState<MaskedCard[] | null>(null);
-  const [availableCards, setAvailableCards] = useState<CardBrand[]>([]);
   const [scenario, setScenario] = useState<'VERIFY_USER' | 'NEW_EMAIL' | null>(
     null,
   );
-  const [payWith, setPayWith] = useState<
-    (MaskedCard['srcDigitalCardId'] & {}) | 'NEW_CARD' | null
-  >(null);
+
   const [firstSixDigits, setFirstSixDigits] = useState<string | null>(null);
   const [isLearnMoreOpen, setIsLearnMoreOpen] = useState(false);
   const [saveCardToMoneyHash, setSaveCardToMoneyHash] = useState(false);
-  const [checkoutAsGuest, setCheckoutAsGuest] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidCardForm, setIsValidCardForm] = useState(false);
@@ -1051,8 +1056,8 @@ export function Click2PayCardForm({
         if (errors.type === 'network') {
           setError(errors.message || 'Something Went Wrong');
         } else {
-          setCheckoutAsGuest(false);
-          setIsC2pError(true);
+          setMaskedCards(null);
+          setPayWith('NEW_CARD');
           setError(
             'Something went wrong, please choose another card or payment method',
           );
@@ -1095,6 +1100,45 @@ export function Click2PayCardForm({
           );
           if (!recognized) {
             deleteCookie('c2p');
+
+            await moneyHash.click2Pay.init({
+              env: 'sandbox',
+              dpaLocale: 'en_US',
+              checkoutExperience: 'PAYMENT_SETTINGS',
+              srcDpaId: click2payNativeData.dpa_id,
+              dpaData: {
+                dpaName: click2payNativeData.dpa_name,
+              },
+              dpaTransactionOptions: {
+                confirmPayment: false,
+                transactionAmount: {
+                  transactionAmount: totalPrice,
+                  transactionCurrencyCode: currency,
+                },
+                authenticationPreferences: {
+                  payloadRequested: 'AUTHENTICATED',
+                },
+                paymentOptions: [
+                  {
+                    dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
+                  },
+                ],
+                acquirerData: [
+                  {
+                    cardBrand: 'mastercard',
+                    acquirerMerchantId: 'SRC3DS',
+                    acquirerBIN: '545301',
+                  },
+                  {
+                    cardBrand: 'visa',
+                    acquirerMerchantId: '33334444',
+                    acquirerBIN: '432104',
+                  },
+                ],
+              },
+              cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
+            });
+            await moneyHash.click2Pay.getCards();
           }
         } else if (
           result.action === 'UNKNOWN_ERROR' ||
@@ -1119,84 +1163,30 @@ export function Click2PayCardForm({
   );
 
   useEffect(() => {
-    if (window.FAILED_C2P_INIT) {
-      c2pInitFailure(moneyHash);
-    } else if (window.FAILED_C2P_CKO) {
-      c2pCKOFailure(moneyHash);
-    } else if (window.FAILED_C2P_UNK) {
-      c2pUnknownFailure(moneyHash);
-    }
-
-    logJSON.info('C2P Cookie', getCookie('c2p'));
-
-    async function initializeC2P() {
-      try {
-        const { availableCardBrands } = await moneyHash.click2Pay.init({
-          env: 'sandbox',
-          dpaLocale: 'en_US',
-          checkoutExperience: 'PAYMENT_SETTINGS',
-          srcDpaId: click2payNativeData.dpa_id,
-          dpaData: {
-            dpaName: click2payNativeData.dpa_name,
-          },
-          dpaTransactionOptions: {
-            confirmPayment: false,
-            transactionAmount: {
-              transactionAmount: totalPrice,
-              transactionCurrencyCode: currency,
+    async function getC2pCards() {
+      const cards = await moneyHash.click2Pay.getCards();
+      logJSON.response('click2Pay.getCards', cards);
+      if (cards.length > 0) {
+        setMaskedCards(cards);
+      } else {
+        setTimeout(() => {
+          setScenario('VERIFY_USER');
+          handleUnrecognizedUser({
+            email: userInfo.email,
+            onConsumerNotPreset: () => {
+              setScenario(null);
+              setPayWith('NEW_CARD');
             },
-            authenticationPreferences: {
-              payloadRequested: 'AUTHENTICATED',
-            },
-            paymentOptions: [
-              {
-                dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
-              },
-            ],
-            acquirerData: [
-              {
-                cardBrand: 'mastercard',
-                acquirerMerchantId: 'SRC3DS',
-                acquirerBIN: '545301',
-              },
-              {
-                cardBrand: 'visa',
-                acquirerMerchantId: '33334444',
-                acquirerBIN: '432104',
-              },
-            ],
-          },
-          cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
-          recognitionToken: getCookie('c2p') || undefined,
-        });
-
-        setAvailableCards(availableCardBrands);
-
-        const cards = await moneyHash.click2Pay.getCards();
-        logJSON.response('click2Pay.getCards', cards);
-        if (cards.length > 0) {
-          setMaskedCards(cards);
-        } else {
-          setTimeout(() => {
-            setScenario('VERIFY_USER');
-            handleUnrecognizedUser({
-              email: userInfo.email,
-              onConsumerNotPreset: () => {
-                setScenario(null);
-                setPayWith('NEW_CARD');
-              },
-            });
-          }, 50);
-        }
-      } catch (error: any) {
-        setPayWith('NEW_CARD');
-        setCheckoutAsGuest(false);
-        setIsC2pError(true);
+          });
+        }, 50);
       }
-      setIsLoading(false);
+
+      setIsCardsLoading(false);
     }
 
-    initializeC2P();
+    if (!isC2pLoading && !isC2pError) {
+      getC2pCards();
+    }
   }, [
     moneyHash,
     click2payNativeData,
@@ -1204,6 +1194,9 @@ export function Click2PayCardForm({
     handleUnrecognizedUser,
     totalPrice,
     currency,
+    isC2pLoading,
+    isC2pError,
+    setPayWith,
   ]);
 
   useEffect(() => {
@@ -1237,6 +1230,44 @@ export function Click2PayCardForm({
             );
             if (!recognized) {
               deleteCookie('c2p');
+              await moneyHash.click2Pay.init({
+                env: 'sandbox',
+                dpaLocale: 'en_US',
+                checkoutExperience: 'PAYMENT_SETTINGS',
+                srcDpaId: click2payNativeData.dpa_id,
+                dpaData: {
+                  dpaName: click2payNativeData.dpa_name,
+                },
+                dpaTransactionOptions: {
+                  confirmPayment: false,
+                  transactionAmount: {
+                    transactionAmount: totalPrice,
+                    transactionCurrencyCode: currency,
+                  },
+                  authenticationPreferences: {
+                    payloadRequested: 'AUTHENTICATED',
+                  },
+                  paymentOptions: [
+                    {
+                      dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
+                    },
+                  ],
+                  acquirerData: [
+                    {
+                      cardBrand: 'mastercard',
+                      acquirerMerchantId: 'SRC3DS',
+                      acquirerBIN: '545301',
+                    },
+                    {
+                      cardBrand: 'visa',
+                      acquirerMerchantId: '33334444',
+                      acquirerBIN: '432104',
+                    },
+                  ],
+                },
+                cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
+              });
+              await moneyHash.click2Pay.getCards();
             }
 
             setMaskedCards(null);
@@ -1251,7 +1282,14 @@ export function Click2PayCardForm({
         clickSignOutLinkCleanup();
       };
     }
-  }, [moneyHash, maskedCards]);
+  }, [
+    moneyHash,
+    maskedCards,
+    click2payNativeData,
+    currency,
+    totalPrice,
+    setPayWith,
+  ]);
 
   const cardBrand = firstSixDigits ? getCardBrand(firstSixDigits) : null;
   const isEligibleForC2p =
@@ -1295,9 +1333,9 @@ export function Click2PayCardForm({
         controller.abort();
       };
     }
-  }, [payWith, isEligibleForC2p]);
+  }, [payWith, isEligibleForC2p, setCheckoutAsGuest]);
 
-  if (isLoading) {
+  if (isCardsLoading && !isC2pError) {
     return <src-loader dark={theme === 'dark' ? true : undefined} />;
   }
 
@@ -1389,14 +1427,24 @@ export function Click2PayCardForm({
 
           {!isC2pError && isEligibleForC2p && (
             <>
-              <src-consent
-                dark={theme === 'dark' ? true : undefined}
-                display-remember-me={checkoutAsGuest}
-                dcf-suppressed={!maskedCards?.length}
-                id="mh-src-consent"
-                card-brands={cardBrand}
-              />
+              <div className="relative">
+                <src-consent
+                  dark={theme === 'dark' ? true : undefined}
+                  display-remember-me={checkoutAsGuest}
+                  dcf-suppressed={!maskedCards?.length}
+                  id="mh-src-consent"
+                  card-brands={cardBrand}
+                />
 
+                {maskedCards?.length && (
+                  <p className="absolute bg-background top-[53px] bottom-px right-px left-[56px] pr-2  z-10">
+                    Yes, I want to add this card to Click to Pay.{' '}
+                    {click2payNativeData.dpa_name} will share my card details
+                    and billing address with{' '}
+                    <span className="capitalize">{cardBrand}</span>
+                  </p>
+                )}
+              </div>
               <Dialog open={isLearnMoreOpen} onOpenChange={setIsLearnMoreOpen}>
                 <DialogContent hideClose className="p-0">
                   <DialogTitle className="sr-only">
@@ -1480,176 +1528,6 @@ function NewEmailClick2PayCardForm({
       </Button>
     </form>
   );
-}
-
-declare global {
-  interface Window {
-    FAILED_C2P_INIT?: boolean;
-    FAILED_C2P_CKO?: boolean;
-    FAILED_C2P_UNK?: boolean;
-  }
-}
-
-function c2pInitFailure(moneyHash: MoneyHash<'payment'>) {
-  const prototype = Object.getPrototypeOf(moneyHash.click2Pay);
-  const WRAPPED = Symbol('wrapped');
-
-  Object.getOwnPropertyNames(prototype).forEach(methodName => {
-    if (methodName === 'constructor') return;
-
-    const descriptor = Object.getOwnPropertyDescriptor(prototype, methodName);
-    if (!descriptor || typeof descriptor.value !== 'function') return;
-
-    const originalFn = descriptor.value;
-
-    // prevent double wrapping
-    if ((originalFn as any)[WRAPPED]) return;
-
-    const wrappedFn = async function override(this: any, ...params: any[]) {
-      console.warn(
-        `[MA SV2] Invoking SV2 method: ${methodName} with params`,
-        params,
-      );
-
-      // example forced error
-      if (methodName === 'init') {
-        throw new Error('SV2 init forced failure');
-      }
-
-      try {
-        const response = await originalFn.apply(this, params);
-        console.warn(
-          `[MA SV2] SV2 method: ${methodName} resolved with`,
-          response,
-        );
-        return response;
-      } catch (error) {
-        console.error(
-          `[MA SV2] SV2 method: ${methodName} rejected with`,
-          error,
-        );
-        throw error;
-      }
-    };
-
-    // mark as wrapped
-    (wrappedFn as any)[WRAPPED] = true;
-
-    Object.defineProperty(prototype, methodName, {
-      ...descriptor,
-      value: wrappedFn,
-    });
-  });
-}
-
-function c2pCKOFailure(moneyHash: MoneyHash<'payment'>) {
-  const prototype = Object.getPrototypeOf(moneyHash.click2Pay);
-  const WRAPPED = Symbol('wrapped');
-
-  Object.getOwnPropertyNames(prototype).forEach(methodName => {
-    if (methodName === 'constructor') return;
-
-    const descriptor = Object.getOwnPropertyDescriptor(prototype, methodName);
-    if (!descriptor || typeof descriptor.value !== 'function') return;
-
-    const originalFn = descriptor.value;
-
-    // prevent double wrapping
-    if ((originalFn as any)[WRAPPED]) return;
-
-    const wrappedFn = async function (this: any, ...params: any[]) {
-      console.warn(
-        `[MA SV2] Invoking SV2 method: ${methodName} with params`,
-        params,
-      );
-
-      // force error for specific method
-      if (methodName === 'checkoutWithCard') {
-        throw new Error();
-      }
-
-      try {
-        const response = await originalFn.apply(this, params);
-        console.warn(
-          `[MA SV2] SV2 method: ${methodName} resolved with`,
-          response,
-        );
-        return response;
-      } catch (error) {
-        console.error(
-          `[MA SV2] SV2 method: ${methodName} rejected with`,
-          error,
-        );
-        throw error;
-      }
-    };
-
-    (wrappedFn as any)[WRAPPED] = true;
-
-    Object.defineProperty(prototype, methodName, {
-      ...descriptor,
-      value: wrappedFn,
-    });
-  });
-}
-
-function c2pUnknownFailure(moneyHash: MoneyHash<'payment'>) {
-  const prototype = Object.getPrototypeOf(moneyHash.click2Pay);
-  const WRAPPED = Symbol('wrapped');
-
-  Object.getOwnPropertyNames(prototype).forEach(methodName => {
-    if (methodName === 'constructor') return;
-
-    const descriptor = Object.getOwnPropertyDescriptor(prototype, methodName);
-    if (!descriptor || typeof descriptor.value !== 'function') return;
-
-    const originalFn = descriptor.value;
-
-    // prevent double wrapping
-    if ((originalFn as any)[WRAPPED]) return;
-
-    const wrappedFn = async function (this: any, ...params: any[]) {
-      console.warn(
-        `[MA SV2] Invoking SV2 method: ${methodName} with params`,
-        params,
-      );
-
-      // force error for specific method
-      if (methodName === 'authenticate') {
-        throw Object.assign(
-          new Error(
-            'This indicates that the server is not able to establish communication with any of the requested card networks.',
-          ),
-          {
-            reason: 'UNKNOWN_ERROR',
-            details: [],
-          },
-        );
-      }
-
-      try {
-        const response = await originalFn.apply(this, params);
-        console.warn(
-          `[MA SV2] SV2 method: ${methodName} resolved with`,
-          response,
-        );
-        return response;
-      } catch (error) {
-        console.error(
-          `[MA SV2] SV2 method: ${methodName} rejected with`,
-          error,
-        );
-        throw error;
-      }
-    };
-
-    (wrappedFn as any)[WRAPPED] = true;
-
-    Object.defineProperty(prototype, methodName, {
-      ...descriptor,
-      value: wrappedFn,
-    });
-  });
 }
 
 function C2PLearnMore({ onClose }: { onClose: () => void }) {
