@@ -825,7 +825,7 @@ export function Click2PayCardForm({
 
     let apiMethod;
 
-    if (payWith === 'NEW_CARD' && !checkoutAsGuest) {
+    if (payWith === 'NEW_CARD' && (!checkoutAsGuest || !isEligibleForC2p)) {
       const intentId = await createClick2PayIntent('CARD');
 
       apiMethod = moneyHash.cardForm
