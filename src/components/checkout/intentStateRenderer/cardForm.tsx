@@ -825,7 +825,7 @@ export function Click2PayCardForm({
 
     let apiMethod;
 
-    if (payWith === 'NEW_CARD' && !checkoutAsGuest) {
+    if (!isEligibleForC2p || (payWith === 'NEW_CARD' && !checkoutAsGuest)) {
       const intentId = await createClick2PayIntent('CARD');
 
       apiMethod = moneyHash.cardForm
@@ -874,6 +874,8 @@ export function Click2PayCardForm({
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
             },
+            merchantCategoryCode: '0001',
+            merchantCountryCode: 'US',
             authenticationPreferences: {
               payloadRequested: 'AUTHENTICATED',
             },
@@ -945,6 +947,8 @@ export function Click2PayCardForm({
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
             },
+            merchantCategoryCode: '0001',
+            merchantCountryCode: 'US',
             authenticationPreferences: {
               payloadRequested: 'AUTHENTICATED',
             },
@@ -1113,6 +1117,8 @@ export function Click2PayCardForm({
                   transactionAmount: totalPrice,
                   transactionCurrencyCode: currency,
                 },
+                merchantCategoryCode: '0001',
+                merchantCountryCode: 'US',
                 authenticationPreferences: {
                   payloadRequested: 'AUTHENTICATED',
                 },
@@ -1136,10 +1142,16 @@ export function Click2PayCardForm({
               },
               cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
             });
-            await moneyHash.click2Pay.getCards();
           }
+        } else if (result.action === 'UNKNOWN_ERROR') {
+          toast.error(
+            'Click to Pay is unavailable at the moment. Please proceed with another payment method',
+          );
+          setPayWith('NEW_CARD');
+          setCheckoutAsGuest(false);
+          setIsC2pError(true);
+          setScenario(null);
         } else if (
-          result.action === 'UNKNOWN_ERROR' ||
           result.action === 'ACCT_INACCESSIBLE' ||
           result.action === 'OTP_SEND_FAILED' ||
           result.action === 'RETRIES_EXCEEDED'
@@ -1242,6 +1254,8 @@ export function Click2PayCardForm({
                     transactionAmount: totalPrice,
                     transactionCurrencyCode: currency,
                   },
+                  merchantCategoryCode: '0001',
+                  merchantCountryCode: 'US',
                   authenticationPreferences: {
                     payloadRequested: 'AUTHENTICATED',
                   },
@@ -1265,7 +1279,6 @@ export function Click2PayCardForm({
                 },
                 cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
               });
-              await moneyHash.click2Pay.getCards();
             }
 
             setMaskedCards(null);
