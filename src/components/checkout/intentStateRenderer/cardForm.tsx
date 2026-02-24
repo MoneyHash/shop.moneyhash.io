@@ -1102,8 +1102,7 @@ export function Click2PayCardForm({
           );
           if (!recognized) {
             deleteCookie('c2p');
-
-            await moneyHash.click2Pay.init({
+            moneyHash.click2Pay.init({
               env: 'sandbox',
               dpaLocale: 'en_US',
               checkoutExperience: 'PAYMENT_SETTINGS',
@@ -1240,7 +1239,7 @@ export function Click2PayCardForm({
             );
             if (!recognized) {
               deleteCookie('c2p');
-              await moneyHash.click2Pay.init({
+              moneyHash.click2Pay.init({
                 env: 'sandbox',
                 dpaLocale: 'en_US',
                 checkoutExperience: 'PAYMENT_SETTINGS',
