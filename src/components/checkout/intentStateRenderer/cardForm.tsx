@@ -1102,45 +1102,47 @@ export function Click2PayCardForm({
           );
           if (!recognized) {
             deleteCookie('c2p');
-            moneyHash.click2Pay.init({
-              env: 'sandbox',
-              dpaLocale: 'en_US',
-              checkoutExperience: 'PAYMENT_SETTINGS',
-              srcDpaId: click2payNativeData.dpa_id,
-              dpaData: {
-                dpaName: click2payNativeData.dpa_name,
-              },
-              dpaTransactionOptions: {
-                confirmPayment: false,
-                transactionAmount: {
-                  transactionAmount: totalPrice,
-                  transactionCurrencyCode: currency,
+            moneyHash.click2Pay
+              .init({
+                env: 'sandbox',
+                dpaLocale: 'en_US',
+                checkoutExperience: 'PAYMENT_SETTINGS',
+                srcDpaId: click2payNativeData.dpa_id,
+                dpaData: {
+                  dpaName: click2payNativeData.dpa_name,
                 },
-                merchantCategoryCode: '0001',
-                merchantCountryCode: 'US',
-                authenticationPreferences: {
-                  payloadRequested: 'AUTHENTICATED',
+                dpaTransactionOptions: {
+                  confirmPayment: false,
+                  transactionAmount: {
+                    transactionAmount: totalPrice,
+                    transactionCurrencyCode: currency,
+                  },
+                  merchantCategoryCode: '0001',
+                  merchantCountryCode: 'US',
+                  authenticationPreferences: {
+                    payloadRequested: 'AUTHENTICATED',
+                  },
+                  paymentOptions: [
+                    {
+                      dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
+                    },
+                  ],
+                  acquirerData: [
+                    {
+                      cardBrand: 'mastercard',
+                      acquirerMerchantId: 'SRC3DS',
+                      acquirerBIN: '545301',
+                    },
+                    {
+                      cardBrand: 'visa',
+                      acquirerMerchantId: '33334444',
+                      acquirerBIN: '432104',
+                    },
+                  ],
                 },
-                paymentOptions: [
-                  {
-                    dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
-                  },
-                ],
-                acquirerData: [
-                  {
-                    cardBrand: 'mastercard',
-                    acquirerMerchantId: 'SRC3DS',
-                    acquirerBIN: '545301',
-                  },
-                  {
-                    cardBrand: 'visa',
-                    acquirerMerchantId: '33334444',
-                    acquirerBIN: '432104',
-                  },
-                ],
-              },
-              cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
-            });
+                cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
+              })
+              .then(() => moneyHash.click2Pay.getCards());
           }
         } else if (result.action === 'UNKNOWN_ERROR') {
           toast.error(
@@ -1239,45 +1241,48 @@ export function Click2PayCardForm({
             );
             if (!recognized) {
               deleteCookie('c2p');
-              moneyHash.click2Pay.init({
-                env: 'sandbox',
-                dpaLocale: 'en_US',
-                checkoutExperience: 'PAYMENT_SETTINGS',
-                srcDpaId: click2payNativeData.dpa_id,
-                dpaData: {
-                  dpaName: click2payNativeData.dpa_name,
-                },
-                dpaTransactionOptions: {
-                  confirmPayment: false,
-                  transactionAmount: {
-                    transactionAmount: totalPrice,
-                    transactionCurrencyCode: currency,
+              moneyHash.click2Pay
+                .init({
+                  env: 'sandbox',
+                  dpaLocale: 'en_US',
+                  checkoutExperience: 'PAYMENT_SETTINGS',
+                  srcDpaId: click2payNativeData.dpa_id,
+                  dpaData: {
+                    dpaName: click2payNativeData.dpa_name,
                   },
-                  merchantCategoryCode: '0001',
-                  merchantCountryCode: 'US',
-                  authenticationPreferences: {
-                    payloadRequested: 'AUTHENTICATED',
+                  dpaTransactionOptions: {
+                    confirmPayment: false,
+                    transactionAmount: {
+                      transactionAmount: totalPrice,
+                      transactionCurrencyCode: currency,
+                    },
+                    merchantCategoryCode: '0001',
+                    merchantCountryCode: 'US',
+                    authenticationPreferences: {
+                      payloadRequested: 'AUTHENTICATED',
+                    },
+                    paymentOptions: [
+                      {
+                        dynamicDataType:
+                          'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
+                      },
+                    ],
+                    acquirerData: [
+                      {
+                        cardBrand: 'mastercard',
+                        acquirerMerchantId: 'SRC3DS',
+                        acquirerBIN: '545301',
+                      },
+                      {
+                        cardBrand: 'visa',
+                        acquirerMerchantId: '33334444',
+                        acquirerBIN: '432104',
+                      },
+                    ],
                   },
-                  paymentOptions: [
-                    {
-                      dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
-                    },
-                  ],
-                  acquirerData: [
-                    {
-                      cardBrand: 'mastercard',
-                      acquirerMerchantId: 'SRC3DS',
-                      acquirerBIN: '545301',
-                    },
-                    {
-                      cardBrand: 'visa',
-                      acquirerMerchantId: '33334444',
-                      acquirerBIN: '432104',
-                    },
-                  ],
-                },
-                cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
-              });
+                  cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
+                })
+                .then(() => moneyHash.click2Pay.getCards());
             }
 
             setMaskedCards(null);
