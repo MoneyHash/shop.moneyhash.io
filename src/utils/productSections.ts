@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 
-export type Currency = 'USD' | 'EGP' | 'SAR' | 'AED' | 'KWD';
+export type Currency = 'USD' | 'EGP' | 'SAR' | 'AED' | 'KWD' | 'ZAR';
 
 export type Product = {
   id: string;
@@ -26,6 +26,7 @@ export const products: Product[] = [
       SAR: 90,
       AED: 90,
       KWD: 10,
+      ZAR: 650,
     },
     descriptionKey: 'product.colors.black',
     rating: 5,
@@ -42,6 +43,7 @@ export const products: Product[] = [
       SAR: 85,
       AED: 80,
       KWD: 9,
+      ZAR: 650,
     },
     descriptionKey: 'product.colors.aspenWhite',
     rating: 5,
@@ -58,6 +60,7 @@ export const products: Product[] = [
       SAR: 95,
       AED: 100,
       KWD: 11,
+      ZAR: 650,
     },
     descriptionKey: 'product.colors.charcoal',
     rating: 3,
@@ -75,6 +78,7 @@ export const products: Product[] = [
       SAR: 70,
       AED: 65,
       KWD: 7,
+      ZAR: 650,
     },
     descriptionKey: 'product.colors.charcoal',
     rating: 4,
@@ -90,6 +94,7 @@ export const products: Product[] = [
       SAR: 95,
       AED: 100,
       KWD: 12,
+      ZAR: 900,
     },
     descriptionKey: 'product.colors.whiteAndBlack',
     imageSrc: '/images/products/category-page-07-product-01.png',
@@ -107,6 +112,7 @@ export const products: Product[] = [
       SAR: 75,
       AED: 80,
       KWD: 9,
+      ZAR: 2500,
     },
     descriptionKey: 'product.colors.washedBlack',
     imageSrc: '/images/products/category-page-07-product-02.png',
@@ -124,6 +130,7 @@ export const products: Product[] = [
       SAR: 65,
       AED: 70,
       KWD: 8,
+      ZAR: 4000,
     },
     descriptionKey: 'product.colors.blue',
     imageSrc: '/images/products/category-page-07-product-03.png',
@@ -141,6 +148,7 @@ export const products: Product[] = [
       SAR: 82,
       AED: 50,
       KWD: 7,
+      ZAR: 3800,
     },
     descriptionKey: 'product.colors.blackAndOrange',
     imageSrc: '/images/products/category-page-07-product-04.png',

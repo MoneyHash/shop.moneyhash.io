@@ -43,10 +43,20 @@ const amazonTestCards: TestCards = {
   failed: '5455031252665454',
 };
 
+const peachTestCards: TestCards = {
+  providerName: 'Peach Payments',
+  docsLink:
+    'https://developer.peachpayments.com/docs/reference-test-and-go-live',
+  frictionless: '4200000000000091',
+  challenge: '4200000000000042',
+  failed: '4012001037461114',
+};
+
 export const testCards: Record<Currency, TestCards> = {
   EGP: checkoutTestCards,
   USD: stripeTestCards,
   AED: amazonTestCards,
   KWD: tapTestCards,
   SAR: checkoutTestCards,
+  ZAR: peachTestCards,
 } as const;

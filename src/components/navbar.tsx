@@ -89,6 +89,7 @@ export default function NavBar({
                     <SelectItem value="AED">AED</SelectItem>
                     <SelectItem value="KWD">KWD</SelectItem>
                     <SelectItem value="SAR">SAR</SelectItem>
+                    <SelectItem value="ZAR">ZAR</SelectItem>
                   </SelectContent>
                 </Select>
               </>
