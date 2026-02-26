@@ -182,5 +182,10 @@
     "title": "Oh no, your payment failed",
     "message": "Don't worry, you can try again with a different payment method.",
     "checkoutButton": "Checkout"
+  },
+  "intentExpired": {
+    "title": "Payment session expired",
+    "message": "Your payment session has expired. Please start a new checkout to complete your purchase.",
+    "returnToCart": "Return to Cart"
   }
 }
