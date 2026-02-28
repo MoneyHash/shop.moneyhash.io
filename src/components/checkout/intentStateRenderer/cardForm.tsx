@@ -1387,7 +1387,7 @@ export function Click2PayCardForm({
                 setScenario('NEW_EMAIL');
 
                 toast.error(
-                  'No email found in Click2Pay system. Please enter a different email.',
+                  'No email found in Click to Pay system. Please enter a different email.',
                 );
               },
             });
