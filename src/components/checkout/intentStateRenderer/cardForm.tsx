@@ -1515,9 +1515,3 @@ function C2PLearnMore({ onClose }: { onClose: () => void }) {
     />
   );
 }
-
-<src-learn-more
-  id="mh-src-learn-more"
-  card-brands="mastercard,visa,amex,discover"
-  display-close-button="true"
-/>;
