@@ -869,21 +869,13 @@ export function Click2PayCardForm({
             }),
           },
           dpaTransactionOptions: {
-            confirmPayment: false,
             transactionAmount: {
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
             },
             merchantCategoryCode: '0001',
             merchantCountryCode: 'US',
-            authenticationPreferences: {
-              payloadRequested: 'AUTHENTICATED',
-            },
-            paymentOptions: [
-              {
-                dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
-              },
-            ],
+
             acquirerData: [
               {
                 cardBrand: 'mastercard',
@@ -896,20 +888,6 @@ export function Click2PayCardForm({
                 acquirerBIN: '432104',
               },
             ],
-          },
-          complianceSettings: {
-            privacy: {
-              acceptedVersion: 'LATEST',
-              latestVersion: 'LATEST',
-              latestVersionUri:
-                'https://www.mastercard.com/global/click-to-pay/country-listing/privacy.html',
-            },
-            tnc: {
-              acceptedVersion: 'LATEST',
-              latestVersion: 'LATEST',
-              latestVersionUri:
-                'https://www.mastercard.com/global/click-to-pay/country-listing/terms.html',
-            },
           },
           rememberMe,
           recognitionTokenRequested: rememberMe,
@@ -940,23 +918,14 @@ export function Click2PayCardForm({
       apiMethod = moneyHash.click2Pay
         .checkoutWithCard({
           srcDigitalCardId: payWith!,
-          rememberMe,
           dpaTransactionOptions: {
-            confirmPayment: false,
             transactionAmount: {
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
             },
             merchantCategoryCode: '0001',
             merchantCountryCode: 'US',
-            authenticationPreferences: {
-              payloadRequested: 'AUTHENTICATED',
-            },
-            paymentOptions: [
-              {
-                dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
-              },
-            ],
+
             acquirerData: [
               {
                 cardBrand: 'mastercard',
@@ -969,20 +938,6 @@ export function Click2PayCardForm({
                 acquirerBIN: '432104',
               },
             ],
-          },
-          complianceSettings: {
-            privacy: {
-              acceptedVersion: 'LATEST',
-              latestVersion: 'LATEST',
-              latestVersionUri:
-                'https://www.mastercard.com/global/click-to-pay/country-listing/privacy.html',
-            },
-            tnc: {
-              acceptedVersion: 'LATEST',
-              latestVersion: 'LATEST',
-              latestVersionUri:
-                'https://www.mastercard.com/global/click-to-pay/country-listing/terms.html',
-            },
           },
         })
         .then(async checkoutResponse => {
@@ -1076,20 +1031,21 @@ export function Click2PayCardForm({
       onConsumerNotPreset: () => void;
     }) => {
       try {
-        const result = await moneyHash.click2Pay.authenticate({
+        const authenticationResult = await moneyHash.click2Pay.authenticate({
           identityType: 'EMAIL_ADDRESS',
           identityValue: email,
         });
 
-        logJSON.info('click2Pay.authenticate', result);
+        logJSON.info('click2Pay.authenticate', authenticationResult);
 
-        if (result.action === 'AUTHENTICATED') {
-          setMaskedCards(result.cards);
+        if (authenticationResult.action === 'AUTHENTICATED') {
+          setMaskedCards(authenticationResult.cards);
           setScenario(null);
-          result.recognitionToken && setCookie('c2p', result.recognitionToken);
-        } else if (result.action === 'CONSUMER_NOT_PRESENT') {
+          authenticationResult.recognitionToken &&
+            setCookie('c2p', authenticationResult.recognitionToken);
+        } else if (authenticationResult.action === 'CONSUMER_NOT_PRESENT') {
           onConsumerNotPreset();
-        } else if (result.action === 'NOT_YOU') {
+        } else if (authenticationResult.action === 'NOT_YOU') {
           setScenario('NEW_EMAIL');
 
           const c2pCookie = getCookie<string>('c2p');
@@ -1106,27 +1062,17 @@ export function Click2PayCardForm({
               .init({
                 env: 'sandbox',
                 dpaLocale: 'en_US',
-                checkoutExperience: 'PAYMENT_SETTINGS',
                 srcDpaId: click2payNativeData.dpa_id,
                 dpaData: {
                   dpaName: click2payNativeData.dpa_name,
                 },
                 dpaTransactionOptions: {
-                  confirmPayment: false,
                   transactionAmount: {
                     transactionAmount: totalPrice,
                     transactionCurrencyCode: currency,
                   },
                   merchantCategoryCode: '0001',
                   merchantCountryCode: 'US',
-                  authenticationPreferences: {
-                    payloadRequested: 'AUTHENTICATED',
-                  },
-                  paymentOptions: [
-                    {
-                      dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
-                    },
-                  ],
                   acquirerData: [
                     {
                       cardBrand: 'mastercard',
@@ -1144,7 +1090,7 @@ export function Click2PayCardForm({
               })
               .then(() => moneyHash.click2Pay.getCards());
           }
-        } else if (result.action === 'UNKNOWN_ERROR') {
+        } else if (authenticationResult.action === 'UNKNOWN_ERROR') {
           toast.error(
             'Click to Pay is unavailable at the moment. Please proceed with another payment method',
           );
@@ -1153,9 +1099,9 @@ export function Click2PayCardForm({
           setIsC2pError(true);
           setScenario(null);
         } else if (
-          result.action === 'ACCT_INACCESSIBLE' ||
-          result.action === 'OTP_SEND_FAILED' ||
-          result.action === 'RETRIES_EXCEEDED'
+          authenticationResult.action === 'ACCT_INACCESSIBLE' ||
+          authenticationResult.action === 'OTP_SEND_FAILED' ||
+          authenticationResult.action === 'RETRIES_EXCEEDED'
         ) {
           setPayWith('NEW_CARD');
           setCheckoutAsGuest(false);
@@ -1245,28 +1191,17 @@ export function Click2PayCardForm({
                 .init({
                   env: 'sandbox',
                   dpaLocale: 'en_US',
-                  checkoutExperience: 'PAYMENT_SETTINGS',
                   srcDpaId: click2payNativeData.dpa_id,
                   dpaData: {
                     dpaName: click2payNativeData.dpa_name,
                   },
                   dpaTransactionOptions: {
-                    confirmPayment: false,
                     transactionAmount: {
                       transactionAmount: totalPrice,
                       transactionCurrencyCode: currency,
                     },
                     merchantCategoryCode: '0001',
                     merchantCountryCode: 'US',
-                    authenticationPreferences: {
-                      payloadRequested: 'AUTHENTICATED',
-                    },
-                    paymentOptions: [
-                      {
-                        dynamicDataType:
-                          'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
-                      },
-                    ],
                     acquirerData: [
                       {
                         cardBrand: 'mastercard',
@@ -1580,3 +1515,9 @@ function C2PLearnMore({ onClose }: { onClose: () => void }) {
     />
   );
 }
+
+<src-learn-more
+  id="mh-src-learn-more"
+  card-brands="mastercard,visa,amex,discover"
+  display-close-button="true"
+/>;

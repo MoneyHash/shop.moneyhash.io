@@ -69,25 +69,17 @@ export function ClickToPayProvider({
         const { availableCardBrands } = await moneyHash.click2Pay.init({
           env: 'sandbox',
           dpaLocale: 'en_US',
-          checkoutExperience: 'PAYMENT_SETTINGS',
           srcDpaId: nativePayData!.dpa_id,
           dpaData: {
             dpaName: nativePayData!.dpa_name,
           },
           dpaTransactionOptions: {
-            confirmPayment: false,
             transactionAmount: {
               transactionAmount: totalPrice,
               transactionCurrencyCode: currency,
             },
-            authenticationPreferences: {
-              payloadRequested: 'AUTHENTICATED',
-            },
-            paymentOptions: [
-              {
-                dynamicDataType: 'CARD_APPLICATION_CRYPTOGRAM_SHORT_FORM',
-              },
-            ],
+            merchantCategoryCode: '0001',
+            merchantCountryCode: 'US',
             acquirerData: [
               {
                 cardBrand: 'mastercard',
