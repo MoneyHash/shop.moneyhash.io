@@ -800,7 +800,7 @@ export function Click2PayCardForm({
   const [firstSixDigits, setFirstSixDigits] = useState<string | null>(null);
   const [isLearnMoreOpen, setIsLearnMoreOpen] = useState(false);
   const [saveCardToMoneyHash, setSaveCardToMoneyHash] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidCardForm, setIsValidCardForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1086,7 +1086,7 @@ export function Click2PayCardForm({
                     },
                   ],
                 },
-                cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
+                cardBrands: ['mastercard', 'visa', 'amex'],
               })
               .then(() => moneyHash.click2Pay.getCards());
           }
@@ -1215,7 +1215,7 @@ export function Click2PayCardForm({
                       },
                     ],
                   },
-                  cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
+                  cardBrands: ['mastercard', 'visa', 'amex'],
                 })
                 .then(() => moneyHash.click2Pay.getCards());
             }
@@ -1302,7 +1302,7 @@ export function Click2PayCardForm({
             display-header={false}
             card-selection-type="radioButton"
             display-add-card
-            card-brands="mastercard,visa,amex,discover"
+            card-brands="mastercard,visa,amex"
           />
         ) : null}
       </div>
@@ -1509,7 +1509,7 @@ function C2PLearnMore({ onClose }: { onClose: () => void }) {
   return (
     <src-learn-more
       id="mh-src-learn-more"
-      card-brands="mastercard,visa,amex,discover"
+      card-brands="mastercard,visa,amex"
       dark={theme === 'dark' ? true : undefined}
       display-close-button="true"
     />
