@@ -4,20 +4,29 @@ export type Currency = 'USD' | 'EGP' | 'SAR' | 'AED' | 'KWD' | 'ZAR';
 
 export type Product = {
   id: string;
-  nameKey: string;
+  descriptionKey: string;
   imageSrc: string;
   imageAlt: string;
   price: Record<Currency, number>;
-  descriptionKey: string;
   rating: 1 | 2 | 3 | 4 | 5;
   category: 'Shirts' | 'Bags';
+  // Chatbot search products tool
+  name: string;
+  color: string;
+  description: string;
+  nameKey: string;
 };
 
 export const products: Product[] = [
   {
     id: nanoid(),
     category: 'Shirts',
+    name: 'Basic Tee',
+    color: 'Black',
+    description:
+      'A wardrobe essential crafted from soft, breathable cotton. The classic black colorway offers effortless versatility — dress it up or keep it casual.',
     nameKey: 'product.items.basicTee',
+    descriptionKey: 'product.colors.black',
     imageSrc: '/images/products/product-page-01-related-product-01.png',
     imageAlt: "Front of men's Basic Tee in black.",
     price: {
@@ -28,13 +37,17 @@ export const products: Product[] = [
       KWD: 10,
       ZAR: 650,
     },
-    descriptionKey: 'product.colors.black',
     rating: 5,
   },
   {
     id: nanoid(),
     category: 'Shirts',
+    name: 'Basic Tee',
+    color: 'Aspen White',
+    description:
+      'A clean, minimalist tee in a soft off-white tone. Made from lightweight cotton for all-day comfort, perfect as a standalone piece or layered look.',
     nameKey: 'product.items.basicTee',
+    descriptionKey: 'product.colors.aspenWhite',
     imageSrc: '/images/products/product-page-01-related-product-02.png',
     imageAlt: "Front of men's Basic Tee in white.",
     price: {
@@ -45,13 +58,17 @@ export const products: Product[] = [
       KWD: 9,
       ZAR: 650,
     },
-    descriptionKey: 'product.colors.aspenWhite',
     rating: 5,
   },
   {
     id: nanoid(),
     category: 'Shirts',
+    name: 'Basic Tee',
+    color: 'Charcoal',
+    description:
+      'The same everyday essential in a rich charcoal gray. A neutral that pairs with everything while adding a bit more depth to your outfit.',
     nameKey: 'product.items.basicTee',
+    descriptionKey: 'product.colors.charcoal',
     imageSrc: '/images/products/product-page-01-related-product-03.png',
     imageAlt: "Front of men's Basic Tee in dark gray.",
     price: {
@@ -62,13 +79,17 @@ export const products: Product[] = [
       KWD: 11,
       ZAR: 650,
     },
-    descriptionKey: 'product.colors.charcoal',
     rating: 3,
   },
   {
     id: nanoid(),
     category: 'Shirts',
+    name: 'Artwork Tee',
+    color: 'Charcoal',
+    description:
+      'A statement tee featuring an isometric cube graphic composed of delicate white and brown dots on a soft peach background. Artistic, understated, and unique.',
     nameKey: 'product.items.artworkTee',
+    descriptionKey: 'product.colors.charcoal',
     imageSrc: '/images/products/product-page-01-related-product-04.png',
     imageAlt:
       "Front of men's Artwork Tee in peach with white and brown dots forming an isometric cube.",
@@ -80,14 +101,20 @@ export const products: Product[] = [
       KWD: 7,
       ZAR: 650,
     },
-    descriptionKey: 'product.colors.charcoal',
     rating: 4,
   },
-
   {
     id: nanoid(),
     category: 'Bags',
+    name: 'Nomad Pouch',
+    color: 'White and Black',
+    description:
+      'A compact travel pouch in white fabric with a smooth zipper and black elastic loop. Ideal for organizing cables, cosmetics, or daily essentials.',
     nameKey: 'product.items.nomadPouch',
+    descriptionKey: 'product.colors.whiteAndBlack',
+    imageSrc: '/images/products/category-page-07-product-01.png',
+    imageAlt:
+      'White fabric pouch with white zipper, black zipper pull, and black elastic loop.',
     price: {
       USD: 50,
       EGP: 1500,
@@ -96,16 +123,20 @@ export const products: Product[] = [
       KWD: 12,
       ZAR: 900,
     },
-    descriptionKey: 'product.colors.whiteAndBlack',
-    imageSrc: '/images/products/category-page-07-product-01.png',
-    imageAlt:
-      'White fabric pouch with white zipper, black zipper pull, and black elastic loop.',
     rating: 4,
   },
   {
     id: nanoid(),
     category: 'Bags',
+    name: 'Zip Tote Basket',
+    color: 'Washed Black',
+    description:
+      'A structured tote with a washed black canvas body, durable black straps, and refined tan leather handles and accents. Spacious enough for work or weekend use.',
     nameKey: 'product.items.zipToteBasket',
+    descriptionKey: 'product.colors.washedBlack',
+    imageSrc: '/images/products/category-page-07-product-02.png',
+    imageAlt:
+      'Front of tote bag with washed black canvas body, black straps, and tan leather handles and accents.',
     price: {
       USD: 140,
       EGP: 4000,
@@ -114,16 +145,20 @@ export const products: Product[] = [
       KWD: 9,
       ZAR: 2500,
     },
-    descriptionKey: 'product.colors.washedBlack',
-    imageSrc: '/images/products/category-page-07-product-02.png',
-    imageAlt:
-      'Front of tote bag with washed black canvas body, black straps, and tan leather handles and accents.',
     rating: 5,
   },
   {
     id: nanoid(),
     category: 'Bags',
+    name: 'Medium Stuff Satchel',
+    color: 'Blue',
+    description:
+      'A bold blue satchel with a drawstring top closure, front zipper pouch, and sturdy black straps. Designed for those who need both style and functionality on the go.',
     nameKey: 'product.items.mediumStuffSatchel',
+    descriptionKey: 'product.colors.blue',
+    imageSrc: '/images/products/category-page-07-product-03.png',
+    imageAlt:
+      'Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch.',
     price: {
       USD: 220,
       EGP: 6400,
@@ -132,16 +167,20 @@ export const products: Product[] = [
       KWD: 8,
       ZAR: 4000,
     },
-    descriptionKey: 'product.colors.blue',
-    imageSrc: '/images/products/category-page-07-product-03.png',
-    imageAlt:
-      'Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch.',
     rating: 5,
   },
   {
     id: nanoid(),
     category: 'Bags',
+    name: 'High Wall Tote',
+    color: 'Black and Orange',
+    description:
+      'A high-capacity tote in black canvas with an eye-catching orange drawstring top and robust handles. Perfect for gym, market, or any adventure that demands extra room.',
     nameKey: 'product.items.highWallTote',
+    descriptionKey: 'product.colors.blackAndOrange',
+    imageSrc: '/images/products/category-page-07-product-04.png',
+    imageAlt:
+      'Front of zip tote bag with black canvas, black handles, and orange drawstring top.',
     price: {
       USD: 210,
       EGP: 6200,
@@ -150,10 +189,6 @@ export const products: Product[] = [
       KWD: 7,
       ZAR: 3800,
     },
-    descriptionKey: 'product.colors.blackAndOrange',
-    imageSrc: '/images/products/category-page-07-product-04.png',
-    imageAlt:
-      'Front of zip tote bag with black canvas, black handles, and orange drawstring top.',
     rating: 4,
   },
 ];

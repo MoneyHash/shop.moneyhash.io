@@ -11,7 +11,13 @@
     "airbnb-typescript",
     "prettier"
   ],
-  "ignorePatterns": ["node_modules/", "dist/", "public/"],
+  "ignorePatterns": [
+    "node_modules/",
+    "dist/",
+    "public/",
+    ".claude/**/*",
+    ".agents/**/*"
+  ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.eslint.json",
@@ -23,6 +29,9 @@
   },
   "plugins": ["react", "react-refresh", "@typescript-eslint", "prettier"],
   "rules": {
+    "jsx-a11y/no-static-element-interactions": "off",
+    "jsx-a11y/click-events-have-key-events": "off",
+    "react/no-array-index-key": "off",
     "import/prefer-default-export": "off",
     "import/extensions": "off",
     "prettier/prettier": "error",

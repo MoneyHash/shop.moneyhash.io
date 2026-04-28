@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import NavBar from '@/components/navbar';
 import ProductItem from '@/components/productItem';
 import productSections from '@/utils/productSections';
+import ChatBot from '@/components/chatBot';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -118,6 +119,8 @@ export default function Home() {
           </section>
         ))}
       </main>
+
+      <ChatBot />
     </div>
   );
 }
