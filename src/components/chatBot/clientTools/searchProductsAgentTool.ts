@@ -18,14 +18,7 @@ export function searchProducts(filters: {
   currency?: Currency;
   minRating?: number;
 }): Product[] {
-  const {
-    query,
-    category,
-    minPrice,
-    maxPrice,
-    currency = 'USD',
-    minRating,
-  } = filters;
+  const { query, category, minPrice, maxPrice, currency, minRating } = filters;
 
   const candidates = query ? fuse.search(query).map(r => r.item) : products;
 

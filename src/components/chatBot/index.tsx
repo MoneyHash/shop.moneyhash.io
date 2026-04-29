@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 
 import { FloatingButton } from './floatingButton';
 import { ChatBotHeader } from './chatbotHeader';
+import { CartView } from './CartView';
 import { ChatContainer } from './chatContainer';
 import { ChatEmptyMessages } from './chatEmptyMessages';
 import { searchProducts } from './clientTools/searchProductsAgentTool';
+import { addToCart } from './clientTools/addToCartAgentTool';
+import { removeFromCart } from './clientTools/removeFromCartAgentTool';
+import { clearCart } from './clientTools/clearCartAgentTool';
+import { ProductsList, ProductsListSkeleton } from './clientTools/ProductsList';
+import { AddToCartConfirmation } from './clientTools/AddToCartConfirmation';
+import { RemoveFromCartConfirmation } from './clientTools/RemoveFromCartConfirmation';
+import { ClearCartConfirmation } from './clientTools/ClearCartConfirmation';
+import type { ChatUIMessage } from './types';
 import {
   PromptInput,
   PromptInputTextarea,
@@ -19,32 +28,103 @@ import {
   ConversationScrollButton,
 } from './conversation';
 import { Message, MessageContent, MessageResponse } from './message';
+import { TypingIndicator } from './typingIndicator';
+import useShoppingCart from '@/store/useShoppingCart';
+import useCurrency from '@/store/useCurrency';
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
+  const [view, setView] = useState<'chat' | 'cart'>('chat');
+  const cart = useShoppingCart(s => s.cart);
+  const currency = useCurrency(s => s.currency);
+  const currencyRef = useRef(currency);
+  currencyRef.current = currency;
 
-  const { messages, sendMessage, status, stop, addToolOutput } = useChat({
-    transport: new DefaultChatTransport({
-      api: 'http://localhost:4000/api/chat',
-    }),
-    onToolCall({ toolCall }) {
-      if (toolCall.toolName === 'searchProducts') {
-        searchProducts(toolCall.input || {});
-        console.log(toolCall.input);
-        setTimeout(() => {
+  const { messages, sendMessage, status, stop, addToolOutput } =
+    useChat<ChatUIMessage>({
+      transport: new DefaultChatTransport({
+        api: 'http://localhost:4000/api/chat',
+        prepareSendMessagesRequest({ messages }) {
+          return {
+            body: {
+              messages,
+              currency: currencyRef.current,
+            },
+          };
+        },
+      }),
+      onToolCall({ toolCall }) {
+        if (toolCall.dynamic) return;
+
+        if (toolCall.toolName === 'searchProducts') {
+          setTimeout(() => {
+            addToolOutput({
+              tool: 'searchProducts',
+              toolCallId: toolCall.toolCallId,
+              output: searchProducts({
+                ...toolCall.input,
+                currency: toolCall.input.currency || currencyRef.current,
+              }),
+            });
+          }, 1000);
+        } else if (toolCall.toolName === 'findProducts') {
           addToolOutput({
-            tool: 'searchProducts',
+            tool: 'findProducts',
             toolCallId: toolCall.toolCallId,
-            output: { products: searchProducts(toolCall.input || {}) },
+            output: searchProducts({
+              ...toolCall.input,
+              currency: toolCall.input.currency || currencyRef.current,
+            }),
           });
-        }, 200);
-      }
-    },
-  });
 
-  console.log(messages);
+          setTimeout(() => {
+            sendMessage();
+          }, 0);
+        } else if (toolCall.toolName === 'getCart') {
+          addToolOutput({
+            tool: 'getCart',
+            toolCallId: toolCall.toolCallId,
+            output: cart,
+          });
+
+          setTimeout(() => {
+            sendMessage();
+          }, 0);
+        } else if (toolCall.toolName === 'addToCart') {
+          addToolOutput({
+            tool: 'addToCart',
+            toolCallId: toolCall.toolCallId,
+            output: addToCart(toolCall.input),
+          });
+
+          setTimeout(() => {
+            sendMessage();
+          }, 0);
+        } else if (toolCall.toolName === 'removeFromCart') {
+          addToolOutput({
+            tool: 'removeFromCart',
+            toolCallId: toolCall.toolCallId,
+            output: removeFromCart(toolCall.input),
+          });
+
+          setTimeout(() => {
+            sendMessage();
+          }, 0);
+        } else if (toolCall.toolName === 'clearCart') {
+          addToolOutput({
+            tool: 'clearCart',
+            toolCallId: toolCall.toolCallId,
+            output: clearCart(),
+          });
+
+          setTimeout(() => {
+            sendMessage();
+          }, 0);
+        }
+      },
+    });
 
   return (
     <div className="fixed bottom-6 end-6 z-50 flex flex-col items-end gap-2 max-sm:inset-0 pointer-events-none">
@@ -53,69 +133,145 @@ export default function ChatBot() {
           onClose={() => setIsOpen(false)}
           isExpanded={isExpanded}
           onToggleExpand={() => setIsExpanded(e => !e)}
+          onCartClick={() =>
+            setView(prevView => (prevView === 'chat' ? 'cart' : 'chat'))
+          }
         />
 
-        <Conversation>
-          <ConversationContent>
-            {messages.length === 0 && (
-              <ChatEmptyMessages
-                onPromptClick={prompt => sendMessage({ text: prompt })}
-              />
-            )}
+        {view === 'cart' ? (
+          <CartView onBack={() => setView('chat')} />
+        ) : (
+          <>
+            <Conversation>
+              <ConversationContent>
+                {messages.length === 0 && (
+                  <ChatEmptyMessages
+                    onPromptClick={prompt => sendMessage({ text: prompt })}
+                  />
+                )}
 
-            {messages.map(({ id, parts, role }) => (
-              <Message key={id} from={role}>
-                <MessageContent>
-                  {parts.map((part, i) => {
-                    switch (part.type) {
-                      case 'text':
-                        return (
-                          <MessageResponse isAnimating key={`${id}-${i}`}>
-                            {part.text}
-                          </MessageResponse>
-                        );
+                {messages.map(({ id, parts, role }) => (
+                  <Message key={id} from={role}>
+                    <MessageContent>
+                      {parts.map((part, i) => {
+                        switch (part.type) {
+                          case 'text':
+                            return (
+                              <MessageResponse isAnimating key={`${id}-${i}`}>
+                                {part.text}
+                              </MessageResponse>
+                            );
 
-                      default:
-                        return null;
-                    }
-                  })}
-                </MessageContent>
-              </Message>
-            ))}
-          </ConversationContent>
+                          case 'tool-searchProducts': {
+                            if (
+                              part.state === 'input-streaming' ||
+                              part.state === 'input-available'
+                            )
+                              return (
+                                <ProductsListSkeleton key={`${id}-${i}`} />
+                              );
 
-          <ConversationScrollButton />
-        </Conversation>
+                            if (part.state === 'output-available')
+                              return (
+                                <ProductsList
+                                  key={`${id}-${i}`}
+                                  products={part.output}
+                                  currency={part.input.currency ?? 'USD'}
+                                />
+                              );
+                            return null;
+                          }
 
-        <div className="px-4 pb-2">
-          <PromptInput
-            value={input}
-            onSubmit={({ text }) => {
-              if (status === 'ready') {
-                setInput('');
-                sendMessage({ text });
-              }
-            }}
-          >
-            <PromptInputTextarea
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder="Search or ask a question..."
-              // disabled={}
-            />
-            <PromptInputFooter>
-              <PromptInputSubmit
-                status={status}
-                onStop={stop}
-                disabled={!input.trim() && status === 'ready'}
-              />
-            </PromptInputFooter>
-          </PromptInput>
+                          case 'tool-addToCart': {
+                            if (
+                              part.state === 'output-available' &&
+                              part.output.success
+                            )
+                              return (
+                                <AddToCartConfirmation
+                                  key={`${id}-${i}`}
+                                  productId={part.output.productId}
+                                  quantity={part.output.quantity}
+                                  onViewCart={() => setView('cart')}
+                                />
+                              );
+                            return null;
+                          }
 
-          <p className="mt-1.5 text-center text-[10px] text-muted-foreground/50">
-            Enter to send · Shift+Enter for new line
-          </p>
-        </div>
+                          case 'tool-removeFromCart': {
+                            if (
+                              part.state === 'output-available' &&
+                              part.output.success
+                            )
+                              return (
+                                <RemoveFromCartConfirmation
+                                  key={`${id}-${i}`}
+                                  productId={part.output.productId}
+                                  removedQuantity={part.output.removedQuantity}
+                                  lineRemoved={part.output.lineRemoved}
+                                  onViewCart={() => setView('cart')}
+                                />
+                              );
+                            return null;
+                          }
+
+                          case 'tool-clearCart': {
+                            if (part.state === 'output-available')
+                              return (
+                                <ClearCartConfirmation
+                                  key={`${id}-${i}`}
+                                  removedItems={part.output.removedItems}
+                                  removedLines={part.output.removedLines}
+                                  alreadyEmpty={part.output.alreadyEmpty}
+                                  onViewCart={() => setView('cart')}
+                                />
+                              );
+                            return null;
+                          }
+
+                          default:
+                            return null;
+                        }
+                      })}
+                    </MessageContent>
+                  </Message>
+                ))}
+                {status === 'submitted' && <TypingIndicator />}
+              </ConversationContent>
+
+              <ConversationScrollButton />
+            </Conversation>
+
+            <div className="px-4 pb-2">
+              <PromptInput
+                value={input}
+                onSubmit={({ text }) => {
+                  if (status === 'ready') {
+                    setInput('');
+                    sendMessage({ text });
+                  }
+                }}
+              >
+                <PromptInputTextarea
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  placeholder="Search or ask a question..."
+                />
+                <PromptInputFooter>
+                  <PromptInputSubmit
+                    status={status}
+                    onStop={stop}
+                    disabled={!input.trim() && status === 'ready'}
+                  />
+                </PromptInputFooter>
+              </PromptInput>
+
+              <p className="mt-1.5 text-center text-[10px] text-muted-foreground/50">
+                Enter to send · Shift+Enter for new line
+              </p>
+            </div>
+          </>
+        )}
       </ChatContainer>
       <FloatingButton open={isOpen} onClick={() => setIsOpen(o => !o)} />
     </div>

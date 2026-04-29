@@ -12,7 +12,7 @@ export function ChatContainer({
   return (
     <div
       className={cn(
-        'flex flex-col rounded-2xl border border-border bg-background overflow-hidden max-sm:rounded-none',
+        'flex flex-col rounded-2xl border border-border bg-background overflow-hidden overscroll-contain max-sm:rounded-none',
         'shadow-[rgba(9,14,21,0.9)_0px_5px_40px_0px]',
         'transition-all duration-[220ms] ease-[cubic-bezier(0.16,1,0.3,1)] ltr:origin-bottom-right rtl:origin-bottom-left',
         // width: caps to viewport width with 1.5rem margin on small screens
