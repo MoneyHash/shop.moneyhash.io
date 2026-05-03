@@ -29,6 +29,8 @@ import {
 } from './conversation';
 import { Message, MessageContent, MessageResponse } from './message';
 import { TypingIndicator } from './typingIndicator';
+import { Checkout } from './checkout';
+import { CheckoutResultBadge } from './checkout/result';
 import useShoppingCart from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
 
@@ -126,6 +128,15 @@ export default function ChatBot() {
       },
     });
 
+  const lastMessage = messages[messages.length - 1];
+  const hasPendingCheckout =
+    lastMessage?.role === 'assistant' &&
+    lastMessage.parts.some(
+      part =>
+        part.type === 'tool-proceedToCheckout' &&
+        part.state === 'input-available',
+    );
+
   return (
     <div className="fixed bottom-6 end-6 z-50 flex flex-col items-end gap-2 max-sm:inset-0 pointer-events-none">
       <ChatContainer isOpen={isOpen} isExpanded={isExpanded}>
@@ -139,7 +150,10 @@ export default function ChatBot() {
         />
 
         {view === 'cart' ? (
-          <CartView onBack={() => setView('chat')} />
+          <CartView
+            onBack={() => setView('chat')}
+            onPromptClick={prompt => sendMessage({ text: prompt })}
+          />
         ) : (
           <>
             <Conversation>
@@ -229,6 +243,47 @@ export default function ChatBot() {
                             return null;
                           }
 
+                          case 'tool-proceedToCheckout': {
+                            if (part.state === 'input-available') {
+                              return (
+                                <Checkout
+                                  key={`${id}-${i}`}
+                                  onComplete={output => {
+                                    addToolOutput({
+                                      tool: 'proceedToCheckout',
+                                      toolCallId: part.toolCallId,
+                                      output,
+                                    });
+                                    sendMessage();
+                                  }}
+                                  onAgentAuthorized={result => {
+                                    console.log(
+                                      '[chatbot] agent authorization:',
+                                      result,
+                                    );
+                                  }}
+                                />
+                              );
+                            }
+
+                            if (part.state === 'output-available') {
+                              return (
+                                <CheckoutResultBadge
+                                  key={`${id}-${i}`}
+                                  output={part.output}
+                                  onAgentAuthorized={result => {
+                                    console.log(
+                                      '[chatbot] agent authorization:',
+                                      result,
+                                    );
+                                  }}
+                                />
+                              );
+                            }
+
+                            return null;
+                          }
+
                           default:
                             return null;
                         }
@@ -246,7 +301,7 @@ export default function ChatBot() {
               <PromptInput
                 value={input}
                 onSubmit={({ text }) => {
-                  if (status === 'ready') {
+                  if (status === 'ready' && !hasPendingCheckout) {
                     setInput('');
                     sendMessage({ text });
                   }
@@ -255,13 +310,21 @@ export default function ChatBot() {
                 <PromptInputTextarea
                   value={input}
                   onChange={e => setInput(e.target.value)}
-                  placeholder="Search or ask a question..."
+                  placeholder={
+                    hasPendingCheckout
+                      ? 'Complete or cancel the checkout to continue...'
+                      : 'Search or ask a question...'
+                  }
+                  disabled={hasPendingCheckout}
                 />
                 <PromptInputFooter>
                   <PromptInputSubmit
                     status={status}
                     onStop={stop}
-                    disabled={!input.trim() && status === 'ready'}
+                    disabled={
+                      hasPendingCheckout ||
+                      (!input.trim() && status === 'ready')
+                    }
                   />
                 </PromptInputFooter>
               </PromptInput>

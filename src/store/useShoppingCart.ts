@@ -18,8 +18,8 @@ type Action = {
 };
 
 const initialCart: State['cart'] = [
-  ...productSections[0].products.slice(0, 4).map(p => ({ ...p, quantity: 3 })),
-  ...productSections[1].products.slice(0, 2).map(p => ({ ...p, quantity: 6 })),
+  // ...productSections[0].products.slice(0, 4).map(p => ({ ...p, quantity: 3 })),
+  // ...productSections[1].products.slice(0, 2).map(p => ({ ...p, quantity: 6 })),
 ];
 
 const useShoppingCart = create<State & Action>(set => ({

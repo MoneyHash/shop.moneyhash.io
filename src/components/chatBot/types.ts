@@ -12,6 +12,7 @@ import type {
   ClearCartInput,
   ClearCartResult,
 } from './clientTools/clearCartAgentTool';
+import type { CheckoutResult } from './checkout/result';
 
 export type StoreAgentTools = {
   query?: string;
@@ -48,6 +49,10 @@ type ChatUITools = {
   clearCart: {
     input: ClearCartInput;
     output: ClearCartResult;
+  };
+  proceedToCheckout: {
+    input: {};
+    output: CheckoutResult;
   };
 };
 

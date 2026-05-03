@@ -15,7 +15,7 @@ export function searchProducts(filters: {
   category?: string;
   minPrice?: number;
   maxPrice?: number;
-  currency?: Currency;
+  currency: Currency;
   minRating?: number;
 }): Product[] {
   const { query, category, minPrice, maxPrice, currency, minRating } = filters;
@@ -26,7 +26,7 @@ export function searchProducts(filters: {
     if (category && p.category.toLowerCase() !== category.toLowerCase())
       return false;
 
-    const priceInCurrency = p.price[currency];
+    const priceInCurrency = p.price[currency!];
     if (minPrice != null && priceInCurrency < minPrice) return false;
     if (maxPrice != null && priceInCurrency > maxPrice) return false;
     if (minRating != null && p.rating < minRating) return false;

@@ -40,8 +40,10 @@ export function MessageContent({
         'group-[.is-user]:text-primary-foreground group-[.is-user]:leading-relaxed',
         // Assistant bubble — mirrors user but left-aligned
         'group-[.is-assistant]:w-fit group-[.is-assistant]:max-w-full',
+        // Expand to full width when a child opts in (e.g. checkout)
+        'group-[.is-assistant]:has-[[data-fill-bubble]]:w-full',
         'group-[.is-assistant]:rounded-2xl group-[.is-assistant]:rounded-tl',
-        'group-[.is-assistant]:bg-muted group-[.is-assistant]:px-4 group-[.is-assistant]:py-2',
+        'group-[.is-assistant]:bg-muted/60 dark:group-[.is-assistant]:bg-muted/30 group-[.is-assistant]:px-4 group-[.is-assistant]:py-2',
         'group-[.is-assistant]:text-foreground group-[.is-assistant]:leading-relaxed',
         className,
       )}
