@@ -27,14 +27,22 @@ export type CheckoutResult =
   | { status: 'cancelled'; message: string };
 
 export function CheckoutResultBadge({
+  customerId,
   output,
   onAgentAuthorized,
 }: {
+  customerId: string;
   output: CheckoutResult;
   onAgentAuthorized?: (result: AgentAuthorizationResult) => void;
 }) {
   if (output.status === 'success') {
-    return <SuccessReceipt {...output} onAgentAuthorized={onAgentAuthorized} />;
+    return (
+      <SuccessReceipt
+        {...output}
+        customerId={customerId}
+        onAgentAuthorized={onAgentAuthorized}
+      />
+    );
   }
 
   return (
@@ -52,12 +60,14 @@ export function CheckoutResultBadge({
 }
 
 function SuccessReceipt({
+  customerId,
   transactionId,
   currency,
   total,
   items,
   onAgentAuthorized,
 }: {
+  customerId: string;
   transactionId: string;
   currency: string;
   total: number;
@@ -173,7 +183,10 @@ function SuccessReceipt({
         </span>
       </button>
 
-      <AgentAuthorization onResult={onAgentAuthorized} />
+      <AgentAuthorization
+        customerId={customerId}
+        onResult={onAgentAuthorized}
+      />
     </div>
   );
 }

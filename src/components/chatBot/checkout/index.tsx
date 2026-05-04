@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { IntentDetails } from '@moneyhash/js-sdk/headless';
 import { useTranslation } from 'react-i18next';
 
-import createIntent from '@/api/createIntent';
+import toast from 'react-hot-toast';
+import createIntent from './createIntent';
 import { moneyHash } from '@/utils/moneyHash';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
@@ -33,13 +34,16 @@ type Step =
   | { kind: 'done'; result: CheckoutResult };
 
 export function Checkout({
+  customerId,
   onComplete,
   onAgentAuthorized,
 }: {
+  customerId: string;
   onComplete: (result: CheckoutResult) => void;
   onAgentAuthorized?: (result: AgentAuthorizationResult) => void;
 }) {
   const cart = useShoppingCart(s => s.cart);
+  const emptyCart = useShoppingCart(s => s.emptyCart);
   const currency = useCurrency(s => s.currency);
   const totalPrice = useTotalPrice();
   const { theme } = useTheme();
@@ -60,34 +64,42 @@ export function Checkout({
     (async () => {
       try {
         const response = await createIntent({
-          methodId: 'CARD',
+          type: 'cit',
+          customerId,
+          backgroundColor: theme === 'dark' ? '%23000A14' : 'white',
           amount: totalRef.current,
           currency: currencyRef.current,
-          userInfo: DEMO_INFO,
-          product_items: cartRef.current.map((product, index) => ({
+          productItems: cartRef.current.map(product => ({
             name: product.nameKey,
             description: product.descriptionKey,
             quantity: product.quantity,
             amount: product.price[currencyRef.current],
-            sku: `sku${index}`,
           })),
         });
         const intentId = response.data.id;
         await moneyHash.getIntentDetails(intentId);
         if (cancelled) return;
         setStep({ kind: 'card-form', intentId });
-      } catch (err) {
+      } catch (err: any) {
         if (cancelled) return;
+        const errors = err?.response?.data?.status?.errors?.[0];
+        if (errors) {
+          toast.error(Object.values(errors).join(', '));
+        }
+
         setCreateError('Could not start checkout. Please try again.');
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [theme, customerId]);
 
   const finish = (result: CheckoutResult) => {
     setStep({ kind: 'done', result });
+    if (result.status === 'success') {
+      emptyCart();
+    }
     onComplete(result);
   };
 
@@ -204,6 +216,7 @@ export function Checkout({
 
   return (
     <CheckoutResultBadge
+      customerId={customerId}
       output={step.result}
       onAgentAuthorized={onAgentAuthorized}
     />

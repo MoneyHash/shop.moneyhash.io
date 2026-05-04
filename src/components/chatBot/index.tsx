@@ -30,11 +30,14 @@ import {
 import { Message, MessageContent, MessageResponse } from './message';
 import { TypingIndicator } from './typingIndicator';
 import { Checkout } from './checkout';
-import { CheckoutResultBadge } from './checkout/result';
+import { MITCheckout } from './checkout/mitCheckout';
+import { CheckoutResultBadge, type CheckoutResult } from './checkout/result';
+import { readAgentAuthorization } from './checkout/agentAuthorization';
+import { AGENT_API_BASE_URL } from './agentApi';
 import useShoppingCart from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
 
-export default function ChatBot() {
+export default function ChatBot({ customerId }: { customerId: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
@@ -47,7 +50,7 @@ export default function ChatBot() {
   const { messages, sendMessage, status, stop, addToolOutput } =
     useChat<ChatUIMessage>({
       transport: new DefaultChatTransport({
-        api: 'http://localhost:4000/api/chat',
+        api: `${AGENT_API_BASE_URL}/chat`,
         prepareSendMessagesRequest({ messages }) {
           return {
             body: {
@@ -190,7 +193,7 @@ export default function ChatBot() {
                                 <ProductsList
                                   key={`${id}-${i}`}
                                   products={part.output}
-                                  currency={part.input.currency ?? 'USD'}
+                                  currency={part.input.currency ?? currency}
                                 />
                               );
                             return null;
@@ -245,17 +248,35 @@ export default function ChatBot() {
 
                           case 'tool-proceedToCheckout': {
                             if (part.state === 'input-available') {
+                              const isAgentAuthorized =
+                                !!readAgentAuthorization(customerId);
+
+                              const handleComplete = (
+                                output: CheckoutResult,
+                              ) => {
+                                addToolOutput({
+                                  tool: 'proceedToCheckout',
+                                  toolCallId: part.toolCallId,
+                                  output,
+                                });
+                                sendMessage();
+                              };
+
+                              if (isAgentAuthorized) {
+                                return (
+                                  <MITCheckout
+                                    key={`${id}-${i}`}
+                                    customerId={customerId}
+                                    onComplete={handleComplete}
+                                  />
+                                );
+                              }
+
                               return (
                                 <Checkout
                                   key={`${id}-${i}`}
-                                  onComplete={output => {
-                                    addToolOutput({
-                                      tool: 'proceedToCheckout',
-                                      toolCallId: part.toolCallId,
-                                      output,
-                                    });
-                                    sendMessage();
-                                  }}
+                                  customerId={customerId}
+                                  onComplete={handleComplete}
                                   onAgentAuthorized={result => {
                                     console.log(
                                       '[chatbot] agent authorization:',
@@ -270,6 +291,7 @@ export default function ChatBot() {
                               return (
                                 <CheckoutResultBadge
                                   key={`${id}-${i}`}
+                                  customerId={customerId}
                                   output={part.output}
                                   onAgentAuthorized={result => {
                                     console.log(

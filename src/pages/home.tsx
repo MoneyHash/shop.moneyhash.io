@@ -1,12 +1,28 @@
 import { useTranslation } from 'react-i18next';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import NavBar from '@/components/navbar';
 import ProductItem from '@/components/productItem';
 import productSections from '@/utils/productSections';
 import ChatBot from '@/components/chatBot';
+import useJsonConfig from '@/store/useJsonConfig';
+import { localEnv } from '@/utils/moneyHash';
 
 export default function Home() {
   const { t } = useTranslation();
+
+  const jsonConfig = useJsonConfig(s => s.jsonConfig);
+
+  const customerId = useMemo(() => {
+    try {
+      const config = JSON.parse(jsonConfig);
+      const customerId = config?.customer;
+      return typeof customerId === 'string' ? customerId : null;
+    } catch (error) {
+      return null;
+    }
+  }, [jsonConfig]);
+
   return (
     <div>
       <NavBar />
@@ -120,7 +136,9 @@ export default function Home() {
         ))}
       </main>
 
-      <ChatBot />
+      {localEnv === 'staging' && customerId && (
+        <ChatBot customerId={customerId} />
+      )}
     </div>
   );
 }

@@ -6,7 +6,10 @@ import {
   ShieldCheckIcon,
 } from 'lucide-react';
 
-const STORAGE_KEY = 'mh_agent_authorization';
+const STORAGE_KEY_PREFIX = 'mh_agent_authorization';
+
+const getStorageKey = (customerId: string) =>
+  `${STORAGE_KEY_PREFIX}:${customerId}`;
 
 type StoredAuthorization = {
   authorizedAt: number;
@@ -24,10 +27,10 @@ type ViewState =
   | { kind: 'authorized'; authorizedAt: number; credentialId: string }
   | { kind: 'error'; reason: string };
 
-function readStored(): StoredAuthorization | null {
+function readStored(customerId: string): StoredAuthorization | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(getStorageKey(customerId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<StoredAuthorization>;
     if (
@@ -42,17 +45,20 @@ function readStored(): StoredAuthorization | null {
   }
 }
 
-function writeStored(value: StoredAuthorization) {
+function writeStored(customerId: string, value: StoredAuthorization) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    window.localStorage.setItem(
+      getStorageKey(customerId),
+      JSON.stringify(value),
+    );
   } catch {
     /* ignore quota / private mode */
   }
 }
 
-function clearStored() {
+function clearStored(customerId: string) {
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(getStorageKey(customerId));
   } catch {
     /* ignore */
   }
@@ -71,6 +77,18 @@ function bufferToBase64Url(buffer: ArrayBuffer): string {
     .replace(/=+$/, '');
 }
 
+function base64UrlToBuffer(base64Url: string): ArrayBuffer {
+  const padding = '='.repeat((4 - (base64Url.length % 4)) % 4);
+  const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const binary = window.atob(base64);
+  const buffer = new ArrayBuffer(binary.length);
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return buffer;
+}
+
 function isWebAuthnAvailable(): boolean {
   return (
     typeof window !== 'undefined' &&
@@ -80,8 +98,10 @@ function isWebAuthnAvailable(): boolean {
   );
 }
 
-export function readAgentAuthorization(): AgentAuthorizationResult | null {
-  const stored = readStored();
+export function readAgentAuthorization(
+  customerId: string,
+): AgentAuthorizationResult | null {
+  const stored = readStored(customerId);
   if (!stored) return null;
   return {
     status: 'authorized',
@@ -90,9 +110,61 @@ export function readAgentAuthorization(): AgentAuthorizationResult | null {
   };
 }
 
+export async function verifyAgentAuthorization(
+  customerId: string,
+): Promise<AgentAuthorizationResult> {
+  if (!isWebAuthnAvailable() || !navigator.credentials?.get) {
+    return { status: 'unsupported' };
+  }
+  const stored = readStored(customerId);
+  if (!stored) {
+    return { status: 'declined', reason: 'No stored authorization' };
+  }
+  try {
+    const challenge = new Uint8Array(32);
+    window.crypto.getRandomValues(challenge);
+
+    const assertion = (await navigator.credentials.get({
+      publicKey: {
+        challenge,
+        rpId: window.location.hostname,
+        allowCredentials: [
+          {
+            type: 'public-key',
+            id: base64UrlToBuffer(stored.credentialId),
+            transports: ['internal'],
+          },
+        ],
+        userVerification: 'required',
+        timeout: 60_000,
+      },
+    })) as PublicKeyCredential | null;
+
+    if (!assertion) {
+      return { status: 'declined', reason: 'No assertion returned' };
+    }
+
+    return {
+      status: 'authorized',
+      authorizedAt: Date.now(),
+      credentialId: stored.credentialId,
+    };
+  } catch (err) {
+    const reason =
+      err instanceof Error
+        ? err.name === 'NotAllowedError'
+          ? 'Cancelled or timed out'
+          : err.name || err.message
+        : 'Unknown error';
+    return { status: 'declined', reason };
+  }
+}
+
 export function AgentAuthorization({
+  customerId,
   onResult,
 }: {
+  customerId: string;
   onResult?: (result: AgentAuthorizationResult) => void;
 }) {
   const supported = useRef(isWebAuthnAvailable());
@@ -101,7 +173,7 @@ export function AgentAuthorization({
 
   const [view, setView] = useState<ViewState>(() => {
     if (!supported.current) return { kind: 'idle' };
-    const stored = readStored();
+    const stored = readStored(customerId);
     if (stored) {
       return {
         kind: 'authorized',
@@ -143,8 +215,7 @@ export function AgentAuthorization({
     try {
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
-      const userId = new Uint8Array(16);
-      window.crypto.getRandomValues(userId);
+      const userId = new TextEncoder().encode(customerId);
 
       const credential = (await navigator.credentials.create({
         publicKey: {
@@ -155,8 +226,8 @@ export function AgentAuthorization({
           },
           user: {
             id: userId,
-            name: 'shop-user',
-            displayName: 'Shop user',
+            name: `shop-user:${customerId}`,
+            displayName: `Shop user ${customerId}`,
           },
           pubKeyCredParams: [
             { type: 'public-key', alg: -7 },
@@ -178,7 +249,7 @@ export function AgentAuthorization({
 
       const credentialId = bufferToBase64Url(credential.rawId);
       const authorizedAt = Date.now();
-      writeStored({ authorizedAt, credentialId });
+      writeStored(customerId, { authorizedAt, credentialId });
       setView({ kind: 'authorized', authorizedAt, credentialId });
       onResultRef.current?.({
         status: 'authorized',
@@ -198,7 +269,7 @@ export function AgentAuthorization({
   };
 
   const revoke = () => {
-    clearStored();
+    clearStored(customerId);
     setView({ kind: 'idle' });
   };
 

@@ -20,6 +20,7 @@ export function searchProducts(filters: {
 }): Product[] {
   const { query, category, minPrice, maxPrice, currency, minRating } = filters;
 
+  console.log(filters);
   const candidates = query ? fuse.search(query).map(r => r.item) : products;
 
   return candidates.filter(p => {
