@@ -29,10 +29,10 @@ export function AddToCartConfirmation({
           {t('chatBot.tools.addedToCart')}
         </div>
         <p className="truncate text-xs font-semibold leading-tight">
-          {product.name}
+          {t(product.nameKey)}
         </p>
         <p className="truncate text-[10px] text-muted-foreground">
-          {product.color} · {t('chatBot.tools.qty')} {quantity}
+          {t(product.descriptionKey)} · {t('chatBot.tools.qty')} {quantity}
         </p>
       </div>
       <Button

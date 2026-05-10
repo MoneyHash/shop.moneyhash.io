@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useTranslation } from 'react-i18next';
+import type { Language } from './clientTools/searchProductsAgentTool';
 
 import { FloatingButton } from './floatingButton';
 import { ChatBotHeader } from './chatbotHeader';
@@ -39,7 +40,7 @@ import useShoppingCart from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
 
 export default function ChatBot({ customerId }: { customerId: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
@@ -48,6 +49,9 @@ export default function ChatBot({ customerId }: { customerId: string }) {
   const currency = useCurrency(s => s.currency);
   const currencyRef = useRef(currency);
   currencyRef.current = currency;
+  const language: Language = i18n.language === 'ar' ? 'ar' : 'en';
+  const languageRef = useRef(language);
+  languageRef.current = language;
 
   const { messages, sendMessage, status, stop, addToolOutput } =
     useChat<ChatUIMessage>({
@@ -58,6 +62,7 @@ export default function ChatBot({ customerId }: { customerId: string }) {
             body: {
               messages,
               currency: currencyRef.current,
+              language: languageRef.current,
             },
           };
         },
@@ -73,6 +78,7 @@ export default function ChatBot({ customerId }: { customerId: string }) {
               output: searchProducts({
                 ...toolCall.input,
                 currency: toolCall.input.currency || currencyRef.current,
+                language: toolCall.input.language ?? languageRef.current,
               }),
             });
           }, 1000);
@@ -83,6 +89,7 @@ export default function ChatBot({ customerId }: { customerId: string }) {
             output: searchProducts({
               ...toolCall.input,
               currency: toolCall.input.currency || currencyRef.current,
+              language: toolCall.input.language ?? languageRef.current,
             }),
           });
 

@@ -37,10 +37,10 @@ function ProductCard({
       />
       <div className="flex flex-1 flex-col gap-1 p-2.5">
         <p className="truncate text-xs font-semibold leading-tight">
-          {product.name}
+          {t(product.nameKey)}
         </p>
         <p className="truncate text-[10px] text-muted-foreground">
-          {product.color}
+          {t(product.descriptionKey)}
         </p>
         <StarRating rating={product.rating} />
         <p className="mt-auto text-xs font-bold text-primary">

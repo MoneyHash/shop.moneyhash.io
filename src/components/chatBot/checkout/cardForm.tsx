@@ -130,10 +130,15 @@ function useChatbotFormField({
 
 const ChatbotFormField = forwardRef<
   FieldRef,
-  { elementType: ElementType; label: string; onComplete?: () => void }
->(({ elementType, label, onComplete }, ref) => {
+  {
+    elementType: ElementType;
+    label: string;
+    onComplete?: () => void;
+    styles?: ElementStyles;
+  }
+>(({ elementType, label, onComplete, styles }, ref) => {
   const { field, isMounted, isFocused, isError, hasValue } =
-    useChatbotFormField({ elementType, onComplete });
+    useChatbotFormField({ elementType, onComplete, styles });
 
   useImperativeHandle(
     ref,
@@ -148,6 +153,11 @@ const ChatbotFormField = forwardRef<
       )}
       <div
         id={`mh-${elementType}`}
+        dir={
+          elementType === 'cardNumber' || elementType === 'cardCvv'
+            ? 'ltr'
+            : undefined
+        }
         className={cn(
           'peer h-10 rounded-md border border-input bg-background transition-colors',
           'hover:border-input/70',
@@ -157,7 +167,7 @@ const ChatbotFormField = forwardRef<
       />
       <Label
         className={cn(
-          'pointer-events-none absolute start-1 top-1/2 z-0 origin-left -translate-y-1/2 scale-100 bg-background px-2 text-sm text-subtle transition-all duration-200',
+          'pointer-events-none absolute start-1 top-1/2 z-0 origin-left rtl:origin-right -translate-y-1/2 scale-100 bg-background px-2 text-sm text-subtle transition-all duration-200',
           isError && 'text-red-500',
           (isFocused || hasValue) &&
             'top-2 -translate-y-4 scale-75 font-medium',
@@ -248,7 +258,7 @@ function ExpiryField({ onComplete }: { onComplete: () => void }) {
       </div>
       <Label
         className={cn(
-          'pointer-events-none absolute start-1 top-1/2 z-0 origin-left -translate-y-1/2 scale-100 bg-background px-2 text-sm text-subtle transition-all duration-200',
+          'pointer-events-none absolute start-1 top-1/2 z-0 origin-left rtl:origin-right -translate-y-1/2 scale-100 bg-background px-2 text-sm text-subtle transition-all duration-200',
           isError && 'text-red-500',
           (isFocused || hasValue) &&
             'top-2 -translate-y-4 scale-75 font-medium',
@@ -262,11 +272,12 @@ function ExpiryField({ onComplete }: { onComplete: () => void }) {
 }
 
 function ChatbotCardFields() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const cvvRef = useRef<FieldRef | null>(null);
+  const isArabic = i18n.language === 'ar';
 
   return (
-    <div dir="ltr" className="grid grid-cols-2 gap-2.5">
+    <div className="grid grid-cols-2 gap-2.5">
       <div className="col-span-full">
         <ChatbotFormField
           elementType="cardHolderName"
@@ -277,6 +288,10 @@ function ChatbotCardFields() {
         <ChatbotFormField
           elementType="cardNumber"
           label={t('chatBot.checkout.card.cardNumber')}
+          styles={{
+            direction: 'ltr',
+            textAlign: isArabic ? 'right' : 'left',
+          }}
         />
       </div>
       <ExpiryField onComplete={() => cvvRef.current?.focus()} />
@@ -284,6 +299,10 @@ function ChatbotCardFields() {
         ref={cvvRef}
         elementType="cardCvv"
         label={t('chatBot.checkout.card.cvv')}
+        styles={{
+          direction: 'ltr',
+          textAlign: isArabic ? 'right' : 'left',
+        }}
       />
     </div>
   );

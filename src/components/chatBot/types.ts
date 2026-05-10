@@ -1,5 +1,9 @@
 import type { UIMessage } from '@ai-sdk/react';
-import type { Product } from './clientTools/searchProductsAgentTool';
+import type {
+  Language,
+  LocalizedProduct,
+  Product,
+} from './clientTools/searchProductsAgentTool';
 import type {
   AddToCartInput,
   AddToCartResult,
@@ -21,6 +25,7 @@ export type StoreAgentTools = {
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
+  language?: Language;
 };
 
 export type CartItem = Product & { quantity: number };
@@ -28,11 +33,11 @@ export type CartItem = Product & { quantity: number };
 type ChatUITools = {
   searchProducts: {
     input: StoreAgentTools;
-    output: Product[];
+    output: LocalizedProduct[];
   };
   findProducts: {
     input: StoreAgentTools;
-    output: Product[];
+    output: LocalizedProduct[];
   };
   getCart: {
     input: Record<string, never>;

@@ -158,10 +158,10 @@ export function CartView({
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="text-sm font-medium leading-tight truncate">
-                          {item.name}
+                          {t(item.nameKey)}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {item.color}
+                          {t(item.descriptionKey)}
                         </p>
                       </div>
                       <Button

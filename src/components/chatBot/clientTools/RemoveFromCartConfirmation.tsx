@@ -31,10 +31,10 @@ export function RemoveFromCartConfirmation({
           {t('chatBot.tools.removedFromCart')}
         </div>
         <p className="truncate text-xs font-semibold leading-tight">
-          {product.name}
+          {t(product.nameKey)}
         </p>
         <p className="truncate text-[10px] text-muted-foreground">
-          {product.color} ·{' '}
+          {t(product.descriptionKey)} ·{' '}
           {lineRemoved
             ? t('chatBot.tools.removed')
             : t('chatBot.tools.qtyDelta', { count: removedQuantity })}
