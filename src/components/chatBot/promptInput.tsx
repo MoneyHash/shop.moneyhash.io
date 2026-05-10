@@ -8,6 +8,7 @@ import type {
   KeyboardEventHandler,
 } from 'react';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   InputGroupButton,
   InputGroupTextarea,
@@ -69,9 +70,10 @@ export type PromptInputTextareaProps = ComponentProps<
 export function PromptInputTextarea({
   onKeyDown,
   className,
-  placeholder = 'Ask a question...',
+  placeholder,
   ...props
 }: PromptInputTextareaProps) {
+  const { t } = useTranslation();
   const [isComposing, setIsComposing] = useState(false);
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = useCallback(
@@ -110,7 +112,7 @@ export function PromptInputTextarea({
       onCompositionEnd={() => setIsComposing(false)}
       onCompositionStart={() => setIsComposing(true)}
       onKeyDown={handleKeyDown}
-      placeholder={placeholder}
+      placeholder={placeholder ?? t('chatBot.input.fallback')}
       {...props}
     />
   );
@@ -145,6 +147,7 @@ export function PromptInputSubmit({
   children,
   ...props
 }: PromptInputSubmitProps) {
+  const { t } = useTranslation();
   const isGenerating = status === 'submitted' || status === 'streaming';
 
   let Icon = <ArrowUpIcon className="size-4" />;
@@ -172,7 +175,9 @@ export function PromptInputSubmit({
 
   return (
     <InputGroupButton
-      aria-label={isGenerating ? 'Stop' : 'Submit'}
+      aria-label={
+        isGenerating ? t('chatBot.input.stop') : t('chatBot.input.submit')
+      }
       className={cn('rounded-full', className)}
       onClick={handleClick}
       size={size}

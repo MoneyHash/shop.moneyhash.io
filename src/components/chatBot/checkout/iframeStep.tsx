@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import type { IntentDetails } from '@moneyhash/js-sdk/headless';
 
 import { moneyHash } from '@/utils/moneyHash';
+import i18n from '@/i18n/config';
 
 const CONTAINER_ID = 'rendered-url-iframe-container';
 
@@ -28,7 +29,8 @@ export function IframeStep({
           const message =
             (err && typeof err === 'object' && 'message' in err
               ? String((err as { message: unknown }).message)
-              : null) || 'Authentication failed';
+              : null) ||
+            i18n.t('chatBot.checkout.errors.authenticationFailed');
           onError(message);
         }
       });

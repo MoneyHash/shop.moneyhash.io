@@ -1,18 +1,17 @@
 import { Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { MoneyHashLogo } from '../moneyHashLogo';
 import { Button } from '../ui/button';
 
-const SUGGESTED_PROMPTS = [
-  'What shirts do you have?',
-  'Show me bags under $200',
-  'Help me with my order',
-] as const;
+const PROMPT_KEYS = ['shirts', 'bagsUnder200', 'helpWithOrder'] as const;
 
 export function ChatEmptyMessages({
   onPromptClick,
 }: {
   onPromptClick?: (prompt: string) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col items-center gap-5 mt-8 animate-in fade-in duration-500">
       {/* Logo with concentric rings */}
@@ -26,17 +25,17 @@ export function ChatEmptyMessages({
 
       <div className="text-center space-y-1 mt-2">
         <p className="text-sm font-semibold text-foreground tracking-[-0.01em]">
-          Hi there 👋
+          {t('chatBot.empty.greeting')}
         </p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          You are now speaking with{' '}
+          {t('chatBot.empty.speakingWith')}{' '}
           <span className="font-medium text-foreground">
-            Shopping Assistant
+            {t('chatBot.empty.assistantName')}
           </span>
           .
         </p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          How can I help?
+          {t('chatBot.empty.howCanIHelp')}
         </p>
       </div>
 
@@ -44,21 +43,24 @@ export function ChatEmptyMessages({
         <div className="flex items-center gap-1.5 justify-center text-muted-foreground">
           <Sparkles className="h-3 w-3 text-primary/70" />
           <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Try asking
+            {t('chatBot.empty.tryAsking')}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 justify-center">
-          {SUGGESTED_PROMPTS.map(prompt => (
-            <Button
-              key={prompt}
-              className="rounded-full px-4"
-              onClick={() => onPromptClick?.(prompt)}
-              size="sm"
-              variant="outline"
-            >
-              {prompt}
-            </Button>
-          ))}
+          {PROMPT_KEYS.map(key => {
+            const prompt = t(`chatBot.empty.prompts.${key}`);
+            return (
+              <Button
+                key={key}
+                className="rounded-full px-4"
+                onClick={() => onPromptClick?.(prompt)}
+                size="sm"
+                variant="outline"
+              >
+                {prompt}
+              </Button>
+            );
+          })}
         </div>
       </div>
     </div>

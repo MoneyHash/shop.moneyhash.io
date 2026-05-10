@@ -1,4 +1,5 @@
 import { ShoppingCart, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { products } from './searchProductsAgentTool';
 
@@ -13,6 +14,7 @@ export function RemoveFromCartConfirmation({
   lineRemoved: boolean;
   onViewCart: () => void;
 }) {
+  const { t } = useTranslation();
   const product = products.find(p => p.id === productId);
   if (!product) return null;
 
@@ -26,14 +28,16 @@ export function RemoveFromCartConfirmation({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-center gap-1 text-[10px] font-medium text-destructive">
           <Trash2 className="h-3 w-3" />
-          Removed from cart
+          {t('chatBot.tools.removedFromCart')}
         </div>
         <p className="truncate text-xs font-semibold leading-tight">
           {product.name}
         </p>
         <p className="truncate text-[10px] text-muted-foreground">
           {product.color} ·{' '}
-          {lineRemoved ? 'Removed' : `Qty -${removedQuantity}`}
+          {lineRemoved
+            ? t('chatBot.tools.removed')
+            : t('chatBot.tools.qtyDelta', { count: removedQuantity })}
         </p>
       </div>
       <Button
@@ -43,7 +47,7 @@ export function RemoveFromCartConfirmation({
         onClick={onViewCart}
       >
         <ShoppingCart className="h-3 w-3" />
-        View cart
+        {t('chatBot.tools.viewCart')}
       </Button>
     </div>
   );

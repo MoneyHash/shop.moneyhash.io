@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
+import { useTranslation } from 'react-i18next';
 
 import { FloatingButton } from './floatingButton';
 import { ChatBotHeader } from './chatbotHeader';
@@ -38,6 +39,7 @@ import useShoppingCart from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
 
 export default function ChatBot({ customerId }: { customerId: string }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
@@ -334,8 +336,8 @@ export default function ChatBot({ customerId }: { customerId: string }) {
                   onChange={e => setInput(e.target.value)}
                   placeholder={
                     hasPendingCheckout
-                      ? 'Complete or cancel the checkout to continue...'
-                      : 'Search or ask a question...'
+                      ? t('chatBot.input.checkoutInProgress')
+                      : t('chatBot.input.placeholder')
                   }
                   disabled={hasPendingCheckout}
                 />
@@ -352,7 +354,7 @@ export default function ChatBot({ customerId }: { customerId: string }) {
               </PromptInput>
 
               <p className="mt-1.5 text-center text-[10px] text-muted-foreground/50">
-                Enter to send · Shift+Enter for new line
+                {t('chatBot.input.helperText')}
               </p>
             </div>
           </>

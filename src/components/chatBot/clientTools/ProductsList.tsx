@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Check, ShoppingCart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +24,7 @@ function ProductCard({
   product: Product;
   currency: Currency;
 }) {
+  const { t } = useTranslation();
   const [added, setAdded] = useState(false);
   const addProductToCart = useShoppingCart(s => s.addProductToCart);
 
@@ -63,7 +65,7 @@ function ProductCard({
           ) : (
             <ShoppingCart className="h-3 w-3" />
           )}
-          {added ? 'Added' : 'Add to cart'}
+          {added ? t('chatBot.tools.added') : t('chatBot.tools.addToCart')}
         </Button>
       </div>
     </div>
@@ -105,9 +107,12 @@ export function ProductsList({
   products: Product[];
   currency: Currency;
 }) {
+  const { t } = useTranslation();
   if (!products.length) {
     return (
-      <p className="px-1 text-xs text-muted-foreground">No products found.</p>
+      <p className="px-1 text-xs text-muted-foreground">
+        {t('chatBot.tools.noProducts')}
+      </p>
     );
   }
 

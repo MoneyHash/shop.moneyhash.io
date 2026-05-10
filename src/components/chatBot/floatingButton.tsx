@@ -1,4 +1,5 @@
 import { XIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { MoneyHashLogo } from '../moneyHashLogo';
 import { cn } from '@/utils/cn';
 
@@ -9,11 +10,12 @@ export function FloatingButton({
   open: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={open ? 'Close chat' : 'Open chat'}
+      aria-label={open ? t('chatBot.header.close') : t('chatBot.open')}
       className={cn(
         'relative size-14 rounded-full bg-background border-2 shadow-lg outline-none transition-[transform,background-color] duration-150 ease-out hover:scale-[1.07] active:scale-[0.94] pointer-events-auto',
         open && 'max-sm:hidden',

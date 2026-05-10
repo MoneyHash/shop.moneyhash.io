@@ -182,5 +182,135 @@
     "title": "عذراً، فشل في الدفع",
     "message": "لا تقلق، يمكنك المحاولة مرة أخرى بطريقة دفع مختلفة.",
     "checkoutButton": "الدفع"
+  },
+  "chatBot": {
+    "ariaLabel": "محادثة مساعد التسوق",
+    "open": "فتح المحادثة",
+    "header": {
+      "title": "مساعد التسوق",
+      "subtitle": "مدعوم من MoneyHash",
+      "cart": "عربة التسوق",
+      "expand": "توسيع المحادثة",
+      "collapse": "تصغير المحادثة",
+      "close": "إغلاق المحادثة"
+    },
+    "empty": {
+      "greeting": "أهلاً بك 👋",
+      "speakingWith": "أنت الآن تتحدث مع",
+      "assistantName": "مساعد التسوق",
+      "howCanIHelp": "كيف يمكنني المساعدة؟",
+      "tryAsking": "جرّب أن تسأل",
+      "prompts": {
+        "shirts": "ما هي القمصان المتوفرة لديكم؟",
+        "bagsUnder200": "أرني الحقائب بأقل من 200 دولار",
+        "helpWithOrder": "ساعدني في طلبي"
+      }
+    },
+    "cartView": {
+      "title": "عربتك",
+      "items": "عناصر",
+      "back": "العودة إلى المحادثة",
+      "removeItem": "إزالة العنصر",
+      "decreaseQuantity": "تقليل الكمية",
+      "increaseQuantity": "زيادة الكمية",
+      "total": "الإجمالي",
+      "empty": {
+        "title": "عربتك فارغة تماماً",
+        "description": "لا شيء بداخلها بعد. أخبر مساعدنا بما تبحث عنه وسنحضره هنا.",
+        "cta": "ابدأ المحادثة",
+        "popularPicks": "الأكثر طلباً"
+      },
+      "popularPicks": {
+        "shirts": { "label": "قمصان", "prompt": "أرني القمصان المتوفرة" },
+        "bags": { "label": "حقائب", "prompt": "ما هي الحقائب المتوفرة لديكم؟" },
+        "underHundred": { "label": "أقل من 100 دولار", "prompt": "أرني المنتجات بأقل من 100 دولار" }
+      }
+    },
+    "input": {
+      "placeholder": "ابحث أو اطرح سؤالاً...",
+      "checkoutInProgress": "أكمل أو ألغِ عملية الدفع للمتابعة...",
+      "helperText": "Enter للإرسال · Shift+Enter لسطر جديد",
+      "submit": "إرسال",
+      "stop": "إيقاف",
+      "fallback": "اطرح سؤالاً..."
+    },
+    "tools": {
+      "addedToCart": "تمت الإضافة إلى العربة",
+      "removedFromCart": "تمت الإزالة من العربة",
+      "removed": "تمت الإزالة",
+      "qty": "الكمية",
+      "qtyDelta": "الكمية -{{count}}",
+      "cartCleared": "تم تفريغ العربة",
+      "alreadyEmpty": "كانت عربتك فارغة بالفعل.",
+      "allItemsRemoved": "تمت إزالة جميع العناصر.",
+      "removedSummary_one": "{{items}} عنصر من {{lines}} منتج",
+      "removedSummary_other": "{{items}} عناصر من {{lines}} منتجات",
+      "viewCart": "عرض العربة",
+      "added": "تمت الإضافة",
+      "addToCart": "أضف إلى العربة",
+      "noProducts": "لا توجد منتجات."
+    },
+    "checkout": {
+      "errors": {
+        "couldNotStart": "تعذّر بدء عملية الدفع. يرجى المحاولة مرة أخرى.",
+        "paymentDeclined": "تم رفض الدفع",
+        "paymentIncomplete": "تعذّر إتمام الدفع",
+        "unexpectedState": "حالة دفع غير متوقعة",
+        "paymentNotCompleted": "لم يكتمل الدفع ({{status}})",
+        "couldNotComplete": "تعذّر إتمام الدفع. يرجى المحاولة مرة أخرى.",
+        "userDismissed": "ألغى المستخدم عملية الدفع",
+        "biometricUnavailable": "التفويض البيومتري غير متاح على هذا الجهاز.",
+        "biometricUnavailableShort": "التفويض البيومتري غير متاح على هذا الجهاز",
+        "authorizationCancelled": "تم إلغاء التفويض",
+        "verifyFailed": "تعذّر التحقق ({{reason}}). انقر للمحاولة مجدداً.",
+        "paymentFailed": "فشل الدفع",
+        "noStoredAuthorization": "لا يوجد تفويض محفوظ",
+        "noAssertionReturned": "لم يتم إرجاع تأكيد",
+        "noCredentialReturned": "لم يتم إرجاع بيانات اعتماد",
+        "cancelledOrTimedOut": "تم الإلغاء أو انتهت المهلة",
+        "unknownError": "خطأ غير معروف",
+        "authenticationFailed": "فشل المصادقة"
+      },
+      "dismiss": "تجاهل",
+      "agentAuth": {
+        "authorized": "تم تفويض المساعد",
+        "oneTapEnabled": "تم تفعيل الدفع بنقرة واحدة على هذا الجهاز",
+        "revoke": "إلغاء التفويض",
+        "verifying": "جارٍ التحقق…",
+        "speedUp": "أسرع لعمليات الدفع المستقبلية",
+        "biometricsHint": "فوّض المساعد ببصمتك — تبقى على هذا الجهاز",
+        "confirmTouchId": "أكّد ببصمة الإصبع / الوجه"
+      },
+      "mit": {
+        "agentAuthorized": "تم تفويض المساعد",
+        "oneTapCheckout": "الدفع بنقرة واحدة",
+        "explainer": "استخدم التفويض المحفوظ على هذا الجهاز للدفع بطريقتك المخزّنة. لا حاجة لإدخال البطاقة.",
+        "total": "الإجمالي",
+        "verifying": "جارٍ التحقق...",
+        "confirming": "جارٍ التأكيد...",
+        "confirmPurchase": "تأكيد الشراء",
+        "cancel": "إلغاء"
+      },
+      "card": {
+        "secureCheckout": "دفع آمن",
+        "payWithCard": "ادفع ببطاقتك",
+        "cardholderName": "اسم حامل البطاقة",
+        "cardNumber": "رقم البطاقة",
+        "cvv": "CVV",
+        "expiry": "تاريخ الانتهاء",
+        "buyNow": "اشترِ الآن",
+        "processing": "جارٍ المعالجة...",
+        "cancel": "إلغاء",
+        "tls": "تشفير TLS 256-bit",
+        "pci": "PCI DSS"
+      },
+      "result": {
+        "cancelled": "تم إلغاء الدفع",
+        "confirmed": "تم تأكيد الطلب",
+        "thankYou": "تم استلام الدفع — شكراً لك",
+        "total": "الإجمالي",
+        "txnId": "رقم العملية"
+      }
+    }
   }
 }

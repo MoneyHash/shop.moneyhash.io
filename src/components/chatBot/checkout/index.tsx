@@ -47,7 +47,7 @@ export function Checkout({
   const currency = useCurrency(s => s.currency);
   const totalPrice = useTotalPrice();
   const { theme } = useTheme();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [step, setStep] = useState<Step>({ kind: 'creating-intent' });
   const [createError, setCreateError] = useState<string | null>(null);
@@ -87,7 +87,7 @@ export function Checkout({
           toast.error(Object.values(errors).join(', '));
         }
 
-        setCreateError('Could not start checkout. Please try again.');
+        setCreateError(t('chatBot.checkout.errors.couldNotStart'));
       }
     })();
     return () => {
@@ -131,7 +131,10 @@ export function Checkout({
     }
 
     if (paymentStatus.status === 'AUTHORIZE_ATTEMPT_FAILED') {
-      finish({ status: 'cancelled', message: 'Payment was declined' });
+      finish({
+        status: 'cancelled',
+        message: t('chatBot.checkout.errors.paymentDeclined'),
+      });
       return;
     }
 
@@ -142,7 +145,7 @@ export function Checkout({
     ) {
       finish({
         status: 'cancelled',
-        message: 'Payment could not be completed',
+        message: t('chatBot.checkout.errors.paymentIncomplete'),
       });
       return;
     }
@@ -161,7 +164,10 @@ export function Checkout({
       return;
     }
 
-    finish({ status: 'cancelled', message: 'Unexpected payment state' });
+    finish({
+      status: 'cancelled',
+      message: t('chatBot.checkout.errors.unexpectedState'),
+    });
   };
 
   if (createError) {
@@ -179,7 +185,7 @@ export function Checkout({
             onComplete({ status: 'cancelled', message: createError })
           }
         >
-          Dismiss
+          {t('chatBot.checkout.dismiss')}
         </Button>
       </div>
     );
@@ -197,7 +203,10 @@ export function Checkout({
         billingData={DEMO_INFO}
         onPaymentResult={routeIntentDetails}
         onCancel={() =>
-          finish({ status: 'cancelled', message: 'User dismissed checkout' })
+          finish({
+            status: 'cancelled',
+            message: t('chatBot.checkout.errors.userDismissed'),
+          })
         }
       />
     );

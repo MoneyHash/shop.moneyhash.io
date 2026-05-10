@@ -6,6 +6,7 @@ import {
   SparklesIcon,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
@@ -28,6 +29,7 @@ export function MITCheckout({
   customerId: string;
   onComplete: (result: CheckoutResult) => void;
 }) {
+  const { t } = useTranslation();
   const cart = useShoppingCart(s => s.cart);
   const emptyCart = useShoppingCart(s => s.emptyCart);
   const currency = useCurrency(s => s.currency);
@@ -60,8 +62,9 @@ export function MITCheckout({
     if (authResult.status !== 'authorized') {
       const message =
         authResult.status === 'unsupported'
-          ? 'Biometric authorization is not available on this device'
-          : authResult.reason || 'Authorization cancelled';
+          ? t('chatBot.checkout.errors.biometricUnavailableShort')
+          : authResult.reason ||
+            t('chatBot.checkout.errors.authorizationCancelled');
       setStep('idle');
       finish({ status: 'cancelled', message });
       return;
@@ -112,13 +115,15 @@ export function MITCheckout({
       setStep('idle');
       finish({
         status: 'cancelled',
-        message: `Payment was not completed (${paymentStatus.status})`,
+        message: t('chatBot.checkout.errors.paymentNotCompleted', {
+          status: paymentStatus.status,
+        }),
       });
     } catch (err: any) {
       const errors = err?.response?.data?.status?.errors?.[0];
       if (errors) toast.error(Object.values(errors).join(', '));
       setStep('idle');
-      setError('Could not complete the payment. Please try again.');
+      setError(t('chatBot.checkout.errors.couldNotComplete'));
     }
   };
 
@@ -139,10 +144,10 @@ export function MITCheckout({
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-emerald-700/80 dark:text-emerald-400/80">
-            Agent authorized
+            {t('chatBot.checkout.mit.agentAuthorized')}
           </p>
           <p className="truncate text-xs font-semibold text-foreground">
-            One-tap checkout
+            {t('chatBot.checkout.mit.oneTapCheckout')}
           </p>
         </div>
       </div>
@@ -154,13 +159,12 @@ export function MITCheckout({
         )}
       >
         <p className="text-[11px] leading-snug text-muted-foreground">
-          Use the saved authorization on this device to charge your stored
-          payment method. No card entry needed.
+          {t('chatBot.checkout.mit.explainer')}
         </p>
 
         <div className="flex items-baseline justify-between rounded-md border border-dashed border-border/80 bg-muted/20 px-2.5 py-2">
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Total
+            {t('chatBot.checkout.mit.total')}
           </span>
           <span className="flex items-baseline gap-1">
             <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
@@ -197,17 +201,17 @@ export function MITCheckout({
                 className="me-1.5 size-3.5 animate-pulse"
                 strokeWidth={2.5}
               />
-              Verifying...
+              {t('chatBot.checkout.mit.verifying')}
             </>
           ) : step === 'paying' ? (
             <>
               <LoaderIcon className="me-1.5 size-3.5 animate-spin" />
-              Confirming...
+              {t('chatBot.checkout.mit.confirming')}
             </>
           ) : (
             <>
               <FingerprintIcon className="me-1.5 size-3.5" strokeWidth={2.5} />
-              Confirm purchase
+              {t('chatBot.checkout.mit.confirmPurchase')}
             </>
           )}
         </Button>
@@ -216,12 +220,12 @@ export function MITCheckout({
           onClick={() =>
             finish({
               status: 'cancelled',
-              message: 'User dismissed checkout',
+              message: t('chatBot.checkout.errors.userDismissed'),
             })
           }
           disabled={isWorking}
         >
-          Cancel
+          {t('chatBot.checkout.mit.cancel')}
         </Button>
       </div>
     </div>

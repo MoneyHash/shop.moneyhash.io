@@ -182,5 +182,135 @@
     "title": "Oh no, your payment failed",
     "message": "Don't worry, you can try again with a different payment method.",
     "checkoutButton": "Checkout"
+  },
+  "chatBot": {
+    "ariaLabel": "Shopping Assistant chat",
+    "open": "Open chat",
+    "header": {
+      "title": "Shopping Assistant",
+      "subtitle": "Powered by MoneyHash",
+      "cart": "Shopping cart",
+      "expand": "Expand chat",
+      "collapse": "Collapse chat",
+      "close": "Close chat"
+    },
+    "empty": {
+      "greeting": "Hi there 👋",
+      "speakingWith": "You are now speaking with",
+      "assistantName": "Shopping Assistant",
+      "howCanIHelp": "How can I help?",
+      "tryAsking": "Try asking",
+      "prompts": {
+        "shirts": "What shirts do you have?",
+        "bagsUnder200": "Show me bags under $200",
+        "helpWithOrder": "Help me with my order"
+      }
+    },
+    "cartView": {
+      "title": "Your Cart",
+      "items": "items",
+      "back": "Back to chat",
+      "removeItem": "Remove item",
+      "decreaseQuantity": "Decrease quantity",
+      "increaseQuantity": "Increase quantity",
+      "total": "Total",
+      "empty": {
+        "title": "Your cart is wide open",
+        "description": "Nothing tucked inside yet. Tell our assistant what you're hunting for and we'll bring it here.",
+        "cta": "Start a conversation",
+        "popularPicks": "Popular picks"
+      },
+      "popularPicks": {
+        "shirts": { "label": "Shirts", "prompt": "Show me your shirts" },
+        "bags": { "label": "Bags", "prompt": "What bags do you have?" },
+        "underHundred": { "label": "Under $100", "prompt": "Show me items under $100" }
+      }
+    },
+    "input": {
+      "placeholder": "Search or ask a question...",
+      "checkoutInProgress": "Complete or cancel the checkout to continue...",
+      "helperText": "Enter to send · Shift+Enter for new line",
+      "submit": "Submit",
+      "stop": "Stop",
+      "fallback": "Ask a question..."
+    },
+    "tools": {
+      "addedToCart": "Added to cart",
+      "removedFromCart": "Removed from cart",
+      "removed": "Removed",
+      "qty": "Qty",
+      "qtyDelta": "Qty -{{count}}",
+      "cartCleared": "Cart cleared",
+      "alreadyEmpty": "Your cart was already empty.",
+      "allItemsRemoved": "All items removed.",
+      "removedSummary_one": "{{items}} item across {{lines}} product",
+      "removedSummary_other": "{{items}} items across {{lines}} products",
+      "viewCart": "View cart",
+      "added": "Added",
+      "addToCart": "Add to cart",
+      "noProducts": "No products found."
+    },
+    "checkout": {
+      "errors": {
+        "couldNotStart": "Could not start checkout. Please try again.",
+        "paymentDeclined": "Payment was declined",
+        "paymentIncomplete": "Payment could not be completed",
+        "unexpectedState": "Unexpected payment state",
+        "paymentNotCompleted": "Payment was not completed ({{status}})",
+        "couldNotComplete": "Could not complete the payment. Please try again.",
+        "userDismissed": "User dismissed checkout",
+        "biometricUnavailable": "Biometric authorization isn't available on this device.",
+        "biometricUnavailableShort": "Biometric authorization is not available on this device",
+        "authorizationCancelled": "Authorization cancelled",
+        "verifyFailed": "Couldn't verify ({{reason}}). Tap to try again.",
+        "paymentFailed": "Payment failed",
+        "noStoredAuthorization": "No stored authorization",
+        "noAssertionReturned": "No assertion returned",
+        "noCredentialReturned": "No credential returned",
+        "cancelledOrTimedOut": "Cancelled or timed out",
+        "unknownError": "Unknown error",
+        "authenticationFailed": "Authentication failed"
+      },
+      "dismiss": "Dismiss",
+      "agentAuth": {
+        "authorized": "Agent authorized",
+        "oneTapEnabled": "One-tap checkout enabled on this device",
+        "revoke": "Revoke",
+        "verifying": "Verifying…",
+        "speedUp": "Speed up future checkouts",
+        "biometricsHint": "Authorize the assistant with biometrics — stays on this device",
+        "confirmTouchId": "Confirm with Touch ID / Face ID"
+      },
+      "mit": {
+        "agentAuthorized": "Agent authorized",
+        "oneTapCheckout": "One-tap checkout",
+        "explainer": "Use the saved authorization on this device to charge your stored payment method. No card entry needed.",
+        "total": "Total",
+        "verifying": "Verifying...",
+        "confirming": "Confirming...",
+        "confirmPurchase": "Confirm purchase",
+        "cancel": "Cancel"
+      },
+      "card": {
+        "secureCheckout": "Secure checkout",
+        "payWithCard": "Pay with your card",
+        "cardholderName": "Cardholder name",
+        "cardNumber": "Card number",
+        "cvv": "CVV",
+        "expiry": "Expiry",
+        "buyNow": "Buy now",
+        "processing": "Processing...",
+        "cancel": "Cancel",
+        "tls": "256-bit TLS",
+        "pci": "PCI DSS"
+      },
+      "result": {
+        "cancelled": "Checkout cancelled",
+        "confirmed": "Order confirmed",
+        "thankYou": "Payment received — thank you",
+        "total": "Total",
+        "txnId": "Txn ID"
+      }
+    }
   }
 }

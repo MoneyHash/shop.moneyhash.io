@@ -16,6 +16,7 @@ import {
   LockIcon,
   ShieldCheckIcon,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { moneyHash } from '@/utils/moneyHash';
 import { getColorFromCssVariable } from '@/utils/getColorFromCssVariable';
@@ -171,6 +172,7 @@ const ChatbotFormField = forwardRef<
 ChatbotFormField.displayName = 'ChatbotFormField';
 
 function ExpiryField({ onComplete }: { onComplete: () => void }) {
+  const { t } = useTranslation();
   const {
     field: monthField,
     isMounted: monthIsMounted,
@@ -253,28 +255,36 @@ function ExpiryField({ onComplete }: { onComplete: () => void }) {
           isFocused && !isError && 'text-ring',
         )}
       >
-        Expiry
+        {t('chatBot.checkout.card.expiry')}
       </Label>
     </div>
   );
 }
 
 function ChatbotCardFields() {
+  const { t } = useTranslation();
   const cvvRef = useRef<FieldRef | null>(null);
 
   return (
-    <div className="grid grid-cols-2 gap-2.5">
+    <div dir="ltr" className="grid grid-cols-2 gap-2.5">
       <div className="col-span-full">
         <ChatbotFormField
           elementType="cardHolderName"
-          label="Cardholder name"
+          label={t('chatBot.checkout.card.cardholderName')}
         />
       </div>
       <div className="col-span-full">
-        <ChatbotFormField elementType="cardNumber" label="Card number" />
+        <ChatbotFormField
+          elementType="cardNumber"
+          label={t('chatBot.checkout.card.cardNumber')}
+        />
       </div>
       <ExpiryField onComplete={() => cvvRef.current?.focus()} />
-      <ChatbotFormField ref={cvvRef} elementType="cardCvv" label="CVV" />
+      <ChatbotFormField
+        ref={cvvRef}
+        elementType="cardCvv"
+        label={t('chatBot.checkout.card.cvv')}
+      />
     </div>
   );
 }
@@ -307,6 +317,7 @@ export function CardForm({
   onPaymentResult: (intentDetails: IntentDetails<'payment'>) => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [elements] = useState(() =>
     moneyHash.elements({
       styles: {
@@ -339,7 +350,11 @@ export function CardForm({
         errors && typeof errors === 'object'
           ? Object.values(errors as Record<string, unknown>)[0]
           : errors;
-      setError(typeof firstError === 'string' ? firstError : 'Payment failed');
+      setError(
+        typeof firstError === 'string'
+          ? firstError
+          : t('chatBot.checkout.errors.paymentFailed'),
+      );
       setIsSubmitting(false);
     }
   };
@@ -360,10 +375,10 @@ export function CardForm({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-indigo-700/80 dark:text-indigo-400/80">
-              Secure checkout
+              {t('chatBot.checkout.card.secureCheckout')}
             </p>
             <p className="truncate text-xs font-semibold text-foreground">
-              Pay with your card
+              {t('chatBot.checkout.card.payWithCard')}
             </p>
           </div>
           <CardBrandStack />
@@ -399,32 +414,32 @@ export function CardForm({
             {isSubmitting ? (
               <>
                 <LoaderIcon className="me-1.5 size-3 animate-spin" />
-                Processing...
+                {t('chatBot.checkout.card.processing')}
               </>
             ) : (
               <>
                 <LockIcon className="me-1.5 size-3" strokeWidth={2.5} />
-                Buy now
+                {t('chatBot.checkout.card.buyNow')}
                 <ArrowRightIcon
-                  className="ms-1.5 size-3 transition-transform duration-150 group-hover:translate-x-0.5"
+                  className="ms-1.5 size-3 transition-transform duration-150 ltr:group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
                   strokeWidth={2.5}
                 />
               </>
             )}
           </Button>
           <Button variant="ghost" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            {t('chatBot.checkout.card.cancel')}
           </Button>
         </div>
 
         <div className="flex items-center justify-between gap-2 border-t border-dashed border-border/80 bg-muted/10 px-3 py-2">
           <span className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             <LockIcon className="size-2.5" strokeWidth={2.5} />
-            256-bit TLS
+            {t('chatBot.checkout.card.tls')}
           </span>
           <div className="flex items-center gap-2">
             <span className="font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">
-              PCI DSS ·
+              {t('chatBot.checkout.card.pci')} ·
             </span>
             <MoneyHashLogo className="size-3.5" />
           </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CheckIcon, CopyIcon, XCircleIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import {
   AgentAuthorization,
@@ -35,6 +36,7 @@ export function CheckoutResultBadge({
   output: CheckoutResult;
   onAgentAuthorized?: (result: AgentAuthorizationResult) => void;
 }) {
+  const { t } = useTranslation();
   if (output.status === 'success') {
     return (
       <SuccessReceipt
@@ -52,7 +54,9 @@ export function CheckoutResultBadge({
     >
       <XCircleIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0">
-        <p className="font-medium text-foreground">Checkout cancelled</p>
+        <p className="font-medium text-foreground">
+          {t('chatBot.checkout.result.cancelled')}
+        </p>
         <p className="text-[11px] text-muted-foreground">{output.message}</p>
       </div>
     </div>
@@ -74,6 +78,7 @@ function SuccessReceipt({
   items: ReceiptItem[];
   onAgentAuthorized?: (result: AgentAuthorizationResult) => void;
 }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   return (
@@ -90,10 +95,10 @@ function SuccessReceipt({
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-emerald-700/80 dark:text-emerald-400/80">
-            Order confirmed
+            {t('chatBot.checkout.result.confirmed')}
           </p>
           <p className="truncate text-xs font-semibold text-foreground">
-            Payment received — thank you
+            {t('chatBot.checkout.result.thankYou')}
           </p>
         </div>
       </div>
@@ -143,7 +148,7 @@ function SuccessReceipt({
       <div className="border-t border-dashed border-border/80 px-3 py-2.5">
         <div className="flex items-baseline justify-between">
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Total
+            {t('chatBot.checkout.result.total')}
           </span>
           <span className="flex items-baseline gap-1">
             <span className="font-mono text-base font-semibold tabular-nums text-foreground">
@@ -166,7 +171,7 @@ function SuccessReceipt({
         className="group flex w-full items-center justify-between gap-2 border-t border-border/60 bg-muted/30 px-3 py-2 text-left transition-colors hover:bg-muted/50"
       >
         <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          Txn ID
+          {t('chatBot.checkout.result.txnId')}
         </span>
         <span className="flex min-w-0 items-center gap-1.5">
           <code className="truncate font-mono text-[10px] text-muted-foreground/90 group-hover:text-foreground">

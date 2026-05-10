@@ -14,7 +14,7 @@ export function Message({ className, from, ...props }: MessageProps) {
       className={cn(
         'group flex w-full max-w-[95%] flex-col gap-1.5',
         'animate-in fade-in slide-in-from-bottom-2 duration-200 fill-mode-both',
-        from === 'user' ? 'is-user ml-auto justify-end' : 'is-assistant',
+        from === 'user' ? 'is-user ms-auto justify-end' : 'is-assistant',
         className,
       )}
       {...props}
@@ -34,15 +34,15 @@ export function MessageContent({
       className={cn(
         'flex min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm',
         // User bubble — modern rounded pill shape
-        'group-[.is-user]:w-fit group-[.is-user]:ml-auto',
-        'group-[.is-user]:rounded-2xl group-[.is-user]:rounded-tr',
+        'group-[.is-user]:w-fit group-[.is-user]:ms-auto',
+        'group-[.is-user]:rounded-2xl ltr:group-[.is-user]:rounded-tr rtl:group-[.is-user]:rounded-tl',
         'group-[.is-user]:bg-primary group-[.is-user]:px-4 group-[.is-user]:py-2',
         'group-[.is-user]:text-primary-foreground group-[.is-user]:leading-relaxed',
-        // Assistant bubble — mirrors user but left-aligned
+        // Assistant bubble — mirrors user but on the leading edge
         'group-[.is-assistant]:w-fit group-[.is-assistant]:max-w-full',
         // Expand to full width when a child opts in (e.g. checkout)
         'group-[.is-assistant]:has-[[data-fill-bubble]]:w-full',
-        'group-[.is-assistant]:rounded-2xl group-[.is-assistant]:rounded-tl',
+        'group-[.is-assistant]:rounded-2xl ltr:group-[.is-assistant]:rounded-tl rtl:group-[.is-assistant]:rounded-tr',
         'group-[.is-assistant]:bg-muted/60 dark:group-[.is-assistant]:bg-muted/30 group-[.is-assistant]:px-4 group-[.is-assistant]:py-2',
         'group-[.is-assistant]:text-foreground group-[.is-assistant]:leading-relaxed',
         className,

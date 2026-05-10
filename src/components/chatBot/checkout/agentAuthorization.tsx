@@ -5,6 +5,8 @@ import {
   Loader2Icon,
   ShieldCheckIcon,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n/config';
 
 const STORAGE_KEY_PREFIX = 'mh_agent_authorization';
 
@@ -118,7 +120,10 @@ export async function verifyAgentAuthorization(
   }
   const stored = readStored(customerId);
   if (!stored) {
-    return { status: 'declined', reason: 'No stored authorization' };
+    return {
+      status: 'declined',
+      reason: i18n.t('chatBot.checkout.errors.noStoredAuthorization'),
+    };
   }
   try {
     const challenge = new Uint8Array(32);
@@ -141,7 +146,10 @@ export async function verifyAgentAuthorization(
     })) as PublicKeyCredential | null;
 
     if (!assertion) {
-      return { status: 'declined', reason: 'No assertion returned' };
+      return {
+        status: 'declined',
+        reason: i18n.t('chatBot.checkout.errors.noAssertionReturned'),
+      };
     }
 
     return {
@@ -153,9 +161,9 @@ export async function verifyAgentAuthorization(
     const reason =
       err instanceof Error
         ? err.name === 'NotAllowedError'
-          ? 'Cancelled or timed out'
+          ? i18n.t('chatBot.checkout.errors.cancelledOrTimedOut')
           : err.name || err.message
-        : 'Unknown error';
+        : i18n.t('chatBot.checkout.errors.unknownError');
     return { status: 'declined', reason };
   }
 }
@@ -167,6 +175,7 @@ export function AgentAuthorization({
   customerId: string;
   onResult?: (result: AgentAuthorizationResult) => void;
 }) {
+  const { t } = useTranslation();
   const supported = useRef(isWebAuthnAvailable());
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
@@ -204,7 +213,7 @@ export function AgentAuthorization({
     return (
       <div className="border-t border-border/60 bg-muted/20 px-3 py-2">
         <p className="text-[10px] text-muted-foreground">
-          Biometric authorization isn&apos;t available on this device.
+          {t('chatBot.checkout.errors.biometricUnavailable')}
         </p>
       </div>
     );
@@ -244,7 +253,9 @@ export function AgentAuthorization({
       })) as PublicKeyCredential | null;
 
       if (!credential) {
-        throw new Error('No credential returned');
+        throw new Error(
+          i18n.t('chatBot.checkout.errors.noCredentialReturned'),
+        );
       }
 
       const credentialId = bufferToBase64Url(credential.rawId);
@@ -260,9 +271,9 @@ export function AgentAuthorization({
       const reason =
         err instanceof Error
           ? err.name === 'NotAllowedError'
-            ? 'Cancelled or timed out'
+            ? i18n.t('chatBot.checkout.errors.cancelledOrTimedOut')
             : err.name || err.message
-          : 'Unknown error';
+          : i18n.t('chatBot.checkout.errors.unknownError');
       setView({ kind: 'error', reason });
       onResultRef.current?.({ status: 'declined', reason });
     }
@@ -284,10 +295,10 @@ export function AgentAuthorization({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-semibold text-foreground">
-            Agent authorized
+            {t('chatBot.checkout.agentAuth.authorized')}
           </p>
           <p className="truncate text-[10px] text-muted-foreground">
-            One-tap checkout enabled on this device
+            {t('chatBot.checkout.agentAuth.oneTapEnabled')}
           </p>
         </div>
         <button
@@ -295,7 +306,7 @@ export function AgentAuthorization({
           onClick={revoke}
           className="shrink-0 text-[10px] font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
         >
-          Revoke
+          {t('chatBot.checkout.agentAuth.revoke')}
         </button>
       </div>
     );
@@ -326,22 +337,24 @@ export function AgentAuthorization({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-semibold text-foreground">
-            {verifying ? 'Verifying…' : 'Speed up future checkouts'}
+            {verifying
+              ? t('chatBot.checkout.agentAuth.verifying')
+              : t('chatBot.checkout.agentAuth.speedUp')}
           </p>
           <p className="truncate text-[10px] text-muted-foreground">
             {verifying
-              ? 'Confirm with Touch ID / Face ID'
-              : 'Authorize the assistant with biometrics — stays on this device'}
+              ? t('chatBot.checkout.agentAuth.confirmTouchId')
+              : t('chatBot.checkout.agentAuth.biometricsHint')}
           </p>
         </div>
         <ArrowRightIcon
-          className="size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground"
+          className="size-3.5 shrink-0 text-muted-foreground transition-transform ltr:group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5 group-hover:text-foreground"
           strokeWidth={2.5}
         />
       </button>
       {view.kind === 'error' && (
         <p className="px-3 pb-2 text-[10px] text-destructive/80">
-          Couldn&apos;t verify ({view.reason}). Tap to try again.
+          {t('chatBot.checkout.errors.verifyFailed', { reason: view.reason })}
         </p>
       )}
     </div>

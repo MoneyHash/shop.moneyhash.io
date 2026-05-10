@@ -6,16 +6,13 @@ import {
   Sparkles,
   Trash2Icon,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
 
-const POPULAR_PICKS = [
-  { label: 'Shirts', prompt: 'Show me your shirts' },
-  { label: 'Bags', prompt: 'What bags do you have?' },
-  { label: 'Under $100', prompt: 'Show me items under $100' },
-] as const;
+const POPULAR_PICK_KEYS = ['shirts', 'bags', 'underHundred'] as const;
 
 export function CartView({
   onBack,
@@ -24,6 +21,7 @@ export function CartView({
   onBack: () => void;
   onPromptClick?: (prompt: string) => void;
 }) {
+  const { t } = useTranslation();
   const cart = useShoppingCart(s => s.cart);
   const incrementProductQuantity = useShoppingCart(
     s => s.incrementProductQuantity,
@@ -43,14 +41,17 @@ export function CartView({
           size="icon"
           className="size-7"
           onClick={onBack}
-          aria-label="Back to chat"
+          aria-label={t('chatBot.cartView.back')}
         >
-          <ArrowLeftIcon className="size-4" />
+          <ArrowLeftIcon className="size-4 rtl:rotate-180" />
         </Button>
-        <span className="text-sm font-semibold">Your Cart</span>
+        <span className="text-sm font-semibold">
+          {t('chatBot.cartView.title')}
+        </span>
         {cart.length > 0 && (
-          <span className="ml-auto text-xs text-muted-foreground">
-            {cart.reduce((acc, p) => acc + p.quantity, 0)} items
+          <span className="ms-auto text-xs text-muted-foreground">
+            {cart.reduce((acc, p) => acc + p.quantity, 0)}{' '}
+            {t('chatBot.cartView.items')}
           </span>
         )}
       </div>
@@ -71,10 +72,10 @@ export function CartView({
                   <span className="absolute left-1/2 top-0 size-1.5 -translate-x-1/2 rounded-full bg-primary/70 shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
                 </div>
                 <div className="absolute inset-2 [animation:spin_22s_linear_infinite_reverse]">
-                  <span className="absolute right-0 top-1/2 size-1 -translate-y-1/2 rounded-full bg-primary/50" />
+                  <span className="absolute end-0 top-1/2 size-1 -translate-y-1/2 rounded-full bg-primary/50" />
                 </div>
                 <div className="absolute inset-1 [animation:spin_36s_linear_infinite]">
-                  <span className="absolute bottom-1 left-2 size-1 rounded-full bg-primary/40" />
+                  <span className="absolute bottom-1 start-2 size-1 rounded-full bg-primary/40" />
                 </div>
 
                 <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-[hsl(259_85%_28%)] shadow-lg shadow-primary/30 ring-2 ring-primary/20 dark:from-primary/90 dark:to-transparent">
@@ -82,7 +83,7 @@ export function CartView({
                     className="size-6 text-primary-foreground dark:text-foreground"
                     strokeWidth={2}
                   />
-                  <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-background ring-1 ring-border/60">
+                  <span className="absolute -end-1 -top-1 flex size-4 items-center justify-center rounded-full bg-background ring-1 ring-border/60">
                     <span className="size-1.5 rounded-full bg-primary/80 [animation:pulse_2s_ease-in-out_infinite]" />
                   </span>
                 </div>
@@ -90,11 +91,10 @@ export function CartView({
 
               <div className="mt-6 max-w-[260px] text-center animate-in fade-in slide-in-from-bottom-1 duration-500 delay-100 fill-mode-both">
                 <p className="text-[15px] font-semibold tracking-[-0.01em] text-foreground">
-                  Your cart is wide open
+                  {t('chatBot.cartView.empty.title')}
                 </p>
                 <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                  Nothing tucked inside yet. Tell our assistant what you&apos;re
-                  hunting for and we&apos;ll bring it here.
+                  {t('chatBot.cartView.empty.description')}
                 </p>
               </div>
 
@@ -104,36 +104,44 @@ export function CartView({
                 onClick={onBack}
               >
                 <Sparkles className="size-3.5" />
-                Start a conversation
+                {t('chatBot.cartView.empty.cta')}
               </Button>
 
               <div className="mt-8 w-full animate-in fade-in duration-500 delay-200 fill-mode-both">
                 <div className="flex items-center gap-2.5">
-                  <span className="h-px flex-1 bg-gradient-to-r from-transparent to-border/60" />
+                  <span className="h-px flex-1 bg-gradient-to-r from-transparent to-border/60 rtl:bg-gradient-to-l" />
                   <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70">
-                    Popular picks
+                    {t('chatBot.cartView.empty.popularPicks')}
                   </span>
-                  <span className="h-px flex-1 bg-gradient-to-l from-transparent to-border/60" />
+                  <span className="h-px flex-1 bg-gradient-to-l from-transparent to-border/60 rtl:bg-gradient-to-r" />
                 </div>
                 <div className="mt-3 flex flex-wrap justify-center gap-1.5">
-                  {POPULAR_PICKS.map(({ label, prompt }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => {
-                        if (onPromptClick) {
-                          onPromptClick(prompt);
-                          onBack();
-                        } else {
-                          onBack();
-                        }
-                      }}
-                      className="group relative h-7 overflow-hidden rounded-full border border-border/60 bg-card/40 px-3 text-[11px] font-medium text-foreground/80 transition-all hover:border-primary/40 hover:bg-primary/[0.06] hover:text-foreground hover:shadow-sm hover:shadow-primary/10"
-                    >
-                      <span className="relative z-10">{label}</span>
-                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/10 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
-                    </button>
-                  ))}
+                  {POPULAR_PICK_KEYS.map(key => {
+                    const label = t(
+                      `chatBot.cartView.popularPicks.${key}.label`,
+                    );
+                    const prompt = t(
+                      `chatBot.cartView.popularPicks.${key}.prompt`,
+                    );
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          if (onPromptClick) {
+                            onPromptClick(prompt);
+                            onBack();
+                          } else {
+                            onBack();
+                          }
+                        }}
+                        className="group relative h-7 overflow-hidden rounded-full border border-border/60 bg-card/40 px-3 text-[11px] font-medium text-foreground/80 transition-all hover:border-primary/40 hover:bg-primary/[0.06] hover:text-foreground hover:shadow-sm hover:shadow-primary/10"
+                      >
+                        <span className="relative z-10">{label}</span>
+                        <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/10 to-transparent transition-transform duration-500 group-hover:translate-x-full rtl:translate-x-full rtl:bg-gradient-to-l rtl:group-hover:-translate-x-full" />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -161,7 +169,7 @@ export function CartView({
                         size="icon"
                         className="size-6 flex-shrink-0 text-muted-foreground hover:text-destructive"
                         onClick={() => removeProductFromCart(item.id)}
-                        aria-label="Remove item"
+                        aria-label={t('chatBot.cartView.removeItem')}
                       >
                         <Trash2Icon className="size-3.5" />
                       </Button>
@@ -179,7 +187,7 @@ export function CartView({
                               decrementProductQuantity(item.id);
                             }
                           }}
-                          aria-label="Decrease quantity"
+                          aria-label={t('chatBot.cartView.decreaseQuantity')}
                         >
                           <MinusIcon className="size-3" />
                         </Button>
@@ -191,7 +199,7 @@ export function CartView({
                           size="icon"
                           className="size-6"
                           onClick={() => incrementProductQuantity(item.id)}
-                          aria-label="Increase quantity"
+                          aria-label={t('chatBot.cartView.increaseQuantity')}
                         >
                           <PlusIcon className="size-3" />
                         </Button>
@@ -213,7 +221,9 @@ export function CartView({
       {cart.length > 0 && (
         <div className="border-t border-border/60 px-4 py-3 flex-shrink-0 bg-muted/30">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Total</span>
+            <span className="text-sm font-medium">
+              {t('chatBot.cartView.total')}
+            </span>
             <span className="text-base font-bold">
               {totalPrice.toFixed(2)} {currency}
             </span>

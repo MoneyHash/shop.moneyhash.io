@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/utils/cn';
 
 export function ChatContainer({
@@ -9,6 +10,7 @@ export function ChatContainer({
   isExpanded: boolean;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className={cn(
@@ -30,7 +32,7 @@ export function ChatContainer({
           : 'opacity-0 scale-95 translate-y-3 pointer-events-none',
       )}
       role="dialog"
-      aria-label="Shopping Assistant chat"
+      aria-label={t('chatBot.ariaLabel')}
     >
       {children}
     </div>
