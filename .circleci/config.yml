@@ -7,7 +7,7 @@ version: 2.1
 jobs:
   deploy-app:
     docker: # Specify executor for running deploy job
-      - image: cimg/node:20.0-browsers # Specify docker image to use
+      - image: cimg/node:20.19-browsers # Specify docker image to use
     steps:
       - checkout
       - run: # install and activate virtual environment with pip
