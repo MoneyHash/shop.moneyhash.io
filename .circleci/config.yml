@@ -30,7 +30,9 @@ jobs:
       - run:
           name: Invalidate CloudFront cache
           command: |
-            AWS_SECRET_ACCESS_KEY=$S3_AWS_SECRET_ACCESS_KEY AWS_ACCESS_KEY_ID=$S3_AWS_ACCESS_KEY_ID aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+            : "${CLOUDFRONT_DISTRIBUTION_ID:?CLOUDFRONT_DISTRIBUTION_ID is not set}"
+            AWS_SECRET_ACCESS_KEY=$S3_AWS_SECRET_ACCESS_KEY AWS_ACCESS_KEY_ID=$S3_AWS_ACCESS_KEY_ID \
+              aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
