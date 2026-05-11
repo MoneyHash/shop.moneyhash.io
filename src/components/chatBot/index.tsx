@@ -272,12 +272,6 @@ export default function ChatBot({ customerId }: { customerId: string }) {
                                   paymentType={part.input.paymentType}
                                   customerId={customerId}
                                   onComplete={handleComplete}
-                                  onAgentAuthorized={result => {
-                                    console.log(
-                                      '[chatbot] agent authorization:',
-                                      result,
-                                    );
-                                  }}
                                 />
                               );
                             }
@@ -288,12 +282,6 @@ export default function ChatBot({ customerId }: { customerId: string }) {
                                   key={`${id}-${i}`}
                                   customerId={customerId}
                                   output={part.output}
-                                  onAgentAuthorized={result => {
-                                    console.log(
-                                      '[chatbot] agent authorization:',
-                                      result,
-                                    );
-                                  }}
                                 />
                               );
                             }

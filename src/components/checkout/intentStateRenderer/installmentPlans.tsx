@@ -24,7 +24,7 @@ export function InstallmentPlans({
             const intentDetails = await moneyHash.selectInstallmentPlan({
               intentId,
               planId: installmentPlan.id,
-              issuerCode: installmentPlan.issuerCode,
+              issuerCode: installmentPlan.issuerCode ?? undefined,
             });
             logJSON.response('proceedWith:savedCard', intentDetails);
             onIntentDetailsChange(intentDetails);

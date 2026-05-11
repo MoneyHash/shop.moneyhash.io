@@ -145,7 +145,6 @@ export function Checkout({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customerId, showApplePay]);
 
   const buildProductItems = () =>
@@ -182,7 +181,6 @@ export function Checkout({
   };
 
   const routeIntentDetails = (intentDetails: IntentDetails<'payment'>) => {
-    console.log(intentDetails);
     const { paymentStatus, state, stateDetails, intent, transaction } =
       intentDetails;
 

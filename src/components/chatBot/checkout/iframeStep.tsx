@@ -29,8 +29,7 @@ export function IframeStep({
           const message =
             (err && typeof err === 'object' && 'message' in err
               ? String((err as { message: unknown }).message)
-              : null) ||
-            i18n.t('chatBot.checkout.errors.authenticationFailed');
+              : null) || i18n.t('chatBot.checkout.errors.authenticationFailed');
           onError(message);
         }
       });

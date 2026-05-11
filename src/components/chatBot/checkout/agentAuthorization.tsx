@@ -253,9 +253,7 @@ export function AgentAuthorization({
       })) as PublicKeyCredential | null;
 
       if (!credential) {
-        throw new Error(
-          i18n.t('chatBot.checkout.errors.noCredentialReturned'),
-        );
+        throw new Error(i18n.t('chatBot.checkout.errors.noCredentialReturned'));
       }
 
       const credentialId = bufferToBase64Url(credential.rawId);

@@ -1,4 +1,3 @@
-/* eslint-disable no-console, func-names */
 import {
   createContext,
   forwardRef,
