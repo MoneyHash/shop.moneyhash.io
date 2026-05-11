@@ -272,9 +272,21 @@
         "noCredentialReturned": "لم يتم إرجاع بيانات اعتماد",
         "cancelledOrTimedOut": "تم الإلغاء أو انتهت المهلة",
         "unknownError": "خطأ غير معروف",
-        "authenticationFailed": "فشل المصادقة"
+        "authenticationFailed": "فشل المصادقة",
+        "applePayUnavailable": "Apple Pay غير متاح حالياً",
+        "applePayMerchantValidationFailed": "تعذّر التحقق من تاجر Apple Pay",
+        "applePayPaymentFailed": "فشل الدفع عبر Apple Pay"
+      },
+      "applePay": {
+        "title": "Apple Pay",
+        "subtitle": "ادفع بأمان عبر Apple Pay",
+        "button": "ادفع عبر Apple Pay",
+        "preparing": "جارٍ تجهيز Apple Pay…",
+        "processing": "جارٍ المعالجة…",
+        "cancel": "إلغاء"
       },
       "dismiss": "تجاهل",
+      "or": "أو",
       "agentAuth": {
         "authorized": "تم تفويض المساعد",
         "oneTapEnabled": "تم تفعيل الدفع بنقرة واحدة على هذا الجهاز",

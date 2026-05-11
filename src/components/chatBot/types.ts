@@ -56,7 +56,7 @@ type ChatUITools = {
     output: ClearCartResult;
   };
   proceedToCheckout: {
-    input: {};
+    input: { paymentType?: 'card' | 'apple_pay' };
     output: CheckoutResult;
   };
 };

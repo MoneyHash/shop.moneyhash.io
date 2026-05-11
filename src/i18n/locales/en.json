@@ -269,9 +269,21 @@
         "noCredentialReturned": "No credential returned",
         "cancelledOrTimedOut": "Cancelled or timed out",
         "unknownError": "Unknown error",
-        "authenticationFailed": "Authentication failed"
+        "authenticationFailed": "Authentication failed",
+        "applePayUnavailable": "Apple Pay is not available right now",
+        "applePayMerchantValidationFailed": "Couldn't validate Apple Pay merchant",
+        "applePayPaymentFailed": "Apple Pay payment failed"
+      },
+      "applePay": {
+        "title": "Apple Pay",
+        "subtitle": "Pay securely with Apple Pay",
+        "button": "Pay with Apple Pay",
+        "preparing": "Preparing Apple Pay…",
+        "processing": "Processing…",
+        "cancel": "Cancel"
       },
       "dismiss": "Dismiss",
+      "or": "or",
       "agentAuth": {
         "authorized": "Agent authorized",
         "oneTapEnabled": "One-tap checkout enabled on this device",

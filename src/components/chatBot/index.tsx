@@ -32,9 +32,7 @@ import {
 import { Message, MessageContent, MessageResponse } from './message';
 import { TypingIndicator } from './typingIndicator';
 import { Checkout } from './checkout';
-import { MITCheckout } from './checkout/mitCheckout';
 import { CheckoutResultBadge, type CheckoutResult } from './checkout/result';
-import { readAgentAuthorization } from './checkout/agentAuthorization';
 import { AGENT_API_BASE_URL } from './agentApi';
 import useShoppingCart from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
@@ -257,9 +255,6 @@ export default function ChatBot({ customerId }: { customerId: string }) {
 
                           case 'tool-proceedToCheckout': {
                             if (part.state === 'input-available') {
-                              const isAgentAuthorized =
-                                !!readAgentAuthorization(customerId);
-
                               const handleComplete = (
                                 output: CheckoutResult,
                               ) => {
@@ -271,19 +266,10 @@ export default function ChatBot({ customerId }: { customerId: string }) {
                                 sendMessage();
                               };
 
-                              if (isAgentAuthorized) {
-                                return (
-                                  <MITCheckout
-                                    key={`${id}-${i}`}
-                                    customerId={customerId}
-                                    onComplete={handleComplete}
-                                  />
-                                );
-                              }
-
                               return (
                                 <Checkout
                                   key={`${id}-${i}`}
+                                  paymentType={part.input.paymentType}
                                   customerId={customerId}
                                   onComplete={handleComplete}
                                   onAgentAuthorized={result => {

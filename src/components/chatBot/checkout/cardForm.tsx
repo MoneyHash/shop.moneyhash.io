@@ -8,13 +8,12 @@ import {
   useState,
 } from 'react';
 import type { Elements, ElementStyles, ElementType } from '@moneyhash/js-sdk';
-import type { IntentDetails } from '@moneyhash/js-sdk/headless';
+import type { CardData } from '@moneyhash/js-sdk/headless';
 import {
   AlertCircleIcon,
   ArrowRightIcon,
   LoaderIcon,
   LockIcon,
-  ShieldCheckIcon,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -24,8 +23,6 @@ import { useCallbackRef } from '@/hooks/useCallbackRef';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';
-import type { InfoFormValues } from '@/components/checkout/infoForm';
-import { MoneyHashLogo } from '@/components/moneyHashLogo';
 
 const CardElementsContext = createContext<Elements | null>(null);
 
@@ -182,7 +179,8 @@ const ChatbotFormField = forwardRef<
 ChatbotFormField.displayName = 'ChatbotFormField';
 
 function ExpiryField({ onComplete }: { onComplete: () => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === 'ar';
   const {
     field: monthField,
     isMounted: monthIsMounted,
@@ -192,7 +190,11 @@ function ExpiryField({ onComplete }: { onComplete: () => void }) {
     hasValue: monthHasValue,
   } = useChatbotFormField({
     elementType: 'cardExpiryMonth',
-    styles: { padding: '0px 5px 0px 10px' },
+    styles: {
+      direction: 'ltr',
+      textAlign: isArabic ? 'right' : 'left',
+      padding: isArabic ? '0px 10px 0px 5px' : '0px 5px 0px 10px',
+    },
     onComplete: () => yearField.focus(),
   });
 
@@ -205,7 +207,11 @@ function ExpiryField({ onComplete }: { onComplete: () => void }) {
     length: yearLength,
   } = useChatbotFormField({
     elementType: 'cardExpiryYear',
-    styles: { padding: '0px 10px' },
+    styles: {
+      direction: 'ltr',
+      textAlign: isArabic ? 'right' : 'left',
+      padding: '0px 10px',
+    },
     onBackspace: () => {
       if (yearLength === 0) {
         monthField.clear();
@@ -232,6 +238,7 @@ function ExpiryField({ onComplete }: { onComplete: () => void }) {
         <div className="absolute inset-0 animate-pulse rounded-md bg-muted/40" />
       )}
       <div
+        dir={isArabic ? 'rtl' : 'ltr'}
         className={cn(
           'peer flex h-10 items-center rounded-md border border-input bg-background transition-colors',
           'hover:border-input/70',
@@ -282,6 +289,10 @@ function ChatbotCardFields() {
         <ChatbotFormField
           elementType="cardHolderName"
           label={t('chatBot.checkout.card.cardholderName')}
+          styles={{
+            direction: isArabic ? 'rtl' : 'ltr',
+            textAlign: isArabic ? 'right' : 'left',
+          }}
         />
       </div>
       <div className="col-span-full">
@@ -310,9 +321,9 @@ function ChatbotCardFields() {
 
 const ACCEPTED_BRANDS = ['VISA', 'MC', 'AMEX'] as const;
 
-function CardBrandStack() {
+export function CardBrandStack() {
   return (
-    <div className="hidden items-center gap-1 sm:flex">
+    <div className="flex items-center gap-1">
       {ACCEPTED_BRANDS.map(brand => (
         <span
           key={brand}
@@ -326,15 +337,11 @@ function CardBrandStack() {
 }
 
 export function CardForm({
-  intentId,
-  billingData,
-  onPaymentResult,
-  onCancel,
+  onPay,
+  isSubmitting,
 }: {
-  intentId: string;
-  billingData: InfoFormValues;
-  onPaymentResult: (intentDetails: IntentDetails<'payment'>) => void;
-  onCancel: () => void;
+  onPay: (cardData: CardData) => Promise<void>;
+  isSubmitting: boolean;
 }) {
   const { t } = useTranslation();
   const [elements] = useState(() =>
@@ -350,119 +357,66 @@ export function CardForm({
       },
     }),
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    setError(null);
+    setFieldError(null);
+    let cardData: CardData;
     try {
-      const cardData = await moneyHash.cardForm.collect();
-      const intentDetails = await moneyHash.cardForm.pay({
-        intentId,
-        cardData,
-        billingData: billingData as unknown as Record<string, unknown>,
-      });
-      onPaymentResult(intentDetails);
+      cardData = await moneyHash.cardForm.collect();
     } catch (errors) {
       const firstError =
         errors && typeof errors === 'object'
           ? Object.values(errors as Record<string, unknown>)[0]
           : errors;
-      setError(
+      setFieldError(
         typeof firstError === 'string'
           ? firstError
           : t('chatBot.checkout.errors.paymentFailed'),
       );
-      setIsSubmitting(false);
+      return;
     }
+    await onPay(cardData);
   };
 
   return (
     <CardElementsContext.Provider value={elements}>
-      <div
-        data-fill-bubble
-        aria-busy={isSubmitting}
-        className="w-full overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm"
-      >
-        <div className="flex items-center gap-2.5 bg-indigo-500/[0.06] px-3 py-2.5">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-indigo-500/15 ring-1 ring-indigo-500/30">
-            <ShieldCheckIcon
-              className="size-3.5 text-indigo-700 dark:text-indigo-400"
-              strokeWidth={2.4}
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-indigo-700/80 dark:text-indigo-400/80">
-              {t('chatBot.checkout.card.secureCheckout')}
-            </p>
-            <p className="truncate text-xs font-semibold text-foreground">
-              {t('chatBot.checkout.card.payWithCard')}
-            </p>
-          </div>
-          <CardBrandStack />
-        </div>
+      <div className="space-y-2.5">
+        <ChatbotCardFields />
 
-        <div
-          className={cn(
-            'space-y-2.5 p-3 transition-opacity',
-            isSubmitting && 'pointer-events-none opacity-80',
-          )}
-        >
-          <ChatbotCardFields />
-
-          {error && (
-            <div
-              role="alert"
-              className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/[0.06] px-2.5 py-1.5"
-            >
-              <AlertCircleIcon className="mt-0.5 size-3.5 shrink-0 text-destructive" />
-              <p className="text-[11px] font-medium leading-snug text-destructive">
-                {error}
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-stretch gap-2 border-t border-border/60 bg-muted/20 px-3 py-2.5">
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="group flex-1"
+        {fieldError && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/[0.06] px-2.5 py-1.5"
           >
-            {isSubmitting ? (
-              <>
-                <LoaderIcon className="me-1.5 size-3 animate-spin" />
-                {t('chatBot.checkout.card.processing')}
-              </>
-            ) : (
-              <>
-                <LockIcon className="me-1.5 size-3" strokeWidth={2.5} />
-                {t('chatBot.checkout.card.buyNow')}
-                <ArrowRightIcon
-                  className="ms-1.5 size-3 transition-transform duration-150 ltr:group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
-                  strokeWidth={2.5}
-                />
-              </>
-            )}
-          </Button>
-          <Button variant="ghost" onClick={onCancel} disabled={isSubmitting}>
-            {t('chatBot.checkout.card.cancel')}
-          </Button>
-        </div>
-
-        <div className="flex items-center justify-between gap-2 border-t border-dashed border-border/80 bg-muted/10 px-3 py-2">
-          <span className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            <LockIcon className="size-2.5" strokeWidth={2.5} />
-            {t('chatBot.checkout.card.tls')}
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60">
-              {t('chatBot.checkout.card.pci')} ·
-            </span>
-            <MoneyHashLogo className="size-3.5" />
+            <AlertCircleIcon className="mt-0.5 size-3.5 shrink-0 text-destructive" />
+            <p className="text-[11px] font-medium leading-snug text-destructive">
+              {fieldError}
+            </p>
           </div>
-        </div>
+        )}
+
+        <Button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="group w-full"
+        >
+          {isSubmitting ? (
+            <>
+              <LoaderIcon className="me-1.5 size-3 animate-spin" />
+              {t('chatBot.checkout.card.processing')}
+            </>
+          ) : (
+            <>
+              <LockIcon className="me-1.5 size-3" strokeWidth={2.5} />
+              {t('chatBot.checkout.card.buyNow')}
+              <ArrowRightIcon
+                className="ms-1.5 size-3 transition-transform duration-150 ltr:group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
+                strokeWidth={2.5}
+              />
+            </>
+          )}
+        </Button>
       </div>
     </CardElementsContext.Provider>
   );
