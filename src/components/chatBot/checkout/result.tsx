@@ -24,6 +24,7 @@ export type CheckoutResult =
       currency: string;
       total: number;
       items: ReceiptItem[];
+      paymentMethod: 'card' | 'apple_pay';
     }
   | { status: 'cancelled'; message: string };
 
@@ -69,6 +70,7 @@ function SuccessReceipt({
   currency,
   total,
   items,
+  paymentMethod,
   onAgentAuthorized,
 }: {
   customerId: string;
@@ -76,6 +78,7 @@ function SuccessReceipt({
   currency: string;
   total: number;
   items: ReceiptItem[];
+  paymentMethod: 'card' | 'apple_pay';
   onAgentAuthorized?: (result: AgentAuthorizationResult) => void;
 }) {
   const { t } = useTranslation();
@@ -188,10 +191,12 @@ function SuccessReceipt({
         </span>
       </button>
 
-      <AgentAuthorization
-        customerId={customerId}
-        onResult={onAgentAuthorized}
-      />
+      {paymentMethod !== 'apple_pay' && (
+        <AgentAuthorization
+          customerId={customerId}
+          onResult={onAgentAuthorized}
+        />
+      )}
     </div>
   );
 }

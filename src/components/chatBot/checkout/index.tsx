@@ -155,13 +155,17 @@ export function Checkout({
       amount: product.price[currencyRef.current],
     }));
 
-  const successResult = (transactionId: string): CheckoutResult => {
+  const successResult = (
+    transactionId: string,
+    paymentMethod: 'card' | 'apple_pay',
+  ): CheckoutResult => {
     const snapshotCurrency = currencyRef.current;
     return {
       status: 'success',
       transactionId,
       currency: snapshotCurrency,
       total: totalRef.current,
+      paymentMethod,
       items: cartRef.current.map(p => ({
         id: p.id,
         name: p.name,
@@ -189,7 +193,7 @@ export function Checkout({
       paymentStatus.status === 'AUTHORIZED'
     ) {
       if (transaction?.id) {
-        finish(successResult(transaction.id));
+        finish(successResult(transaction.id, 'card'));
       } else {
         finish({
           status: 'cancelled',
@@ -312,7 +316,7 @@ export function Checkout({
       } = response.data;
 
       if (SUCCESS_STATUSES.has(paymentStatus.status)) {
-        finish(successResult(activeTransaction?.id || id));
+        finish(successResult(activeTransaction?.id || id, 'card'));
         return;
       }
 
@@ -415,7 +419,7 @@ export function Checkout({
           intentDetails.transaction?.id || intentDetails.intent.id;
 
         if (status && SUCCESS_STATUSES.has(status)) {
-          finish(successResult(transactionId));
+          finish(successResult(transactionId, 'apple_pay'));
           return;
         }
 
