@@ -29,7 +29,7 @@ export default function createIntent({
 }: {
   amount: number;
   currency: string;
-  type: 'cit' | 'mit';
+  type: 'cit' | 'mit' | 'apple_pay';
   productItems: ProductItem[];
   customerId: string;
   backgroundColor: string;

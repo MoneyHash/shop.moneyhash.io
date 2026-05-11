@@ -390,7 +390,7 @@ export function Checkout({
 
       try {
         const intentResponse = await createIntent({
-          type: 'cit',
+          type: 'apple_pay',
           customerId,
           backgroundColor: theme === 'dark' ? '%23000A14' : 'white',
           amount: totalRef.current,
