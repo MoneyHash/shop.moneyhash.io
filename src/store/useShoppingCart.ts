@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useMemo } from 'react';
-import productSections, { type Product } from '@/utils/productSections';
+import { type Product } from '@/utils/productSections';
 import twoFixedDigit from '@/utils/twoFixedDigits';
 import useCurrency from '@/store/useCurrency';
 
@@ -18,8 +18,8 @@ type Action = {
 };
 
 const initialCart: State['cart'] = [
-  ...productSections[0].products.slice(0, 4).map(p => ({ ...p, quantity: 3 })),
-  ...productSections[1].products.slice(0, 2).map(p => ({ ...p, quantity: 6 })),
+  // ...productSections[0].products.slice(0, 4).map(p => ({ ...p, quantity: 3 })),
+  // ...productSections[1].products.slice(0, 2).map(p => ({ ...p, quantity: 6 })),
 ];
 
 const useShoppingCart = create<State & Action>(set => ({

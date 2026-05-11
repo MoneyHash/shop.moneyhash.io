@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Banner from '@/components/banner';
 import { ThemeProvider } from '@/context/themeProvider';
 import '@/i18n/config';
+import { TooltipProvider } from './components/ui/tooltip';
 
 function App() {
   const { i18n } = useTranslation();
@@ -21,12 +22,14 @@ function App() {
 
   return (
     <ThemeProvider>
-      <ScrollRestoration />
-      <Suspense fallback={null}>
-        <Outlet />
-      </Suspense>
-      <Banner />
-      <Toaster />
+      <TooltipProvider>
+        <ScrollRestoration />
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
+        <Banner />
+        <Toaster />
+      </TooltipProvider>
     </ThemeProvider>
   );
 }

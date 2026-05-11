@@ -93,7 +93,7 @@ export function ClickToPayProvider({
               },
             ],
           },
-          cardBrands: ['mastercard', 'visa', 'amex', 'discover'],
+          cardBrands: ['mastercard', 'visa', 'amex'],
           recognitionToken: getCookie('c2p') || undefined,
         });
 
