@@ -68,6 +68,21 @@
     "monthPlaceholder": "MM",
     "yearPlaceholder": "YY"
   },
+  "binDiscount": {
+    "title": "أنت مؤهل للحصول على خصم!",
+    "noDiscountTitle": "تفاصيل البطاقة",
+    "lookupDescription": "قمنا بالتحقق من تفاصيل بطاقتك قبل إنشاء عملية الدفع.",
+    "brand": "نوع البطاقة",
+    "issuer": "جهة الإصدار",
+    "issuerCountry": "بلد الإصدار",
+    "cardType": "فئة البطاقة",
+    "firstSixDigits": "أول 6 أرقام",
+    "discountReason": "لأن بطاقتك {{brand}}، تحصل على خصم {{percentage}}٪!",
+    "originalTotal": "الإجمالي الأصلي",
+    "newTotal": "الإجمالي الجديد",
+    "confirm": "تأكيد والدفع",
+    "cancel": "إلغاء"
+  },
   "installments": {
     "title": "اختر خطة الدفع الخاصة بك",
     "description": "اختر خيار الدفع الأنسب لك",

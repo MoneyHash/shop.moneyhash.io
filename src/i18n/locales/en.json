@@ -68,6 +68,21 @@
     "monthPlaceholder": "MM",
     "yearPlaceholder": "YY"
   },
+  "binDiscount": {
+    "title": "You qualify for a discount!",
+    "noDiscountTitle": "Card details",
+    "lookupDescription": "We looked up your card details before creating your payment.",
+    "brand": "Brand",
+    "issuer": "Issuer",
+    "issuerCountry": "Issuer country",
+    "cardType": "Card type",
+    "firstSixDigits": "First 6 digits",
+    "discountReason": "Because your card is {{brand}}, you get {{percentage}}% off!",
+    "originalTotal": "Original total",
+    "newTotal": "New total",
+    "confirm": "Confirm & Pay",
+    "cancel": "Cancel"
+  },
   "installments": {
     "title": "Choose Your Payment Plan",
     "description": "Select the payment option that works best for you",
@@ -223,7 +238,10 @@
       "popularPicks": {
         "shirts": { "label": "Shirts", "prompt": "Show me your shirts" },
         "bags": { "label": "Bags", "prompt": "What bags do you have?" },
-        "underHundred": { "label": "Under $100", "prompt": "Show me items under $100" }
+        "underHundred": {
+          "label": "Under $100",
+          "prompt": "Show me items under $100"
+        }
       }
     },
     "input": {

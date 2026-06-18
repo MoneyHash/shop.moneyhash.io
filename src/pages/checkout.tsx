@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   type IntentDetails,
   type Method,
   type Card,
+  type BinLookUpData,
 } from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -20,10 +21,12 @@ import {
   InfoForm,
   type InfoFormValues,
   OrderSummaryPanel,
+  BinDiscountDialog,
 } from '@/components/checkout';
 import { PaymentForm } from '@/components/checkout/paymentForm';
 import { logJSON } from '@/utils/logJSON';
 import { MoneyHashProvider } from '@/context/moneyHashProvider';
+import { applyDiscount, getBinDiscountPercentage } from '@/utils/binDiscount';
 
 const fawryBankInstallment = {
   production: 'LVEnPN9',
@@ -38,6 +41,17 @@ export default function Checkout() {
   const [intentDetails, setIntentDetails] =
     useState<IntentDetails<'payment'> | null>(null);
   const [userInfo, setUserInfo] = useState<InfoFormValues | null>(null);
+  const [binDiscount, setBinDiscount] = useState<{
+    binLookup: BinLookUpData;
+    discountPercentage: number;
+    originalAmount: number;
+    discountedAmount: number;
+  } | null>(null);
+  const confirmResolverRef = useRef<((ok: boolean) => void) | null>(null);
+  const awaitConfirmation = () =>
+    new Promise<boolean>(resolve => {
+      confirmResolverRef.current = resolve;
+    });
 
   const navigate = useNavigate();
   const currency = useCurrency(state => state.currency);
@@ -51,12 +65,14 @@ export default function Checkout() {
     userInfo,
     disableIntentDetails = false,
     customFields,
+    amount,
   }: {
     userInfo: InfoFormValues;
     methodId?: string;
     paymentProvider?: string;
     disableIntentDetails?: boolean;
     customFields?: Record<string, any>;
+    amount?: number;
   }) => {
     const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
 
@@ -65,7 +81,7 @@ export default function Checkout() {
       const response = await createIntent({
         methodId,
         paymentProvider,
-        amount: totalPrice,
+        amount: amount ?? totalPrice,
         currency,
         userInfo,
         product_items: cart.map((product, index) => ({
@@ -338,7 +354,9 @@ export default function Checkout() {
                     const applePayNativeData = expressMethods?.find(
                       method => method.id === 'APPLE_PAY',
                     )?.nativePayData!;
-                    let intentId: string;
+                    const extraConfig = jsonConfig
+                      ? JSON.parse(jsonConfig)
+                      : {};
 
                     const session = new ApplePaySession(3, {
                       countryCode: applePayNativeData.country_code,
@@ -375,31 +393,72 @@ export default function Checkout() {
                           email: e.payment.shippingContact?.emailAddress,
                         },
                       };
+                      // Close the Apple Pay sheet first; the BIN-based discount
+                      // is computed afterwards because the card brand is only
+                      // known once we have the authorized receipt.
                       session.completePayment(ApplePaySession.STATUS_SUCCESS);
 
-                      await moneyHash.proceedWith({
-                        type: 'method',
-                        id: 'APPLE_PAY',
-                        intentId,
-                      });
+                      try {
+                        // 1. BIN Lookup based on the Apple Pay receipt.
+                        const binLookup = await moneyHash.binLookupByReceipt({
+                          nativeReceiptData: applePayReceipt,
+                          methodId: applePayNativeData.method_id,
+                          flowId: extraConfig.flow_id,
+                        });
+                        logJSON.response('Bin Lookup', binLookup);
 
-                      await moneyHash.submitPaymentReceipt({
-                        nativeReceiptData: applePayReceipt,
-                        intentId,
-                      });
+                        // 2. Apply a brand-based discount on the cart total.
+                        const discountPercentage = getBinDiscountPercentage(
+                          binLookup.brand,
+                        );
+                        const discountedAmount = applyDiscount(
+                          totalPrice,
+                          discountPercentage,
+                        );
 
-                      navigate(`/checkout/order?intent_id=${intentId}`, {
-                        replace: true,
-                      });
+                        // 3. Show the BIN result + discount and wait for the
+                        // customer to confirm before creating the intent.
+                        setBinDiscount({
+                          binLookup,
+                          discountPercentage,
+                          originalAmount: totalPrice,
+                          discountedAmount,
+                        });
+                        const confirmed = await awaitConfirmation();
+                        setBinDiscount(null);
+                        if (!confirmed) {
+                          onCancel();
+                          return;
+                        }
+
+                        // 4. Create the intent with the final discounted amount.
+                        const intentId = await handleCreateIntent({
+                          userInfo,
+                          amount: discountedAmount,
+                          disableIntentDetails: true,
+                        });
+
+                        await moneyHash.proceedWith({
+                          type: 'method',
+                          id: 'APPLE_PAY',
+                          intentId,
+                        });
+
+                        await moneyHash.submitPaymentReceipt({
+                          nativeReceiptData: applePayReceipt,
+                          intentId,
+                        });
+
+                        navigate(`/checkout/order?intent_id=${intentId}`, {
+                          replace: true,
+                        });
+                      } catch (error) {
+                        logJSON.error('Bin Lookup / Apple Pay', error);
+                        toast.error(t('errors.pleaseTryAgain'));
+                        onError();
+                      }
                     };
 
-                    if (!intentDetails) {
-                      intentId = await handleCreateIntent({
-                        userInfo,
-                      });
-                    } else {
-                      intentId = intentDetails.intent.id;
-                    }
                     session.oncancel = onCancel;
                     session.begin();
                   }}
@@ -429,6 +488,17 @@ export default function Checkout() {
           </section>
         </div>
       </div>
+
+      <BinDiscountDialog
+        open={!!binDiscount}
+        binLookup={binDiscount?.binLookup ?? null}
+        discountPercentage={binDiscount?.discountPercentage ?? 0}
+        originalAmount={binDiscount?.originalAmount ?? 0}
+        discountedAmount={binDiscount?.discountedAmount ?? 0}
+        currency={currency}
+        onConfirm={() => confirmResolverRef.current?.(true)}
+        onCancel={() => confirmResolverRef.current?.(false)}
+      />
     </div>
   );
 }
