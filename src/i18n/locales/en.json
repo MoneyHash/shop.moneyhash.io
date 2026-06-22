@@ -62,6 +62,7 @@
     "subscribe": "Subscribe",
     "cvvError": "Please enter a valid CVV",
     "enterCardForPlans": "Enter your card information to view plans.",
+    "processing": "Processing your payment…",
     "selectSavedCard": "Select saved card",
     "cardNumberPlaceholder": "Card number",
     "cvvPlaceholder": "CVV",

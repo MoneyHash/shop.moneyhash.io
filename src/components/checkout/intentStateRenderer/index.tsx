@@ -8,6 +8,7 @@ import { UrlToRender } from './urlToRender';
 import { CardForm, Click2PayCardForm } from './cardForm';
 import { IntentForm } from './intentForm';
 import { InstallmentPlans } from './installmentPlans';
+import { Processing } from './processing';
 import { type InfoFormValues } from '../infoForm';
 
 export function IntentStateRenderer({
@@ -124,6 +125,15 @@ export function IntentStateRenderer({
       <InstallmentPlans
         intentId={intentId}
         {...stateDetails}
+        onIntentDetailsChange={onIntentDetailsChange}
+      />
+    );
+  }
+
+  if (state === 'PROCESSING' && intentId) {
+    return (
+      <Processing
+        intentId={intentId}
         onIntentDetailsChange={onIntentDetailsChange}
       />
     );

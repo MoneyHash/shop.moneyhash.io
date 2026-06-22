@@ -62,6 +62,7 @@
     "subscribe": "اشترك",
     "cvvError": "الرجاء إدخال CVV صالح",
     "enterCardForPlans": "أدخل معلومات بطاقتك لعرض خطط التقسيط.",
+    "processing": "جارٍ معالجة الدفع…",
     "selectSavedCard": "اختر بطاقة محفوظة",
     "cardNumberPlaceholder": "رقم البطاقة",
     "cvvPlaceholder": "CVV",
