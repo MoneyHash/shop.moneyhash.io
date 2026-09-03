@@ -50,6 +50,7 @@ import { deleteCookie, getCookie, setCookie } from '@/utils/cookies';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { getCardBrand } from '@/utils/getCardBrand';
 import { useClickToPay } from '@/context/clickToPay';
+import { useLoyalty } from '@/context/loyaltyProvider';
 
 const CardFormContext = createContext<Elements | null>(null);
 
@@ -551,6 +552,7 @@ export function CardForm({
   const { theme } = useTheme();
   const cardForm = useConfiguration(state => state.cardForm);
   const moneyHash = useMoneyHash();
+  const { loyaltyData } = useLoyalty();
 
   const billingValibotSchema = useMemo(() => {
     if (!billingFields) return undefined;
@@ -610,6 +612,7 @@ export function CardForm({
             cardData,
             intentId,
             billingData: getBillingValues(),
+            ...(loyaltyData && { loyaltyData }),
           }),
         )
         .then(response => {
@@ -626,6 +629,7 @@ export function CardForm({
           paymentMethod: paymentMethod as PaymentMethodSlugs,
           intentId,
           billingData: getBillingValues(),
+          ...(loyaltyData && { loyaltyData }),
         })
         .then(response => {
           logJSON.response('submitForm', response);
@@ -809,6 +813,7 @@ export function Click2PayCardForm({
   const cardForm = useConfiguration(state => state.cardForm);
   const moneyHash = useMoneyHash();
   const { jsonConfig } = useJsonConfig();
+  const { loyaltyData } = useLoyalty();
 
   const hasCustomer = useMemo(() => {
     try {
@@ -842,6 +847,7 @@ export function Click2PayCardForm({
             cardData,
             intentId,
             saveCard: saveCardToMoneyHash,
+            ...(loyaltyData && { loyaltyData }),
           }),
         )
         .then(response => {

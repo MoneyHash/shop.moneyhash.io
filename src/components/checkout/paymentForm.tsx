@@ -20,6 +20,7 @@ import { translatePaymentMethod } from '@/utils/translatePaymentMethod';
 import { useTheme } from '@/context/themeProvider';
 import { type InfoFormValues } from './infoForm';
 import { ClickToPayProvider } from '@/context/clickToPay';
+import { LoyaltyProvidersSection } from './loyaltyProvidersSection';
 
 type PaymentFormProps = {
   methods: Method[];
@@ -96,6 +97,7 @@ function TabsPaymentForm({
 
   return (
     <div className="space-y-8">
+      <LoyaltyProvidersSection />
       {hasExpressMethods && (
         <div className="grid grid-cols-1 gap-3 p-4 pt-8 relative border rounded">
           <p className="text-sm absolute top-0 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-background px-2 text-bolder">
@@ -333,6 +335,7 @@ function AccordionPaymentForm({
 
   return (
     <ClickToPayProvider nativePayData={click2payNativeData}>
+      <LoyaltyProvidersSection className="mb-8" />
       {!!expressMethods?.length && (
         <div className="mb-8">
           <p className="text-sm text-center font-medium">

@@ -27,6 +27,7 @@ import { PaymentForm } from '@/components/checkout/paymentForm';
 import { logJSON } from '@/utils/logJSON';
 import { MoneyHashProvider } from '@/context/moneyHashProvider';
 import { applyDiscount, getBinDiscountPercentage } from '@/utils/binDiscount';
+import { LoyaltyProviderProvider, useLoyalty } from '@/context/loyaltyProvider';
 
 const fawryBankInstallment = {
   production: 'LVEnPN9',
@@ -34,6 +35,16 @@ const fawryBankInstallment = {
 };
 
 export default function Checkout() {
+  return (
+    <MoneyHashProvider moneyHash={moneyHash}>
+      <LoyaltyProviderProvider>
+        <CheckoutContent />
+      </LoyaltyProviderProvider>
+    </MoneyHashProvider>
+  );
+}
+
+function CheckoutContent() {
   const { t } = useTranslation();
   const [paymentMethods, setPaymentMethods] = useState<Method[] | null>(null);
   const [expressMethods, setExpressMethods] = useState<Method[] | null>(null);
@@ -58,6 +69,7 @@ export default function Checkout() {
   const jsonConfig = useJsonConfig(state => state.jsonConfig);
   const cart = useShoppingCart(state => state.cart);
   const totalPrice = useTotalPrice();
+  const { loyaltyData } = useLoyalty();
 
   const handleCreateIntent = async ({
     methodId,
@@ -142,6 +154,9 @@ export default function Checkout() {
         intentId: intentDetails.intent.id,
         id: methodId,
         type: 'method',
+        ...(loyaltyData && {
+          loyaltyData,
+        }),
       })
       .then(response => {
         setIntentDetails(response);
@@ -196,6 +211,9 @@ export default function Checkout() {
           cvv,
         },
         intentId,
+        ...(loyaltyData && {
+          loyaltyData,
+        }),
       });
       logJSON.response('proceedWith:savedCard', intentDetails);
       const { stateDetails } = intentDetails;
@@ -336,155 +354,157 @@ export default function Checkout() {
           >
             {!userInfo && <InfoForm onSubmit={handleSubmit} />}
 
-            <MoneyHashProvider moneyHash={moneyHash}>
-              {userInfo && paymentMethods && (
-                <PaymentForm
-                  userInfo={userInfo}
-                  intentDetails={intentDetails}
-                  onIntentDetailsChange={setIntentDetails}
-                  methods={paymentMethods}
-                  expressMethods={expressMethods}
-                  savedCards={savedCards}
-                  googlePayNativeData={googlePayNativeData}
-                  onSelectMethod={handleSelectMethod}
-                  createClick2PayIntent={handleClick2PayIntentCreation}
-                  onSelectBankInstallment={handleSelectBankInstallment}
-                  onPayWithSavedCard={handlePayWithSavedCard}
-                  onApplePayClick={async ({ onCancel, onError }) => {
-                    const applePayNativeData = expressMethods?.find(
-                      method => method.id === 'APPLE_PAY',
-                    )?.nativePayData!;
-                    const extraConfig = jsonConfig
-                      ? JSON.parse(jsonConfig)
-                      : {};
+            {userInfo && paymentMethods && (
+              <PaymentForm
+                userInfo={userInfo}
+                intentDetails={intentDetails}
+                onIntentDetailsChange={setIntentDetails}
+                methods={paymentMethods}
+                expressMethods={expressMethods}
+                savedCards={savedCards}
+                googlePayNativeData={googlePayNativeData}
+                onSelectMethod={handleSelectMethod}
+                createClick2PayIntent={handleClick2PayIntentCreation}
+                onSelectBankInstallment={handleSelectBankInstallment}
+                onPayWithSavedCard={handlePayWithSavedCard}
+                onApplePayClick={async ({ onCancel, onError }) => {
+                  const applePayNativeData = expressMethods?.find(
+                    method => method.id === 'APPLE_PAY',
+                  )?.nativePayData!;
+                  const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
 
-                    const session = new ApplePaySession(3, {
-                      countryCode: applePayNativeData.country_code,
-                      currencyCode: applePayNativeData.currency_code,
-                      supportedNetworks: applePayNativeData.supported_networks,
-                      merchantCapabilities: ['supports3DS'],
-                      total: {
-                        label: 'Apple Pay',
-                        type: 'final',
-                        amount: `${applePayNativeData.amount}`,
-                      },
-                      requiredShippingContactFields: ['email'],
-                    });
+                  const session = new ApplePaySession(3, {
+                    countryCode: applePayNativeData.country_code,
+                    currencyCode: applePayNativeData.currency_code,
+                    supportedNetworks: applePayNativeData.supported_networks,
+                    merchantCapabilities: ['supports3DS'],
+                    total: {
+                      label: 'Apple Pay',
+                      type: 'final',
+                      amount: `${applePayNativeData.amount}`,
+                    },
+                    requiredShippingContactFields: ['email'],
+                  });
 
-                    session.onvalidatemerchant = e =>
-                      moneyHash
-                        .validateApplePayMerchantSession({
-                          methodId: applePayNativeData.method_id,
-                          validationUrl: e.validationURL,
-                        })
-                        .then(merchantSession =>
-                          session.completeMerchantValidation(merchantSession),
-                        )
-                        .catch(() => {
-                          session.completeMerchantValidation({});
-                          onError();
-                          toast.error(t('errors.pleaseTryAgain'));
-                        });
-
-                    session.onpaymentauthorized = async e => {
-                      const applePayReceipt = {
-                        receipt: JSON.stringify({ token: e.payment.token }),
-                        receiptBillingData: {
-                          email: e.payment.shippingContact?.emailAddress,
-                        },
-                      };
-                      // Close the Apple Pay sheet first; the BIN-based discount
-                      // is computed afterwards because the card brand is only
-                      // known once we have the authorized receipt.
-                      session.completePayment(ApplePaySession.STATUS_SUCCESS);
-
-                      try {
-                        // 1. BIN Lookup based on the Apple Pay receipt.
-                        const binLookup = await moneyHash.binLookupByReceipt({
-                          nativeReceiptData: applePayReceipt,
-                          methodId: applePayNativeData.method_id,
-                          flowId: extraConfig.flow_id,
-                        });
-                        logJSON.response('Bin Lookup', binLookup);
-
-                        // 2. Apply a brand-based discount on the cart total.
-                        const discountPercentage = getBinDiscountPercentage(
-                          binLookup.brand,
-                        );
-                        const discountedAmount = applyDiscount(
-                          totalPrice,
-                          discountPercentage,
-                        );
-
-                        // 3. Show the BIN result + discount and wait for the
-                        // customer to confirm before creating the intent.
-                        setBinDiscount({
-                          binLookup,
-                          discountPercentage,
-                          originalAmount: totalPrice,
-                          discountedAmount,
-                        });
-                        const confirmed = await awaitConfirmation();
-                        setBinDiscount(null);
-                        if (!confirmed) {
-                          onCancel();
-                          return;
-                        }
-
-                        // 4. Create the intent with the final discounted amount.
-                        const intentId = await handleCreateIntent({
-                          userInfo,
-                          amount: discountedAmount,
-                          disableIntentDetails: true,
-                        });
-
-                        await moneyHash.proceedWith({
-                          type: 'method',
-                          id: 'APPLE_PAY',
-                          intentId,
-                        });
-
-                        await moneyHash.submitPaymentReceipt({
-                          nativeReceiptData: applePayReceipt,
-                          intentId,
-                        });
-
-                        navigate(`/checkout/order?intent_id=${intentId}`, {
-                          replace: true,
-                        });
-                      } catch (error) {
-                        logJSON.error('Bin Lookup / Apple Pay', error);
-                        toast.error(t('errors.pleaseTryAgain'));
+                  session.onvalidatemerchant = e =>
+                    moneyHash
+                      .validateApplePayMerchantSession({
+                        methodId: applePayNativeData.method_id,
+                        validationUrl: e.validationURL,
+                      })
+                      .then(merchantSession =>
+                        session.completeMerchantValidation(merchantSession),
+                      )
+                      .catch(() => {
+                        session.completeMerchantValidation({});
                         onError();
-                      }
+                        toast.error(t('errors.pleaseTryAgain'));
+                      });
+
+                  session.onpaymentauthorized = async e => {
+                    const applePayReceipt = {
+                      receipt: JSON.stringify({ token: e.payment.token }),
+                      receiptBillingData: {
+                        email: e.payment.shippingContact?.emailAddress,
+                      },
                     };
+                    // Close the Apple Pay sheet first; the BIN-based discount
+                    // is computed afterwards because the card brand is only
+                    // known once we have the authorized receipt.
+                    session.completePayment(ApplePaySession.STATUS_SUCCESS);
 
-                    session.oncancel = onCancel;
-                    session.begin();
-                  }}
-                  onGooglePayClick={async googlePayReceipt => {
-                    const intentId =
-                      intentDetails?.intent.id ||
-                      (await handleCreateIntent({
+                    try {
+                      // 1. BIN Lookup based on the Apple Pay receipt.
+                      const binLookup = await moneyHash.binLookupByReceipt({
+                        nativeReceiptData: applePayReceipt,
+                        methodId: applePayNativeData.method_id,
+                        flowId: extraConfig.flow_id,
+                      });
+                      logJSON.response('Bin Lookup', binLookup);
+
+                      // 2. Apply a brand-based discount on the cart total.
+                      const discountPercentage = getBinDiscountPercentage(
+                        binLookup.brand,
+                      );
+                      const discountedAmount = applyDiscount(
+                        totalPrice,
+                        discountPercentage,
+                      );
+
+                      // 3. Show the BIN result + discount and wait for the
+                      // customer to confirm before creating the intent.
+                      setBinDiscount({
+                        binLookup,
+                        discountPercentage,
+                        originalAmount: totalPrice,
+                        discountedAmount,
+                      });
+                      const confirmed = await awaitConfirmation();
+                      setBinDiscount(null);
+                      if (!confirmed) {
+                        onCancel();
+                        return;
+                      }
+
+                      // 4. Create the intent with the final discounted amount.
+                      const intentId = await handleCreateIntent({
                         userInfo,
-                      }));
+                        amount: discountedAmount,
+                        disableIntentDetails: true,
+                      });
 
-                    await moneyHash.proceedWith({
-                      type: 'method',
-                      id: 'GOOGLE_PAY',
-                      intentId,
-                    });
-
-                    setIntentDetails(
-                      await moneyHash.submitPaymentReceipt({
+                      await moneyHash.proceedWith({
+                        type: 'method',
+                        id: 'APPLE_PAY',
                         intentId,
-                        nativeReceiptData: googlePayReceipt,
-                      }),
-                    );
-                  }}
-                />
-              )}
-            </MoneyHashProvider>
+                        ...(loyaltyData && {
+                          loyaltyData,
+                        }),
+                      });
+
+                      await moneyHash.submitPaymentReceipt({
+                        nativeReceiptData: applePayReceipt,
+                        intentId,
+                      });
+
+                      navigate(`/checkout/order?intent_id=${intentId}`, {
+                        replace: true,
+                      });
+                    } catch (error) {
+                      logJSON.error('Bin Lookup / Apple Pay', error);
+                      toast.error(t('errors.pleaseTryAgain'));
+                      onError();
+                    }
+                  };
+
+                  session.oncancel = onCancel;
+                  session.begin();
+                }}
+                onGooglePayClick={async googlePayReceipt => {
+                  const intentId =
+                    intentDetails?.intent.id ||
+                    (await handleCreateIntent({
+                      userInfo,
+                    }));
+
+                  await moneyHash.proceedWith({
+                    type: 'method',
+                    id: 'GOOGLE_PAY',
+                    intentId,
+                    ...(loyaltyData && {
+                      loyaltyData,
+                    }),
+                  });
+
+                  setIntentDetails(
+                    await moneyHash.submitPaymentReceipt({
+                      intentId,
+                      nativeReceiptData: googlePayReceipt,
+                    }),
+                  );
+                }}
+              />
+            )}
           </section>
         </div>
       </div>
