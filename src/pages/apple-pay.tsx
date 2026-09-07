@@ -628,7 +628,7 @@ export default function ApplePay() {
                         new ApplePayError(
                           'unknown',
                           undefined,
-                          'Please try with a different card',
+                          'Custom error message',
                         ),
                       ],
                     });
@@ -692,7 +692,7 @@ export default function ApplePay() {
                 session.begin();
               }}
             >
-              Fail First Attempt (Retry)
+              Fail First Attempt (Retry)!
             </AppleButton>
           </div>
 
