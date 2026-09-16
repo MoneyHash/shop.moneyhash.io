@@ -111,6 +111,7 @@ function CheckoutContent() {
         customFields,
       });
       intentId = response.data.id;
+      moneyHash.setIntentSecret(response.data.intent_secret);
       logJSON.BE('Create Intent', response);
     } catch (error: any) {
       const [key, message] =

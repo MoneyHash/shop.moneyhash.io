@@ -31,7 +31,7 @@ export default function createIntent({
   extraConfig?: Record<string, any>;
   customFields?: Record<string, any>;
   operation?: string;
-}): Promise<{ data: { id: string } }> {
+}): Promise<{ data: { id: string; intent_secret: string } }> {
   return axiosInstance.post('/payments/intent/', {
     payment_method: methodId,
     payment_provider: paymentProvider,
