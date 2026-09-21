@@ -409,7 +409,7 @@ export function CardForm({
           ) : (
             <>
               <LockIcon className="me-1.5 size-3" strokeWidth={2.5} />
-              {t('chatBot.checkout.card.buyNow')}
+              {t('chatBot.checkout.card.addCard')}
               <ArrowRightIcon
                 className="ms-1.5 size-3 transition-transform duration-150 ltr:group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
                 strokeWidth={2.5}

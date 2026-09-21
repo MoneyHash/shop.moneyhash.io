@@ -1,6 +1,6 @@
 /* eslint-disable no-console, func-names */
 import { CardBrand, MaskedCard } from '@moneyhash/js-sdk';
-import MoneyHash from '@moneyhash/js-sdk/headless';
+import type { MoneyHashHeadless as MoneyHash } from '@moneyhash/js-sdk/headless';
 
 import {
   Dispatch,

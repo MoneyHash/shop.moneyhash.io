@@ -1,4 +1,4 @@
-import MoneyHashHeadless from '@moneyhash/js-sdk/headless';
+import type { MoneyHashHeadless } from '@moneyhash/js-sdk/headless';
 import { useContext, createContext } from 'react';
 
 const MoneyHashContext = createContext<MoneyHashHeadless<'payment'> | null>(

@@ -237,8 +237,14 @@
         "popularPicks": "الأكثر طلباً"
       },
       "popularPicks": {
-        "shirts": { "label": "قمصان", "prompt": "أرني القمصان المتوفرة" },
-        "bags": { "label": "حقائب", "prompt": "ما هي الحقائب المتوفرة لديكم؟" },
+        "shirts": {
+          "label": "قمصان",
+          "prompt": "أرني القمصان المتوفرة"
+        },
+        "bags": {
+          "label": "حقائب",
+          "prompt": "ما هي الحقائب المتوفرة لديكم؟"
+        },
         "underHundred": {
           "label": "أقل من 100 دولار",
           "prompt": "أرني المنتجات بأقل من 100 دولار"
@@ -291,7 +297,11 @@
         "authenticationFailed": "فشل المصادقة",
         "applePayUnavailable": "Apple Pay غير متاح حالياً",
         "applePayMerchantValidationFailed": "تعذّر التحقق من تاجر Apple Pay",
-        "applePayPaymentFailed": "فشل الدفع عبر Apple Pay"
+        "applePayPaymentFailed": "فشل الدفع عبر Apple Pay",
+        "consentFailed": "تعذّر بدء الدفع بالوكيل. يرجى المحاولة مرة أخرى.",
+        "passkeyCancelled": "تم إلغاء تفويض مفتاح المرور. يرجى المحاولة مرة أخرى.",
+        "passkeyFailed": "تعذّر التحقق من مفتاح المرور. يرجى المحاولة مرة أخرى.",
+        "executeFailed": "تعذّر إتمام الدفع. يرجى المحاولة مرة أخرى."
       },
       "applePay": {
         "title": "Apple Pay",
@@ -303,25 +313,6 @@
       },
       "dismiss": "تجاهل",
       "or": "أو",
-      "agentAuth": {
-        "authorized": "تم تفويض المساعد",
-        "oneTapEnabled": "تم تفعيل الدفع بنقرة واحدة على هذا الجهاز",
-        "revoke": "إلغاء التفويض",
-        "verifying": "جارٍ التحقق…",
-        "speedUp": "أسرع لعمليات الدفع المستقبلية",
-        "biometricsHint": "فوّض المساعد ببصمتك — تبقى على هذا الجهاز",
-        "confirmTouchId": "أكّد ببصمة الإصبع / الوجه"
-      },
-      "mit": {
-        "agentAuthorized": "تم تفويض المساعد",
-        "oneTapCheckout": "الدفع بنقرة واحدة",
-        "explainer": "استخدم التفويض المحفوظ على هذا الجهاز للدفع بطريقتك المخزّنة. لا حاجة لإدخال البطاقة.",
-        "total": "الإجمالي",
-        "verifying": "جارٍ التحقق...",
-        "confirming": "جارٍ التأكيد...",
-        "confirmPurchase": "تأكيد الشراء",
-        "cancel": "إلغاء"
-      },
       "card": {
         "secureCheckout": "دفع آمن",
         "payWithCard": "ادفع ببطاقتك",
@@ -330,10 +321,14 @@
         "cvv": "CVV",
         "expiry": "تاريخ الانتهاء",
         "buyNow": "اطلب الآن",
+        "addCard": "إضافة بطاقة",
         "processing": "جارٍ المعالجة...",
         "cancel": "إلغاء",
         "tls": "تشفير TLS 256-bit",
-        "pci": "PCI DSS"
+        "pci": "PCI DSS",
+        "useNewCard": "استخدام بطاقة جديدة",
+        "savedCards": "البطاقات المحفوظة",
+        "newCard": "بطاقة جديدة"
       },
       "result": {
         "cancelled": "تم إلغاء الدفع",
@@ -341,6 +336,26 @@
         "thankYou": "تم استلام الدفع — شكراً لك",
         "total": "الإجمالي",
         "txnId": "رقم العملية"
+      },
+      "receipt": {
+        "immediateTitle": "اكتمل الدفع",
+        "immediateSubtitle": "تم تأكيد طلبك.",
+        "scheduledTitle": "تم تحصيل الدفعة المجدولة",
+        "scheduledSubtitle": "قمنا بخصم المبلغ من بطاقتك المحفوظة كما هو مجدول.",
+        "failedTitle": "فشلت الدفعة المجدولة",
+        "failedSubtitle": "تعذّر إتمام دفعتك المجدولة.",
+        "total": "الإجمالي",
+        "txnId": "رقم العملية"
+      },
+      "agentic": {
+        "authorizeTitle": "الدفع بالوكيل",
+        "authorizeSubtitle": "تفويض المساعد بالدفع",
+        "authorizeExplainer": "تم حفظ بطاقتك. وافق باستخدام مفتاح المرور للسماح للمساعد بإتمام عملية الشراء نيابةً عنك.",
+        "total": "الإجمالي",
+        "authorizeCta": "التفويض بمفتاح المرور",
+        "verifying": "جارٍ التحقق من مفتاح المرور…",
+        "authorizedTitle": "تم التفويض — جارٍ تنفيذ طلبك",
+        "authorizedSubtitle": "المساعد يُكمل عملية الدفع"
       }
     }
   }

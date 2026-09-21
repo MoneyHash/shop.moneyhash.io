@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CardData, IntentDetails } from '@moneyhash/js-sdk/headless';
+import type { Card, CardData, IntentDetails } from '@moneyhash/js-sdk/headless';
 import {
   AlertCircleIcon,
   AppleIcon,
+  CheckIcon,
   FingerprintIcon,
   LoaderIcon,
   ShieldCheckIcon,
@@ -12,6 +13,10 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
 import createIntent from './createIntent';
+import createAgenticConsent, {
+  type AgenticProduct,
+} from './createAgenticConsent';
+import { saveReceiptDraft } from './receiptDraft';
 import { moneyHash } from '@/utils/moneyHash';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
@@ -23,11 +28,6 @@ import type { InfoFormValues } from '@/components/checkout/infoForm';
 import { CardBrandStack, CardForm, CardFormSkeleton } from './cardForm';
 import { IframeStep } from './iframeStep';
 import { CheckoutResultBadge, type CheckoutResult } from './result';
-import {
-  readAgentAuthorization,
-  verifyAgentAuthorization,
-  type AgentAuthorizationResult,
-} from './agentAuthorization';
 
 declare global {
   namespace JSX {
@@ -72,25 +72,42 @@ const DEMO_INFO: InfoFormValues = {
 
 const SUCCESS_STATUSES = new Set(['CAPTURED', 'AUTHORIZED']);
 
+// The card-token webhook that links the tokenized card to the consent can lag a
+// beat behind the CIT success, so the agentic service may briefly reject the
+// passkey options request. Retry a few times before giving up.
+const OPTIONS_RETRIES = 5;
+const OPTIONS_RETRY_DELAY_MS = 1500;
+
+const wait = (ms: number) =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, ms);
+  });
+
+type Consent = {
+  consentId: string;
+  intentId: string;
+  products: AgenticProduct[];
+  amount: string;
+  currency: string;
+};
+
 type Step =
-  | { kind: 'loading-methods' }
+  | { kind: 'loading' }
   | { kind: 'ready' }
   | { kind: 'apple-pay'; phase: 'sheet' | 'processing' }
   | { kind: 'card-paying' }
-  | { kind: 'mit'; phase: 'authorizing' | 'paying' }
   | { kind: 'iframe-3ds'; intentId: string; url: string }
+  | { kind: 'authorize'; phase: 'idle' | 'passkey' }
   | { kind: 'done'; result: CheckoutResult };
 
 export function Checkout({
   customerId,
   paymentType,
   onComplete,
-  onAgentAuthorized,
 }: {
   customerId: string;
   paymentType?: 'card' | 'apple_pay';
   onComplete: (result: CheckoutResult) => void;
-  onAgentAuthorized?: (result: AgentAuthorizationResult) => void;
 }) {
   const { t, i18n } = useTranslation();
   const cart = useShoppingCart(s => s.cart);
@@ -106,38 +123,68 @@ export function Checkout({
   currencyRef.current = currency;
   totalRef.current = totalPrice;
 
-  const [step, setStep] = useState<Step>({ kind: 'loading-methods' });
+  const [step, setStep] = useState<Step>({ kind: 'loading' });
   const [error, setError] = useState<string | null>(null);
   const [nativePayData, setNativePayData] = useState<Record<
     string,
     any
   > | null>(null);
+  const [savedCards, setSavedCards] = useState<Card[]>([]);
 
-  const isAgentAuthorized = !!readAgentAuthorization(customerId);
+  // The agentic consent + zero-auth intent, created up front for the card flow.
+  const consentRef = useRef<Consent | null>(null);
+
   const showApplePay = paymentType !== 'card';
   const showCard = paymentType !== 'apple_pay';
 
   useEffect(() => {
-    if (!showApplePay) {
-      setStep({ kind: 'ready' });
-      return;
-    }
     let cancelled = false;
     (async () => {
       try {
-        const response = await moneyHash.getMethods({
-          currency: currencyRef.current,
-          amount: totalRef.current,
-          operation: 'purchase',
-          customer: customerId,
-        });
-        if (cancelled) return;
-        const applePay = response.expressMethods.find(
-          m => m.id === 'APPLE_PAY',
-        );
-        setNativePayData(applePay?.nativePayData ?? null);
+        // Fetch the customer's methods — saved cards (for the card flow) and the
+        // Apple Pay express method.
+        try {
+          const response = await moneyHash.getMethods({
+            currency: currencyRef.current,
+            amount: totalRef.current,
+            operation: 'purchase',
+            customer: customerId,
+          });
+          if (cancelled) return;
+          if (showCard) setSavedCards(response.savedCards ?? []);
+          if (showApplePay) {
+            const applePay = response.expressMethods.find(
+              m => m.id === 'APPLE_PAY',
+            );
+            setNativePayData(applePay?.nativePayData ?? null);
+          }
+        } catch {
+          // Non-fatal — fall back to new-card entry / no Apple Pay.
+        }
+
+        // The card flow authorizes the agent through an agentic consent.
+        if (showCard) {
+          const products = buildAgenticProducts();
+          const consentCurrency = currencyRef.current;
+          const amount = totalRef.current.toFixed(2);
+          const { consentId, intentId } = await createAgenticConsent({
+            customerId,
+            currency: consentCurrency,
+            products,
+          });
+          if (cancelled) return;
+          consentRef.current = {
+            consentId,
+            intentId,
+            products,
+            amount,
+            currency: consentCurrency,
+          };
+        }
       } catch {
-        // Silently ignore — we just won't show Apple Pay if the lookup fails.
+        if (!cancelled) {
+          setError(t('chatBot.checkout.errors.consentFailed'));
+        }
       } finally {
         if (!cancelled) setStep({ kind: 'ready' });
       }
@@ -145,7 +192,31 @@ export function Checkout({
     return () => {
       cancelled = true;
     };
-  }, [customerId, showApplePay]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerId, showApplePay, showCard]);
+
+  const buildAgenticProducts = (): AgenticProduct[] =>
+    cartRef.current.map(product => ({
+      name: product.nameKey,
+      amount: String(product.price[currencyRef.current]),
+      qty: product.quantity,
+    }));
+
+  // Rich snapshot for the receipt UI (images, resolved names) — captured before
+  // finish() empties the cart. The backend keys this by consentId and renders it
+  // as the receipt for both immediate and deferred agentic charges.
+  const buildReceiptItems = () => {
+    const snapshotCurrency = currencyRef.current;
+    return cartRef.current.map(p => ({
+      id: p.id,
+      name: p.name,
+      color: p.color,
+      imageSrc: p.imageSrc,
+      imageAlt: p.imageAlt,
+      quantity: p.quantity,
+      price: p.price[snapshotCurrency],
+    }));
+  };
 
   const buildProductItems = () =>
     cartRef.current.map(product => ({
@@ -180,26 +251,20 @@ export function Checkout({
 
   const finish = (result: CheckoutResult) => {
     setStep({ kind: 'done', result });
-    if (result.status === 'success') emptyCart();
+    if (result.status === 'success' || result.status === 'authorized') {
+      emptyCart();
+    }
     onComplete(result);
   };
 
-  const routeIntentDetails = (intentDetails: IntentDetails<'payment'>) => {
-    const { paymentStatus, state, stateDetails, intent, transaction } =
-      intentDetails;
+  // Route the result of the zero-auth (CIT) card authorization. On success the
+  // card is tokenized and we move on to the passkey / agent-authorization step.
+  const routeCitDetails = (intentDetails: IntentDetails<'payment'>) => {
+    const { paymentStatus, state, stateDetails, intent } = intentDetails;
 
-    if (
-      paymentStatus.status === 'CAPTURED' ||
-      paymentStatus.status === 'AUTHORIZED'
-    ) {
-      if (transaction?.id) {
-        finish(successResult(transaction.id, 'card'));
-      } else {
-        finish({
-          status: 'cancelled',
-          message: t('chatBot.checkout.errors.unexpectedState'),
-        });
-      }
+    if (SUCCESS_STATUSES.has(paymentStatus.status)) {
+      setError(null);
+      setStep({ kind: 'authorize', phase: 'idle' });
       return;
     }
 
@@ -244,24 +309,28 @@ export function Checkout({
   };
 
   const handleCardPay = async (cardData: CardData) => {
+    const consent = consentRef.current;
+    if (!consent) {
+      setError(t('chatBot.checkout.errors.consentFailed'));
+      return;
+    }
+
     setStep({ kind: 'card-paying' });
     setError(null);
     try {
-      const response = await createIntent({
-        type: 'cit',
-        customerId,
-        backgroundColor: theme === 'dark' ? '%23000A14' : 'white',
-        amount: totalRef.current,
-        currency: currencyRef.current,
-        productItems: buildProductItems(),
+      // The agentic consent intent has no preselected method — pick CARD, then
+      // pay it to tokenize the new card (zero-auth CIT).
+      await moneyHash.proceedWith({
+        type: 'method',
+        id: 'CARD',
+        intentId: consent.intentId,
       });
-      const intentId = response.data.id;
       const intentDetails = await moneyHash.cardForm.pay({
-        intentId,
+        intentId: consent.intentId,
         cardData,
         billingData: DEMO_INFO as unknown as Record<string, unknown>,
       });
-      routeIntentDetails(intentDetails);
+      routeCitDetails(intentDetails);
     } catch (err: any) {
       setStep({ kind: 'ready' });
       const errors = err?.response?.data?.status?.errors?.[0];
@@ -282,57 +351,110 @@ export function Checkout({
     }
   };
 
-  const handleMITConfirm = async () => {
-    setError(null);
-    setStep({ kind: 'mit', phase: 'authorizing' });
-
-    const authResult = await verifyAgentAuthorization(customerId);
-    if (authResult.status !== 'authorized') {
-      const message =
-        authResult.status === 'unsupported'
-          ? t('chatBot.checkout.errors.biometricUnavailableShort')
-          : authResult.reason ||
-            t('chatBot.checkout.errors.authorizationCancelled');
-      setStep({ kind: 'ready' });
-      finish({ status: 'cancelled', message });
+  const handleSavedCardPay = async (cardId: string, cvv: string) => {
+    const consent = consentRef.current;
+    if (!consent) {
+      setError(t('chatBot.checkout.errors.consentFailed'));
       return;
     }
 
-    setStep({ kind: 'mit', phase: 'paying' });
+    setStep({ kind: 'card-paying' });
+    setError(null);
     try {
-      const response = await createIntent({
-        type: 'mit',
-        customerId,
-        backgroundColor: theme === 'dark' ? '%23000A14' : 'white',
-        amount: totalRef.current,
-        currency: currencyRef.current,
-        productItems: buildProductItems(),
+      // Pay the zero-auth intent with a saved card, passing the CVV as metadata.
+      const intentDetails = await moneyHash.proceedWith({
+        type: 'savedCard',
+        id: cardId,
+        intentId: consent.intentId,
+        metaData: { cvv },
       });
-
-      const {
-        id,
-        payment_status: paymentStatus,
-        active_transaction: activeTransaction,
-      } = response.data;
-
-      if (SUCCESS_STATUSES.has(paymentStatus.status)) {
-        finish(successResult(activeTransaction?.id || id, 'card'));
+      routeCitDetails(intentDetails);
+    } catch (err: any) {
+      setStep({ kind: 'ready' });
+      const errors = err?.response?.data?.status?.errors?.[0];
+      if (errors) {
+        toast.error(Object.values(errors).join(', '));
+        setError(t('chatBot.checkout.errors.couldNotComplete'));
         return;
       }
+      setError(t('chatBot.checkout.errors.paymentFailed'));
+    }
+  };
 
-      setStep({ kind: 'ready' });
-      finish({
-        status: 'cancelled',
-        message: t('chatBot.checkout.errors.paymentNotCompleted', {
-          status: paymentStatus.status,
-        }),
+  const generateOptionsWithRetry = async (consentId: string) => {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < OPTIONS_RETRIES; attempt += 1) {
+      try {
+        // Sequential by design — retry only after the previous attempt settles.
+        // eslint-disable-next-line no-await-in-loop
+        return await moneyHash.agentic.generatePassKeyOptions({ consentId });
+      } catch (err) {
+        lastError = err;
+        // eslint-disable-next-line no-await-in-loop
+        if (attempt < OPTIONS_RETRIES - 1) await wait(OPTIONS_RETRY_DELAY_MS);
+      }
+    }
+    throw lastError;
+  };
+
+  // Ask the customer to authorize the agent with a passkey. Once the consent is
+  // AUTHORIZED we hand back to the agent — it executes the payment itself with a
+  // server-side tool, so the frontend does not run the charge.
+  const handleAuthorizeAgent = async () => {
+    const consent = consentRef.current;
+    if (!consent) {
+      setError(t('chatBot.checkout.errors.consentFailed'));
+      return;
+    }
+
+    setError(null);
+    setStep({ kind: 'authorize', phase: 'passkey' });
+
+    try {
+      const options = await generateOptionsWithRetry(consent.consentId);
+      const credential = await moneyHash.agentic.authenticatePassKey(options);
+      if (!credential) {
+        setStep({ kind: 'authorize', phase: 'idle' });
+        setError(t('chatBot.checkout.errors.passkeyCancelled'));
+        return;
+      }
+      await moneyHash.agentic.verifyPassKeyAuthentication({
+        consentId: consent.consentId,
+        credential,
+      });
+
+      // Capture the receipt snapshot before finish() empties the cart. The
+      // backend renders it as the receipt once the agent executes the charge
+      // (immediately, or later for a deferred charge). Fire-and-forget.
+      saveReceiptDraft({
+        consentId: consent.consentId,
+        customerId,
+        currency: consent.currency,
+        total: totalRef.current,
+        items: buildReceiptItems(),
       });
     } catch (err: any) {
-      const errors = err?.response?.data?.status?.errors?.[0];
-      if (errors) toast.error(Object.values(errors).join(', '));
-      setStep({ kind: 'ready' });
-      setError(t('chatBot.checkout.errors.couldNotComplete'));
+      setStep({ kind: 'authorize', phase: 'idle' });
+      if (
+        err instanceof Error &&
+        (err.name === 'NotAllowedError' || err.name === 'AbortError')
+      ) {
+        setError(t('chatBot.checkout.errors.passkeyCancelled'));
+        return;
+      }
+      setError(t('chatBot.checkout.errors.passkeyFailed'));
+      return;
     }
+
+    // Consent is authorized — report it back so the agent completes the payment.
+    finish({
+      status: 'authorized',
+      consentId: consent.consentId,
+      amount: consent.amount,
+      currency: consent.currency,
+      total: totalRef.current,
+      products: consent.products,
+    });
   };
 
   const handleApplePayClick = () => {
@@ -440,7 +562,7 @@ export function Checkout({
     session.begin();
   };
 
-  if (step.kind === 'loading-methods') {
+  if (step.kind === 'loading') {
     return <CardFormSkeleton />;
   }
 
@@ -449,30 +571,25 @@ export function Checkout({
       <IframeStep
         intentId={step.intentId}
         url={step.url}
-        onIntentDetails={routeIntentDetails}
+        onIntentDetails={routeCitDetails}
         onError={message => finish({ status: 'cancelled', message })}
       />
     );
   }
 
   if (step.kind === 'done') {
-    return (
-      <CheckoutResultBadge
-        customerId={customerId}
-        output={step.result}
-        onAgentAuthorized={onAgentAuthorized}
-      />
-    );
+    return <CheckoutResultBadge output={step.result} />;
   }
 
   const isWorking =
     step.kind === 'apple-pay' ||
     step.kind === 'card-paying' ||
-    step.kind === 'mit';
+    (step.kind === 'authorize' && step.phase !== 'idle');
 
   const onlyApplePay = paymentType === 'apple_pay';
   const showApplePayButton = showApplePay && !!nativePayData;
-  const showDivider = showApplePayButton && showCard;
+  const inAuthorizeStep = step.kind === 'authorize';
+  const showDivider = showApplePayButton && showCard && !inAuthorizeStep;
 
   return (
     <div
@@ -480,19 +597,11 @@ export function Checkout({
       aria-busy={isWorking}
       className={cn(
         'w-full overflow-hidden rounded-xl border bg-background shadow-sm',
-        isAgentAuthorized && showCard
-          ? 'border-emerald-500/30'
-          : 'border-border/60',
+        inAuthorizeStep ? 'border-emerald-500/30' : 'border-border/60',
       )}
     >
       <CheckoutHeader
-        variant={
-          onlyApplePay
-            ? 'applePay'
-            : isAgentAuthorized && showCard
-            ? 'mit'
-            : 'card'
-        }
+        variant={inAuthorizeStep ? 'agent' : onlyApplePay ? 'applePay' : 'card'}
       />
 
       <div
@@ -501,34 +610,38 @@ export function Checkout({
           isWorking && 'pointer-events-none opacity-80',
         )}
       >
-        {showApplePayButton && (
-          <ApplePayActionButton
-            onClick={handleApplePayClick}
-            disabled={isWorking}
-            phase={step.kind === 'apple-pay' ? step.phase : 'idle'}
-            theme={theme}
-            language={i18n.language}
+        {inAuthorizeStep ? (
+          <AuthorizeAgentSection
+            total={totalPrice}
+            currency={currency}
+            onAuthorize={handleAuthorizeAgent}
+            phase={step.phase}
           />
+        ) : (
+          <>
+            {showApplePayButton && (
+              <ApplePayActionButton
+                onClick={handleApplePayClick}
+                disabled={isWorking}
+                phase={step.kind === 'apple-pay' ? step.phase : 'idle'}
+                theme={theme}
+                language={i18n.language}
+              />
+            )}
+
+            {showDivider && <OrDivider />}
+
+            {showCard && (
+              <CardPaymentSection
+                key={`${theme}-${i18n.language}`}
+                savedCards={savedCards}
+                onPaySaved={handleSavedCardPay}
+                onPayNew={handleCardPay}
+                isSubmitting={step.kind === 'card-paying'}
+              />
+            )}
+          </>
         )}
-
-        {showDivider && <OrDivider />}
-
-        {showCard &&
-          (isAgentAuthorized ? (
-            <MITSection
-              total={totalPrice}
-              currency={currency}
-              onConfirm={handleMITConfirm}
-              disabled={isWorking || cart.length === 0}
-              phase={step.kind === 'mit' ? step.phase : 'idle'}
-            />
-          ) : (
-            <CardForm
-              key={`${theme}-${i18n.language}`}
-              onPay={handleCardPay}
-              isSubmitting={step.kind === 'card-paying'}
-            />
-          ))}
 
         {error && (
           <div
@@ -562,10 +675,14 @@ export function Checkout({
   );
 }
 
-function CheckoutHeader({ variant }: { variant: 'card' | 'mit' | 'applePay' }) {
+function CheckoutHeader({
+  variant,
+}: {
+  variant: 'card' | 'agent' | 'applePay';
+}) {
   const { t } = useTranslation();
 
-  if (variant === 'mit') {
+  if (variant === 'agent') {
     return (
       <div className="flex items-center gap-2.5 bg-emerald-500/[0.06] px-3 py-2.5">
         <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/30">
@@ -576,10 +693,10 @@ function CheckoutHeader({ variant }: { variant: 'card' | 'mit' | 'applePay' }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-emerald-700/80 dark:text-emerald-400/80">
-            {t('chatBot.checkout.mit.agentAuthorized')}
+            {t('chatBot.checkout.agentic.authorizeTitle')}
           </p>
           <p className="truncate text-xs font-semibold text-foreground">
-            {t('chatBot.checkout.mit.oneTapCheckout')}
+            {t('chatBot.checkout.agentic.authorizeSubtitle')}
           </p>
         </div>
       </div>
@@ -716,29 +833,27 @@ function OrDivider() {
   );
 }
 
-function MITSection({
+function AuthorizeAgentSection({
   total,
   currency,
-  onConfirm,
-  disabled,
+  onAuthorize,
   phase,
 }: {
   total: number;
   currency: string;
-  onConfirm: () => void;
-  disabled: boolean;
-  phase: 'idle' | 'authorizing' | 'paying';
+  onAuthorize: () => void;
+  phase: 'idle' | 'passkey';
 }) {
   const { t } = useTranslation();
   return (
     <div className="space-y-2">
       <p className="text-[11px] leading-snug text-muted-foreground">
-        {t('chatBot.checkout.mit.explainer')}
+        {t('chatBot.checkout.agentic.authorizeExplainer')}
       </p>
 
       <div className="flex items-baseline justify-between rounded-md border border-dashed border-border/80 bg-muted/20 px-2.5 py-2">
         <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          {t('chatBot.checkout.mit.total')}
+          {t('chatBot.checkout.agentic.total')}
         </span>
         <span className="flex items-baseline gap-1">
           <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
@@ -750,27 +865,176 @@ function MITSection({
         </span>
       </div>
 
-      <Button onClick={onConfirm} disabled={disabled} className="w-full">
-        {phase === 'authorizing' ? (
+      <Button
+        onClick={onAuthorize}
+        disabled={phase !== 'idle'}
+        className="w-full"
+      >
+        {phase === 'passkey' ? (
           <>
             <FingerprintIcon
               className="me-1.5 size-3.5 animate-pulse"
               strokeWidth={2.5}
             />
-            {t('chatBot.checkout.mit.verifying')}
-          </>
-        ) : phase === 'paying' ? (
-          <>
-            <LoaderIcon className="me-1.5 size-3.5 animate-spin" />
-            {t('chatBot.checkout.mit.confirming')}
+            {t('chatBot.checkout.agentic.verifying')}
           </>
         ) : (
           <>
             <FingerprintIcon className="me-1.5 size-3.5" strokeWidth={2.5} />
-            {t('chatBot.checkout.mit.confirmPurchase')}
+            {t('chatBot.checkout.agentic.authorizeCta')}
           </>
         )}
       </Button>
     </div>
+  );
+}
+
+// Lets the customer pay the CIT with a saved card (tabs → card tiles + CVV) or
+// a new card.
+function CardPaymentSection({
+  savedCards,
+  onPaySaved,
+  onPayNew,
+  isSubmitting,
+}: {
+  savedCards: Card[];
+  onPaySaved: (cardId: string, cvv: string) => void;
+  onPayNew: (cardData: CardData) => Promise<void>;
+  isSubmitting: boolean;
+}) {
+  const { t } = useTranslation();
+  const [tab, setTab] = useState<'saved' | 'new'>(
+    savedCards.length ? 'saved' : 'new',
+  );
+  const [selected, setSelected] = useState<string>(savedCards[0]?.id ?? '');
+  const [cvv, setCvv] = useState('');
+
+  // No saved cards → straight to new-card entry, no tabs.
+  if (!savedCards.length) {
+    return <CardForm onPay={onPayNew} isSubmitting={isSubmitting} />;
+  }
+
+  const selectedCard = savedCards.find(c => c.id === selected);
+  const cvvValid = cvv.length >= 3;
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted/40 p-1">
+        {(['saved', 'new'] as const).map(key => (
+          <button
+            key={key}
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => setTab(key)}
+            className={cn(
+              'rounded-md py-1.5 text-[11px] font-semibold transition-colors disabled:opacity-60',
+              tab === key
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {key === 'saved'
+              ? t('chatBot.checkout.card.savedCards')
+              : t('chatBot.checkout.card.newCard')}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'saved' ? (
+        <div className="space-y-2.5">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {savedCards.map(card => (
+              <SavedCardTile
+                key={card.id}
+                card={card}
+                selected={selected === card.id}
+                disabled={isSubmitting}
+                onSelect={() => setSelected(card.id)}
+              />
+            ))}
+          </div>
+
+          <div className="flex items-end gap-2">
+            <label className="shrink-0">
+              <span className="mb-1 block text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+                {t('chatBot.checkout.card.cvv')}
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="cc-csc"
+                maxLength={4}
+                value={cvv}
+                onChange={e => setCvv(e.target.value.replace(/\D/g, ''))}
+                placeholder="•••"
+                disabled={isSubmitting}
+                className="h-9 w-16 rounded-md border border-border/60 bg-background text-center font-mono text-sm tabular-nums tracking-widest text-foreground outline-none ring-primary/30 transition placeholder:tracking-normal focus:border-primary/50 focus:ring-2"
+              />
+            </label>
+            <Button
+              className="h-9 flex-1"
+              disabled={isSubmitting || !cvvValid || !selectedCard}
+              onClick={() => selectedCard && onPaySaved(selectedCard.id, cvv)}
+            >
+              {isSubmitting ? (
+                <>
+                  <LoaderIcon className="me-1.5 size-3.5 animate-spin" />
+                  {t('chatBot.checkout.card.processing')}
+                </>
+              ) : (
+                t('chatBot.checkout.card.addCard')
+              )}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <CardForm onPay={onPayNew} isSubmitting={isSubmitting} />
+      )}
+    </div>
+  );
+}
+
+function SavedCardTile({
+  card,
+  selected,
+  disabled,
+  onSelect,
+}: {
+  card: Card;
+  selected: boolean;
+  disabled: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onSelect}
+      className={cn(
+        'relative flex h-24 w-40 shrink-0 flex-col justify-between rounded-xl border bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-fuchsia-500/10 p-3 text-left transition-all disabled:opacity-60',
+        selected
+          ? 'border-primary/60 ring-2 ring-primary/30'
+          : 'border-border/60 hover:border-border',
+      )}
+    >
+      <span className="flex items-start justify-between">
+        <span className="text-[11px] font-bold uppercase tracking-wide text-foreground">
+          {card.brand}
+        </span>
+        {selected && (
+          <span className="flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <CheckIcon className="size-3" strokeWidth={3} />
+          </span>
+        )}
+      </span>
+      <span className="block">
+        <span className="block font-mono text-xs tracking-widest text-foreground">
+          •••• {card.last4}
+        </span>
+        <span className="block font-mono text-[10px] tabular-nums text-muted-foreground">
+          {card.expiryMonth}/{card.expiryYear}
+        </span>
+      </span>
+    </button>
   );
 }

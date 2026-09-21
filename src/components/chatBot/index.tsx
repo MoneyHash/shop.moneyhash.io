@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +17,7 @@ import { ProductsList, ProductsListSkeleton } from './clientTools/ProductsList';
 import { AddToCartConfirmation } from './clientTools/AddToCartConfirmation';
 import { RemoveFromCartConfirmation } from './clientTools/RemoveFromCartConfirmation';
 import { ClearCartConfirmation } from './clientTools/ClearCartConfirmation';
-import type { ChatUIMessage } from './types';
+import type { ChatUIMessage, Receipt } from './types';
 import {
   PromptInput,
   PromptInputTextarea,
@@ -33,9 +33,21 @@ import { Message, MessageContent, MessageResponse } from './message';
 import { TypingIndicator } from './typingIndicator';
 import { Checkout } from './checkout';
 import { CheckoutResultBadge, type CheckoutResult } from './checkout/result';
+import { AgenticReceipt } from './AgenticReceipt';
 import { AGENT_API_BASE_URL } from './agentApi';
+import {
+  loadPendingCharges,
+  savePendingCharges,
+  type PendingCharge,
+} from './pendingReceipts';
 import useShoppingCart from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
+
+// How often to poll for a scheduled-charge receipt once one is due.
+const POLL_INTERVAL_MS = 4000;
+// Stop polling for a charge this long after its due time — guards against a lost
+// receipt keeping the poll loop alive indefinitely.
+const GIVE_UP_MS = 10 * 60 * 1000; // 10 minutes
 
 export default function ChatBot({ customerId }: { customerId: string }) {
   const { t, i18n } = useTranslation();
@@ -43,6 +55,12 @@ export default function ChatBot({ customerId }: { customerId: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
   const [view, setView] = useState<'chat' | 'cart'>('chat');
+  // Scheduled ("pay later") charges we're still awaiting a receipt for. Seeded
+  // from localStorage so a reload keeps polling; polling only runs while this is
+  // non-empty (see the effects below).
+  const [pendingCharges, setPendingCharges] = useState<PendingCharge[]>(() =>
+    typeof window === 'undefined' ? [] : loadPendingCharges(customerId),
+  );
   const cart = useShoppingCart(s => s.cart);
   const currency = useCurrency(s => s.currency);
   const currencyRef = useRef(currency);
@@ -51,7 +69,7 @@ export default function ChatBot({ customerId }: { customerId: string }) {
   const languageRef = useRef(language);
   languageRef.current = language;
 
-  const { messages, sendMessage, status, stop, addToolOutput } =
+  const { messages, sendMessage, status, stop, addToolOutput, setMessages } =
     useChat<ChatUIMessage>({
       transport: new DefaultChatTransport({
         api: `${AGENT_API_BASE_URL}/chat`,
@@ -137,6 +155,132 @@ export default function ChatBot({ customerId }: { customerId: string }) {
         }
       },
     });
+
+  // Reload the pending list when the customer changes, and persist it whenever
+  // it changes so a page reload can resume polling.
+  useEffect(() => {
+    setPendingCharges(loadPendingCharges(customerId));
+  }, [customerId]);
+  useEffect(() => {
+    savePendingCharges(customerId, pendingCharges);
+  }, [customerId, pendingCharges]);
+
+  // Register a scheduled charge to await once executeAgenticPayment reports it
+  // was deferred. Immediate charges return their receipt inline, so they're not
+  // tracked here and never trigger polling.
+  useEffect(() => {
+    // consentIds whose receipt has already landed (inline SUCCEEDED result or a
+    // polled data-receipt). We must skip these: the SCHEDULED tool part lingers
+    // in the message history forever, so without this guard, appending a receipt
+    // re-fires this effect and re-adds the very charge the poll just resolved —
+    // bouncing it back into localStorage and keeping the poll loop alive.
+    const resolved = new Set<string>();
+    const scheduled: PendingCharge[] = [];
+    messages
+      .flatMap(message => message.parts)
+      .forEach(part => {
+        if (part.type === 'data-receipt') {
+          resolved.add(part.data.consentId);
+        } else if (
+          part.type === 'tool-executeAgenticPayment' &&
+          part.state === 'output-available'
+        ) {
+          if (part.output.status === 'SUCCEEDED' && part.output.receipt) {
+            resolved.add(part.output.receipt.consentId);
+          } else if (part.output.status === 'SCHEDULED') {
+            // Anchor the due time to the client clock via the relative delay so
+            // it stays consistent with the Date.now() checks in the poll effect.
+            const delayMs = Math.max(0, (part.output.delaySeconds ?? 0) * 1000);
+            scheduled.push({
+              consentId: part.input.consentId,
+              dueAt: new Date(Date.now() + delayMs).toISOString(),
+            });
+          }
+        }
+      });
+    const toAdd = scheduled.filter(s => !resolved.has(s.consentId));
+    if (toAdd.length === 0) return;
+    setPendingCharges(prev => {
+      const seen = new Set(prev.map(p => p.consentId));
+      const additions = toAdd.filter(s => !seen.has(s.consentId));
+      return additions.length === 0 ? prev : [...prev, ...additions];
+    });
+  }, [messages]);
+
+  // Poll the backend for scheduled-charge receipts — but ONLY while we're
+  // actually waiting on one. The backend executes due charges *on poll*, so we
+  // wait until the earliest charge is due before the first request, then poll on
+  // an interval and drop each charge as its receipt arrives. When nothing is
+  // pending, no requests are made at all. Polling (not SSE) keeps the backend
+  // serverless-friendly on Vercel.
+  useEffect(() => {
+    if (!customerId || pendingCharges.length === 0) return;
+
+    let cancelled = false;
+
+    const appendReceipt = (receipt: Receipt) => {
+      const messageId = `receipt-${receipt.id}`;
+      setMessages(prev => {
+        // De-dupe: a receipt sticks around until the poll that returns it acks
+        // it, so overlapping polls can hand back the same one twice.
+        if (prev.some(m => m.id === messageId)) return prev;
+        return [
+          ...prev,
+          {
+            id: messageId,
+            role: 'assistant',
+            parts: [{ type: 'data-receipt', id: receipt.id, data: receipt }],
+          },
+        ];
+      });
+    };
+
+    const poll = async () => {
+      try {
+        const res = await fetch(
+          `${AGENT_API_BASE_URL}/receipts/poll?customerId=${encodeURIComponent(
+            customerId,
+          )}`,
+        );
+        if (!res.ok) return;
+        const { receipts } = (await res.json()) as { receipts: Receipt[] };
+        if (cancelled) return;
+        receipts.forEach(appendReceipt);
+
+        // Stop awaiting charges whose receipt just arrived, and give up on any
+        // that are long overdue so a lost receipt can't poll forever.
+        const arrived = new Set(receipts.map(r => r.consentId));
+        setPendingCharges(prev => {
+          const next = prev.filter(
+            p =>
+              !arrived.has(p.consentId) &&
+              Date.now() < Date.parse(p.dueAt) + GIVE_UP_MS,
+          );
+          return next.length === prev.length ? prev : next;
+        });
+      } catch {
+        // Ignore transient failures; the next tick retries.
+      }
+    };
+
+    // Hold off until the earliest charge is due (past-due charges start now).
+    const earliestDue = Math.min(
+      ...pendingCharges.map(p => Date.parse(p.dueAt)),
+    );
+    const startDelay = Math.max(0, earliestDue - Date.now());
+
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const startTimer = setTimeout(() => {
+      poll();
+      interval = setInterval(poll, POLL_INTERVAL_MS);
+    }, startDelay);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(startTimer);
+      if (interval) clearInterval(interval);
+    };
+  }, [customerId, pendingCharges, setMessages]);
 
   const lastMessage = messages[messages.length - 1];
   const hasPendingCheckout =
@@ -280,7 +424,6 @@ export default function ChatBot({ customerId }: { customerId: string }) {
                               return (
                                 <CheckoutResultBadge
                                   key={`${id}-${i}`}
-                                  customerId={customerId}
                                   output={part.output}
                                 />
                               );
@@ -288,6 +431,29 @@ export default function ChatBot({ customerId }: { customerId: string }) {
 
                             return null;
                           }
+
+                          case 'tool-executeAgenticPayment': {
+                            if (
+                              part.state === 'output-available' &&
+                              part.output.status === 'SUCCEEDED' &&
+                              part.output.receipt
+                            )
+                              return (
+                                <AgenticReceipt
+                                  key={`${id}-${i}`}
+                                  receipt={part.output.receipt}
+                                />
+                              );
+                            return null;
+                          }
+
+                          case 'data-receipt':
+                            return (
+                              <AgenticReceipt
+                                key={`${id}-${i}`}
+                                receipt={part.data}
+                              />
+                            );
 
                           default:
                             return null;

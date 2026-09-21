@@ -237,8 +237,14 @@
         "popularPicks": "Popular picks"
       },
       "popularPicks": {
-        "shirts": { "label": "Shirts", "prompt": "Show me your shirts" },
-        "bags": { "label": "Bags", "prompt": "What bags do you have?" },
+        "shirts": {
+          "label": "Shirts",
+          "prompt": "Show me your shirts"
+        },
+        "bags": {
+          "label": "Bags",
+          "prompt": "What bags do you have?"
+        },
         "underHundred": {
           "label": "Under $100",
           "prompt": "Show me items under $100"
@@ -291,7 +297,11 @@
         "authenticationFailed": "Authentication failed",
         "applePayUnavailable": "Apple Pay is not available right now",
         "applePayMerchantValidationFailed": "Couldn't validate Apple Pay merchant",
-        "applePayPaymentFailed": "Apple Pay payment failed"
+        "applePayPaymentFailed": "Apple Pay payment failed",
+        "consentFailed": "Couldn't start the agentic checkout. Please try again.",
+        "passkeyCancelled": "Passkey authorization was cancelled. Please try again.",
+        "passkeyFailed": "Couldn't verify your passkey. Please try again.",
+        "executeFailed": "Couldn't complete the payment. Please try again."
       },
       "applePay": {
         "title": "Apple Pay",
@@ -303,25 +313,6 @@
       },
       "dismiss": "Dismiss",
       "or": "or",
-      "agentAuth": {
-        "authorized": "Agent authorized",
-        "oneTapEnabled": "One-tap checkout enabled on this device",
-        "revoke": "Revoke",
-        "verifying": "Verifying…",
-        "speedUp": "Speed up future checkouts",
-        "biometricsHint": "Authorize the assistant with biometrics — stays on this device",
-        "confirmTouchId": "Confirm with Touch ID / Face ID"
-      },
-      "mit": {
-        "agentAuthorized": "Agent authorized",
-        "oneTapCheckout": "One-tap checkout",
-        "explainer": "Use the saved authorization on this device to charge your stored payment method. No card entry needed.",
-        "total": "Total",
-        "verifying": "Verifying...",
-        "confirming": "Confirming...",
-        "confirmPurchase": "Confirm purchase",
-        "cancel": "Cancel"
-      },
       "card": {
         "secureCheckout": "Secure checkout",
         "payWithCard": "Pay with your card",
@@ -330,10 +321,14 @@
         "cvv": "CVV",
         "expiry": "Expiry",
         "buyNow": "Buy now",
+        "addCard": "Add card",
         "processing": "Processing...",
         "cancel": "Cancel",
         "tls": "256-bit TLS",
-        "pci": "PCI DSS"
+        "pci": "PCI DSS",
+        "useNewCard": "Use a new card",
+        "savedCards": "Saved cards",
+        "newCard": "New card"
       },
       "result": {
         "cancelled": "Checkout cancelled",
@@ -341,6 +336,26 @@
         "thankYou": "Payment received — thank you",
         "total": "Total",
         "txnId": "Txn ID"
+      },
+      "receipt": {
+        "immediateTitle": "Payment complete",
+        "immediateSubtitle": "Your order is confirmed.",
+        "scheduledTitle": "Scheduled payment charged",
+        "scheduledSubtitle": "We charged your saved card as scheduled.",
+        "failedTitle": "Scheduled payment failed",
+        "failedSubtitle": "We couldn't complete your scheduled payment.",
+        "total": "Total",
+        "txnId": "Txn ID"
+      },
+      "agentic": {
+        "authorizeTitle": "Agentic checkout",
+        "authorizeSubtitle": "Authorize the assistant to pay",
+        "authorizeExplainer": "Your card is saved. Approve with a passkey to let the assistant complete this purchase on your behalf.",
+        "total": "Total",
+        "authorizeCta": "Authorize with passkey",
+        "verifying": "Verifying passkey…",
+        "authorizedTitle": "Authorized — placing your order",
+        "authorizedSubtitle": "The assistant is completing your payment"
       }
     }
   }

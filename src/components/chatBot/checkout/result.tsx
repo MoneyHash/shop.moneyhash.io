@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import { CheckIcon, CopyIcon, XCircleIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, SparklesIcon, XCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import {
-  AgentAuthorization,
-  type AgentAuthorizationResult,
-} from './agentAuthorization';
+import type { AgenticProduct } from './createAgenticConsent';
 
 export type ReceiptItem = {
   id: string;
@@ -26,26 +23,25 @@ export type CheckoutResult =
       items: ReceiptItem[];
       paymentMethod: 'card' | 'apple_pay';
     }
+  | {
+      // Consent authorized via passkey — the agent executes the payment itself.
+      status: 'authorized';
+      consentId: string;
+      amount: string;
+      currency: string;
+      total: number;
+      products: AgenticProduct[];
+    }
   | { status: 'cancelled'; message: string };
 
-export function CheckoutResultBadge({
-  customerId,
-  output,
-  onAgentAuthorized,
-}: {
-  customerId: string;
-  output: CheckoutResult;
-  onAgentAuthorized?: (result: AgentAuthorizationResult) => void;
-}) {
+export function CheckoutResultBadge({ output }: { output: CheckoutResult }) {
   const { t } = useTranslation();
   if (output.status === 'success') {
-    return (
-      <SuccessReceipt
-        {...output}
-        customerId={customerId}
-        onAgentAuthorized={onAgentAuthorized}
-      />
-    );
+    return <SuccessReceipt {...output} />;
+  }
+
+  if (output.status === 'authorized') {
+    return <AuthorizedBadge total={output.total} currency={output.currency} />;
   }
 
   return (
@@ -64,22 +60,55 @@ export function CheckoutResultBadge({
   );
 }
 
+function AuthorizedBadge({
+  total,
+  currency,
+}: {
+  total: number;
+  currency: string;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      data-fill-bubble
+      className="flex w-full items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.06] p-3 shadow-sm"
+    >
+      <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/30">
+        <SparklesIcon
+          className="size-3.5 text-emerald-700 dark:text-emerald-400"
+          strokeWidth={2.4}
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold text-foreground">
+          {t('chatBot.checkout.agentic.authorizedTitle')}
+        </p>
+        <p className="truncate text-[11px] text-muted-foreground">
+          {t('chatBot.checkout.agentic.authorizedSubtitle')}
+        </p>
+      </div>
+      <span className="flex shrink-0 items-baseline gap-1">
+        <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
+          {total.toFixed(2)}
+        </span>
+        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          {currency}
+        </span>
+      </span>
+    </div>
+  );
+}
+
 function SuccessReceipt({
-  customerId,
   transactionId,
   currency,
   total,
   items,
-  paymentMethod,
-  onAgentAuthorized,
 }: {
-  customerId: string;
   transactionId: string;
   currency: string;
   total: number;
   items: ReceiptItem[];
-  paymentMethod: 'card' | 'apple_pay';
-  onAgentAuthorized?: (result: AgentAuthorizationResult) => void;
 }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
@@ -190,13 +219,6 @@ function SuccessReceipt({
           )}
         </span>
       </button>
-
-      {paymentMethod !== 'apple_pay' && (
-        <AgentAuthorization
-          customerId={customerId}
-          onResult={onAgentAuthorized}
-        />
-      )}
     </div>
   );
 }
