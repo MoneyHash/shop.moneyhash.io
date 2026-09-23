@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import MoneyHash, { Method } from '@moneyhash/js-sdk/headless';
+import MoneyHash, {
+  Method,
+  IntentStateDetails,
+} from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { JsonEditor } from '@/components/jsonEditor';
@@ -189,6 +192,9 @@ export default function ApplePay() {
                       logJSON.error('Validate ApplePay Merchant Session', e);
                     });
 
+                let intentId = '';
+                let isRecovering = false;
+
                 session.onpaymentauthorized = async e => {
                   const applePayReceipt = {
                     receipt: JSON.stringify({ token: e.payment.token }),
@@ -196,45 +202,117 @@ export default function ApplePay() {
                       email: e.payment.shippingContact?.emailAddress,
                     },
                   };
-                  session.completePayment(ApplePaySession.STATUS_SUCCESS);
                   logJSON.response('ApplePay Receipt', applePayReceipt);
 
-                  let intentId;
-
-                  try {
-                    intentId = await axios
-                      .post(
-                        `${API_URLS[config.env]}/payments/intent/`,
-                        JSON.parse(config.intentConfig),
-                        {
-                          headers: {
-                            'x-api-key': config.apiKey,
+                  // Create the intent once. On auto-recovery retries we keep
+                  // paying for the same intent, so we don't create a new one.
+                  if (!intentId) {
+                    try {
+                      intentId = await axios
+                        .post(
+                          `${API_URLS[config.env]}/payments/intent/`,
+                          JSON.parse(config.intentConfig),
+                          {
+                            headers: {
+                              'x-api-key': config.apiKey,
+                            },
                           },
-                        },
-                      )
-                      .then(res => res.data.data.id);
-                  } catch (error) {
-                    toast.error('Failed to create intent, check logs');
-                    logJSON.error('Create Intent', error);
-                    return;
+                        )
+                        .then(res => res.data.data.id);
+                    } catch (error) {
+                      session.completePayment({
+                        status: ApplePaySession.STATUS_FAILURE,
+                        errors: [
+                          new ApplePayError(
+                            'unknown',
+                            undefined,
+                            'Failed to create payment. Please try again.',
+                          ),
+                        ],
+                      });
+                      toast.error('Failed to create intent, check logs');
+                      logJSON.error('Create Intent', error);
+                      return;
+                    }
                   }
 
                   try {
-                    await moneyHash.proceedWith({
-                      type: 'method',
-                      id: 'APPLE_PAY',
-                      intentId,
-                    });
+                    // On recovery retries the intent was already reset and
+                    // Apple Pay reselected, so only select it on first attempt.
+                    if (!isRecovering) {
+                      await moneyHash.proceedWith({
+                        type: 'method',
+                        id: 'APPLE_PAY',
+                        intentId,
+                      });
+                    }
 
                     const intentDetails = await moneyHash.submitPaymentReceipt({
                       nativeReceiptData: applePayReceipt,
                       intentId,
                     });
                     logJSON.response('Submit Receipt', intentDetails);
+
+                    // On a failed transaction MoneyHash returns `autoRecovery`
+                    // when the failure is eligible for re-authorization, meaning
+                    // we can collect another token from the user.
+                    const autoRecovery =
+                      intentDetails.state === 'TRANSACTION_FAILED'
+                        ? (
+                            intentDetails.stateDetails as IntentStateDetails<'TRANSACTION_FAILED'>
+                          )?.autoRecovery
+                        : null;
+
+                    if (autoRecovery) {
+                      logJSON.info(
+                        'Transaction failed, auto recovery available',
+                        autoRecovery,
+                      );
+
+                      // Reset the intent and reselect Apple Pay so the user can
+                      // authorize a new token for the same intent.
+                      await moneyHash.resetSelectedMethod(intentId);
+                      await moneyHash.proceedWith({
+                        type: 'method',
+                        id: 'APPLE_PAY',
+                        intentId,
+                      });
+                      isRecovering = true;
+
+                      // Keep the Apple Pay sheet open and surface the error so
+                      // the user can retry with a different card.
+                      session.completePayment({
+                        status: ApplePaySession.STATUS_FAILURE,
+                        errors: [
+                          new ApplePayError(
+                            'unknown',
+                            undefined,
+                            autoRecovery.errorMessage ||
+                              'Payment failed. Please try another card.',
+                          ),
+                        ],
+                      });
+                      if (autoRecovery.errorMessage) {
+                        toast.error(autoRecovery.errorMessage);
+                      }
+                      return;
+                    }
+
+                    session.completePayment(ApplePaySession.STATUS_SUCCESS);
                     toast.success(
                       `Submitted receipt successfully, check logs.`,
                     );
                   } catch (error) {
+                    session.completePayment({
+                      status: ApplePaySession.STATUS_FAILURE,
+                      errors: [
+                        new ApplePayError(
+                          'unknown',
+                          undefined,
+                          'Failed to submit payment. Please try again.',
+                        ),
+                      ],
+                    });
                     toast.error('Failed to submit receipt, check logs');
                     logJSON.error('Submit Receipt', error);
                   }
