@@ -12,10 +12,10 @@ export const localEnv = localStorage.getItem('env') || 'production';
 declare global {
   interface Window {
     switchEnvironment: (env: string) => void;
-    MONEYHASH_IFRAME_URL: string;
-    API_URL: string;
-    MONEYHASH_VAULT_INPUT_IFRAME_URL: string;
-    MONEYHASH_VAULT_API_URL: string;
+    MONEYHASH_IFRAME_URL?: string;
+    API_URL?: string;
+    MONEYHASH_VAULT_INPUT_IFRAME_URL?: string;
+    MONEYHASH_VAULT_API_URL?: string;
   }
 }
 
