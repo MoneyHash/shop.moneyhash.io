@@ -193,7 +193,6 @@ export default function ApplePay() {
                     });
 
                 let intentId = '';
-                let isRecovering = false;
 
                 session.onpaymentauthorized = async e => {
                   const applePayReceipt = {
@@ -237,15 +236,15 @@ export default function ApplePay() {
                   }
 
                   try {
-                    // On recovery retries the intent was already reset and
-                    // Apple Pay reselected, so only select it on first attempt.
-                    if (!isRecovering) {
-                      await moneyHash.proceedWith({
-                        type: 'method',
-                        id: 'APPLE_PAY',
-                        intentId,
-                      });
-                    }
+                    // Select Apple Pay right before submitting the receipt. On
+                    // the first attempt the method isn't selected yet, and on
+                    // recovery retries the previous selection was reset, so we
+                    // (re)select the method with the freshly authorized token.
+                    await moneyHash.proceedWith({
+                      type: 'method',
+                      id: 'APPLE_PAY',
+                      intentId,
+                    });
 
                     const intentDetails = await moneyHash.submitPaymentReceipt({
                       nativeReceiptData: applePayReceipt,
@@ -269,15 +268,11 @@ export default function ApplePay() {
                         autoRecovery,
                       );
 
-                      // Reset the intent and reselect Apple Pay so the user can
-                      // authorize a new token for the same intent.
+                      // Reset the selected method so the user can authorize a
+                      // new token for the same intent. We don't reselect here —
+                      // the method is selected again before the next submit once
+                      // a new token is authorized.
                       await moneyHash.resetSelectedMethod(intentId);
-                      await moneyHash.proceedWith({
-                        type: 'method',
-                        id: 'APPLE_PAY',
-                        intentId,
-                      });
-                      isRecovering = true;
 
                       // Keep the Apple Pay sheet open and surface the error so
                       // the user can retry with a different card.
