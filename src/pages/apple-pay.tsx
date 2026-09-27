@@ -288,7 +288,7 @@ export default function ApplePay() {
                         ],
                       });
                       if (autoRecovery.errorMessage) {
-                        toast.error(autoRecovery.errorMessage);
+                        toast.error(`UPDATED: ${autoRecovery.errorMessage}`);
                       }
                       return;
                     }
