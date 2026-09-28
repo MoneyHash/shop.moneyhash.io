@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import MoneyHash, {
   Method,
   IntentStateDetails,
@@ -18,6 +18,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/utils/cn';
 import { logJSON } from '@/utils/logJSON';
 
@@ -86,6 +93,19 @@ const moneyHash = new MoneyHash({
   publicApiKey: defaultPublicApiKey.production,
 });
 
+// Hardcoded Apple Pay native data used by the "Fixed Native Data" button, so we
+// can test the flow without depending on getMethods.
+const fixedNativePayData: NonNullable<Method['nativePayData']> = {
+  amount: 123,
+  country_code: 'AE',
+  currency_code: 'USD',
+  merchant_id: 'merchant.cko.selfserve.donttouch',
+  method_id: '9eYdqD9',
+  supported_capabilities: ['supportsCredit', 'supports3DS', 'supportsDebit'],
+  supported_networks: ['mada', 'amex', 'visa', 'masterCard'],
+  supported_regions: ['US', 'AE'],
+};
+
 export default function ApplePay() {
   const [config, setConfig] = useState<FormConfiguration>(() => ({
     intentConfig: defaultConfig,
@@ -138,6 +158,169 @@ export default function ApplePay() {
         setIsLoading(false);
       });
   }, [config]);
+
+  // Holds the intent id across Apple Pay sessions. On dialog-based recovery we
+  // keep paying for the same intent, so retries reuse this instead of creating
+  // a new one. Reset back to '' once a payment fully succeeds.
+  const dialogRecoveryIntentId = useRef('');
+  // When set, we render the recovery dialog with this error message and an
+  // Apple Pay button to retry the payment for the same intent.
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
+
+  // Starts an Apple Pay session for the dialog-based auto-recovery experience.
+  // Unlike the in-sheet recovery flow, on a recoverable failure this closes the
+  // Apple Pay sheet and surfaces the error in our own dialog, letting the user
+  // retry by opening a brand new session for the same intent.
+  const startDialogRecoverySession = () => {
+    if (!nativePayData) return;
+
+    let session: ApplePaySession;
+    try {
+      session = new ApplePaySession(3, {
+        countryCode: nativePayData.country_code,
+        currencyCode: nativePayData.currency_code,
+        supportedNetworks: nativePayData.supported_networks,
+        merchantCapabilities: ['supports3DS'],
+        total: {
+          label: 'Apple Pay',
+          type: 'final',
+          amount: `${nativePayData.amount}`,
+        },
+        requiredShippingContactFields: ['email'],
+      });
+    } catch (error) {
+      toast.error('Failed to create Apple Pay session, check logs.');
+      logJSON.error('Create ApplePay Session', error);
+      return;
+    }
+
+    // Hide the dialog while the Apple Pay sheet is presented. It reopens
+    // automatically if this attempt also fails with an auto-recovery error.
+    setRecoveryError(null);
+
+    session.onvalidatemerchant = e =>
+      moneyHash
+        .validateApplePayMerchantSession({
+          methodId: nativePayData.method_id,
+          validationUrl: e.validationURL,
+        })
+        .then(merchantSession =>
+          session.completeMerchantValidation(merchantSession),
+        )
+        .catch(e => {
+          session.completeMerchantValidation({});
+          toast.error('Failed to validate merchant session, check logs');
+          logJSON.error('Validate ApplePay Merchant Session', e);
+        });
+
+    session.onpaymentauthorized = async e => {
+      const applePayReceipt = {
+        receipt: JSON.stringify({ token: e.payment.token }),
+        receiptBillingData: {
+          email: e.payment.shippingContact?.emailAddress,
+        },
+      };
+      logJSON.response('ApplePay Receipt', applePayReceipt);
+
+      // Create the intent once. On recovery retries we keep paying for the
+      // same intent, so we don't create a new one.
+      if (!dialogRecoveryIntentId.current) {
+        try {
+          dialogRecoveryIntentId.current = await axios
+            .post(
+              `${API_URLS[config.env]}/payments/intent/`,
+              JSON.parse(config.intentConfig),
+              {
+                headers: {
+                  'x-api-key': config.apiKey,
+                },
+              },
+            )
+            .then(res => res.data.data.id);
+        } catch (error) {
+          session.completePayment({
+            status: ApplePaySession.STATUS_FAILURE,
+            errors: [
+              new ApplePayError(
+                'unknown',
+                undefined,
+                'Failed to create payment. Please try again.',
+              ),
+            ],
+          });
+          toast.error('Failed to create intent, check logs');
+          logJSON.error('Create Intent', error);
+          return;
+        }
+      }
+
+      const intentId = dialogRecoveryIntentId.current;
+
+      try {
+        // Select Apple Pay right before submitting the receipt. On recovery
+        // retries the previous selection was reset, so we (re)select the method
+        // with the freshly authorized token.
+        await moneyHash.proceedWith({
+          type: 'method',
+          id: 'APPLE_PAY',
+          intentId,
+        });
+
+        const intentDetails = await moneyHash.submitPaymentReceipt({
+          nativeReceiptData: applePayReceipt,
+          intentId,
+        });
+        logJSON.response('Submit Receipt', intentDetails);
+
+        const autoRecovery =
+          intentDetails.state === 'TRANSACTION_FAILED'
+            ? (
+                intentDetails.stateDetails as IntentStateDetails<'TRANSACTION_FAILED'>
+              )?.autoRecovery
+            : null;
+
+        if (autoRecovery) {
+          logJSON.info(
+            'Transaction failed, auto recovery available',
+            autoRecovery,
+          );
+
+          // Reset the selected method so the user can authorize a new token for
+          // the same intent on the next attempt.
+          await moneyHash.resetSelectedMethod(intentId);
+
+          // Dismiss the Apple Pay sheet and surface the error in our own
+          // dialog, where the user can retry with a fresh session.
+          session.completePayment(ApplePaySession.STATUS_FAILURE);
+          setRecoveryError(
+            autoRecovery.errorMessage ||
+              'Payment failed. Please try another card.',
+          );
+          return;
+        }
+
+        session.completePayment(ApplePaySession.STATUS_SUCCESS);
+        // Payment succeeded, drop the intent so the next click starts fresh.
+        dialogRecoveryIntentId.current = '';
+        toast.success(`Submitted receipt successfully, check logs.`);
+      } catch (error) {
+        session.completePayment({
+          status: ApplePaySession.STATUS_FAILURE,
+          errors: [
+            new ApplePayError(
+              'unknown',
+              undefined,
+              'Failed to submit payment. Please try again.',
+            ),
+          ],
+        });
+        toast.error('Failed to submit receipt, check logs');
+        logJSON.error('Submit Receipt', error);
+      }
+    };
+
+    session.begin();
+  };
 
   return (
     <>
@@ -317,6 +500,19 @@ export default function ApplePay() {
               }}
             >
               Pay with Apple Pay
+            </AppleButton>
+
+            <AppleButton
+              disabled={!nativePayData}
+              className={isLoading ? 'animate-pulse' : ''}
+              onClick={() => {
+                if (!nativePayData) return;
+                // Fresh click starts a brand new intent; dialog retries reuse it.
+                dialogRecoveryIntentId.current = '';
+                startDialogRecoverySession();
+              }}
+            >
+              Pay with Apple Pay (Dialog Recovery)
             </AppleButton>
 
             <AppleButton
@@ -767,6 +963,127 @@ export default function ApplePay() {
             >
               Fail First Attempt (Retry)!
             </AppleButton>
+
+            <AppleButton
+              className={isLoading ? 'animate-pulse' : ''}
+              onClick={async () => {
+                let session: ApplePaySession;
+                try {
+                  session = new ApplePaySession(3, {
+                    countryCode: fixedNativePayData.country_code,
+                    currencyCode: fixedNativePayData.currency_code,
+                    supportedNetworks: fixedNativePayData.supported_networks,
+                    merchantCapabilities:
+                      fixedNativePayData.supported_capabilities,
+                    total: {
+                      label: 'Apple Pay',
+                      type: 'final',
+                      amount: `${fixedNativePayData.amount}`,
+                    },
+                    requiredShippingContactFields: ['email'],
+                  });
+                } catch (error) {
+                  toast.error(
+                    'Failed to create Apple Pay session, check logs.',
+                  );
+                  logJSON.error('Create ApplePay Session', error);
+                  return;
+                }
+
+                session.onvalidatemerchant = e =>
+                  moneyHash
+                    .validateApplePayMerchantSession({
+                      methodId: fixedNativePayData.method_id,
+                      validationUrl: e.validationURL,
+                    })
+                    .then(merchantSession =>
+                      session.completeMerchantValidation(merchantSession),
+                    )
+                    .catch(e => {
+                      session.completeMerchantValidation({});
+                      toast.error(
+                        'Failed to validate merchant session, check logs',
+                      );
+                      logJSON.error('Validate ApplePay Merchant Session', e);
+                    });
+
+                session.onpaymentauthorized = async e => {
+                  const applePayReceipt = {
+                    receipt: JSON.stringify({ token: e.payment.token }),
+                    receiptBillingData: {
+                      email: e.payment.shippingContact?.emailAddress,
+                    },
+                  };
+                  logJSON.response('ApplePay Receipt', applePayReceipt);
+
+                  let intentId;
+
+                  try {
+                    intentId = await axios
+                      .post(
+                        `${API_URLS[config.env]}/payments/intent/`,
+                        JSON.parse(config.intentConfig),
+                        {
+                          headers: {
+                            'x-api-key': config.apiKey,
+                          },
+                        },
+                      )
+                      .then(res => res.data.data.id);
+                  } catch (error) {
+                    session.completePayment({
+                      status: ApplePaySession.STATUS_FAILURE,
+                      errors: [
+                        new ApplePayError(
+                          'unknown',
+                          undefined,
+                          'Failed to create payment. Please try again.',
+                        ),
+                      ],
+                    });
+                    toast.error('Failed to create intent, check logs');
+                    logJSON.error('Create Intent', error);
+                    return;
+                  }
+
+                  try {
+                    await moneyHash.proceedWith({
+                      type: 'method',
+                      id: 'APPLE_PAY',
+                      intentId,
+                    });
+
+                    const intentDetails = await moneyHash.submitPaymentReceipt({
+                      nativeReceiptData: applePayReceipt,
+                      intentId,
+                    });
+                    logJSON.response('Submit Receipt', intentDetails);
+
+                    session.completePayment(ApplePaySession.STATUS_SUCCESS);
+                    toast.success(
+                      `Submitted receipt successfully, check logs.`,
+                    );
+                  } catch (error) {
+                    session.completePayment({
+                      status: ApplePaySession.STATUS_FAILURE,
+                      errors: [
+                        new ApplePayError(
+                          'unknown',
+                          undefined,
+                          'Failed to submit payment. Please try again.',
+                        ),
+                      ],
+                    });
+                    toast.error('Failed to submit receipt, check logs');
+                    logJSON.error('Submit Receipt', error);
+                  }
+                };
+
+                session.begin();
+              }}
+            >
+              Pay with Fixed Native Data
+            </AppleButton>
           </div>
 
           <ConfigurationForm
@@ -775,6 +1092,23 @@ export default function ApplePay() {
           />
         </div>
       </section>
+
+      <Dialog
+        open={recoveryError !== null}
+        onOpenChange={open => {
+          if (!open) setRecoveryError(null);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Payment failed</DialogTitle>
+            <DialogDescription>{recoveryError}</DialogDescription>
+          </DialogHeader>
+          <AppleButton onClick={startDialogRecoverySession}>
+            Retry with Apple Pay
+          </AppleButton>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
