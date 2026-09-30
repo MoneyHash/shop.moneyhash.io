@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import Loader from '@/components/loader';
 import { useCallbackRef } from '@/hooks/useCallbackRef';
 import { useMoneyHash } from '@/context/moneyHashProvider';
+import useCurrency from '@/store/useCurrency';
 
 export function UrlToRender({
   intentId,
@@ -19,18 +20,29 @@ export function UrlToRender({
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
 } & IntentStateDetails<'URL_TO_RENDER'>) {
   const onIntentDetailsChangeRef = useCallbackRef(onIntentDetailsChange);
+
+  const currency = useCurrency(s => s.currency);
+  const resolvedRenderStrategy =
+    currency === 'ZAR' ? 'POPUP_IFRAME' : renderStrategy;
+
   const moneyHash = useMoneyHash();
   useEffect(() => {
     moneyHash
       .renderUrl({
         intentId,
-        renderStrategy,
+        renderStrategy: resolvedRenderStrategy,
         url,
       })
       .then(onIntentDetailsChangeRef);
-  }, [intentId, url, renderStrategy, onIntentDetailsChangeRef, moneyHash]);
+  }, [
+    intentId,
+    url,
+    resolvedRenderStrategy,
+    onIntentDetailsChangeRef,
+    moneyHash,
+  ]);
 
-  if (renderStrategy === 'POPUP_IFRAME')
+  if (resolvedRenderStrategy === 'POPUP_IFRAME')
     return (
       <div className="p-4 flex gap-3">
         <Button
@@ -39,7 +51,7 @@ export function UrlToRender({
             moneyHash
               .renderUrl({
                 intentId,
-                renderStrategy,
+                renderStrategy: resolvedRenderStrategy,
                 url,
               })
               .then(onIntentDetailsChangeRef)
@@ -54,7 +66,7 @@ export function UrlToRender({
       </div>
     );
 
-  if (renderStrategy === 'IFRAME') {
+  if (resolvedRenderStrategy === 'IFRAME') {
     return <div className="h-96" id="rendered-url-iframe-container" />;
   }
 
