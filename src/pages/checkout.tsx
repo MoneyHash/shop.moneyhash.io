@@ -16,6 +16,7 @@ import createIntent from '@/api/createIntent';
 import useCurrency from '@/store/useCurrency';
 import TestCardsPanel from '@/components/testCardsPanel';
 import useJsonConfig from '@/store/useJsonConfig';
+import safeLocalStorage from '@/utils/safeLocalStorage';
 
 import {
   InfoForm,
@@ -87,42 +88,50 @@ function CheckoutContent() {
     amount?: number;
   }) => {
     const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
+    // Allow reusing a pre-created intent (configured in the Config panel)
+    // instead of creating one client-side.
+    const configuredIntentId = safeLocalStorage.getItem('intentId');
 
     let intentId;
-    try {
-      const response = await createIntent({
-        methodId,
-        paymentProvider,
-        amount: amount ?? totalPrice,
-        currency,
-        userInfo,
-        product_items: cart.map((product, index) => ({
-          name: product.nameKey,
-          description: product.descriptionKey,
-          quantity: product.quantity,
-          amount: product.price[currency],
-          category: 'Electronics',
-          subcategory: 'Audio',
-          type: 'Digital',
-          sku: `sku${index}`,
-          tax: 1,
-        })),
-        extraConfig,
-        customFields,
-      });
-      intentId = response.data.id;
-      moneyHash.setIntentSecret(response.data.intent_secret);
-      logJSON.BE('Create Intent', response);
-    } catch (error: any) {
-      const [key, message] =
-        Object.entries(error.response.data.status.errors[0] || {})[0] || [];
-      if (key) {
-        toast.error(`${key}: ${message}`);
-      } else {
-        toast.error((message as string) || t('errors.somethingWentWrong'));
-      }
+    if (configuredIntentId) {
+      intentId = configuredIntentId;
+      logJSON.BE('Using pre-created Intent', { intentId });
+    } else {
+      try {
+        const response = await createIntent({
+          methodId,
+          paymentProvider,
+          amount: amount ?? totalPrice,
+          currency,
+          userInfo,
+          product_items: cart.map((product, index) => ({
+            name: product.nameKey,
+            description: product.descriptionKey,
+            quantity: product.quantity,
+            amount: product.price[currency],
+            category: 'Electronics',
+            subcategory: 'Audio',
+            type: 'Digital',
+            sku: `sku${index}`,
+            tax: 1,
+          })),
+          extraConfig,
+          customFields,
+        });
+        intentId = response.data.id;
+        moneyHash.setIntentSecret(response.data.intent_secret);
+        logJSON.BE('Create Intent', response);
+      } catch (error: any) {
+        const [key, message] =
+          Object.entries(error.response.data.status.errors[0] || {})[0] || [];
+        if (key) {
+          toast.error(`${key}: ${message}`);
+        } else {
+          toast.error((message as string) || t('errors.somethingWentWrong'));
+        }
 
-      return Promise.reject(error);
+        return Promise.reject(error);
+      }
     }
 
     if (disableIntentDetails) {

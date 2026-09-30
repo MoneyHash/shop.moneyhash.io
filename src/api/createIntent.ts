@@ -71,10 +71,6 @@ export default function createIntent({
     hide_loader_message: true,
     ...(methodId === 'CARD' ? { threeds: { enabled: true } } : {}),
     webhook_url: 'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
-    successful_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
-    failed_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
-    pending_external_action_redirect_url: `${'https://shop.moneyhash.io'}/checkout/order`,
-    back_url: `${'https://shop.moneyhash.io'}/checkout/order`,
     redirect_branding_data: {
       icon: 'https://shop.moneyhash.io/images/moneyhash-logo.png',
       background_color: 'white',
