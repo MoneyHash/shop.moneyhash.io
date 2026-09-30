@@ -643,18 +643,7 @@ export function CardForm({
 
     apiMethod
       .then(intentDetails => {
-        const { stateDetails } = intentDetails;
-        if (
-          // Skip rendering the redirection loader and redirect directly
-          // You can use paymentStatus.status === 'CAPTURED' if you're not using redirection on intent creation
-          stateDetails &&
-          'url' in stateDetails &&
-          stateDetails.renderStrategy === 'REDIRECT'
-        ) {
-          window.location.href = stateDetails.url;
-        } else {
-          onIntentDetailsChange(intentDetails);
-        }
+        onIntentDetailsChange(intentDetails);
       })
       .catch(errors => {
         const [error] = Object.values(errors);
@@ -1002,18 +991,7 @@ export function Click2PayCardForm({
           //
         }
 
-        const { stateDetails } = intentDetails;
-        if (
-          // Skip rendering the redirection loader and redirect directly
-          // You can use paymentStatus.status === 'CAPTURED' if you're not using redirection on intent creation
-          stateDetails &&
-          'url' in stateDetails &&
-          stateDetails.renderStrategy === 'REDIRECT'
-        ) {
-          window.location.href = stateDetails.url;
-        } else {
-          onIntentDetailsChange(intentDetails);
-        }
+        onIntentDetailsChange(intentDetails);
       })
       .catch(errors => {
         setIsSubmitting(false);
