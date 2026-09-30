@@ -16,9 +16,8 @@ function Divide() {
   );
 }
 export function Configuration() {
-  const { layout, cardForm, fontFamily, setConfiguration } = useConfiguration(
-    state => state,
-  );
+  const { layout, cardForm, fontFamily, renderStrategy, setConfiguration } =
+    useConfiguration(state => state);
 
   const { theme, setTheme } = useTheme();
 
@@ -59,6 +58,32 @@ export function Configuration() {
               <SelectContent>
                 <SelectItem value="accordion">Accordion</SelectItem>
                 <SelectItem value="tabs">Tabs</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Divide />
+          <div className="flex items-center">
+            <Label
+              htmlFor="renderStrategy"
+              className="text-subtler whitespace-nowrap"
+            >
+              Render Strategy:
+            </Label>
+            <Select
+              value={renderStrategy}
+              onValueChange={value =>
+                setConfiguration({ renderStrategy: value as any })
+              }
+            >
+              <SelectTrigger id="renderStrategy">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Auto</SelectItem>
+                <SelectItem value="IFRAME">Iframe</SelectItem>
+                <SelectItem value="POPUP_IFRAME">Popup Iframe</SelectItem>
+                <SelectItem value="REDIRECT">Redirect</SelectItem>
               </SelectContent>
             </Select>
           </div>

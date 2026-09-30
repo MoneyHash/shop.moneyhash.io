@@ -9,6 +9,7 @@ import Loader from '@/components/loader';
 import { useCallbackRef } from '@/hooks/useCallbackRef';
 import { useMoneyHash } from '@/context/moneyHashProvider';
 import useCurrency from '@/store/useCurrency';
+import useConfiguration from '@/store/useConfiguration';
 
 export function UrlToRender({
   intentId,
@@ -22,8 +23,17 @@ export function UrlToRender({
   const onIntentDetailsChangeRef = useCallbackRef(onIntentDetailsChange);
 
   const currency = useCurrency(s => s.currency);
+  const configRenderStrategy = useConfiguration(s => s.renderStrategy);
+
+  // `auto` keeps the default behavior: force POPUP_IFRAME for ZAR, otherwise
+  // fall back to the strategy provided by the intent. Any explicit config value
+  // overrides both.
   const resolvedRenderStrategy =
-    currency === 'ZAR' ? 'POPUP_IFRAME' : renderStrategy;
+    configRenderStrategy !== 'auto'
+      ? configRenderStrategy
+      : currency === 'ZAR'
+      ? 'POPUP_IFRAME'
+      : renderStrategy;
 
   const moneyHash = useMoneyHash();
   useEffect(() => {
