@@ -51,9 +51,6 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
   const [publicApiKey, setPublicApiKey] = useState(
     () => safeLocalStorage.getItem('publicApiKey') || '',
   );
-  const [intentId, setIntentId] = useState(
-    () => safeLocalStorage.getItem('intentId') || '',
-  );
 
   const saveConfig = () => {
     if (!internalJsonConfig) {
@@ -76,11 +73,6 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
       safeLocalStorage.setItem('jsonConfig', internalJsonConfig);
       safeLocalStorage.setItem('apiKey', apiKey);
       safeLocalStorage.setItem('publicApiKey', publicApiKey);
-      if (intentId) {
-        safeLocalStorage.setItem('intentId', intentId);
-      } else {
-        safeLocalStorage.removeItem('intentId');
-      }
       toast.success('Configuration saved successfully.');
       onClose();
       setTimeout(() => {
@@ -143,20 +135,6 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
         >
           <span>Clear API Keys</span>
         </Button>
-      </div>
-
-      <hr />
-      <div>
-        <p className="text-sm mb-2 text-subtle">Pre-created Intent</p>
-        <Input
-          label="Intent ID"
-          value={intentId}
-          onChange={e => setIntentId(e.target.value)}
-          containerClassName="flex-1"
-        />
-        <p className="text-xs text-subtle mt-1">
-          Use an existing intent instead of creating one client-side.
-        </p>
       </div>
 
       <hr />

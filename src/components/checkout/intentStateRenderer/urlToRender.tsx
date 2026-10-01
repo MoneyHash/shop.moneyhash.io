@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import Loader from '@/components/loader';
 import { useCallbackRef } from '@/hooks/useCallbackRef';
 import { useMoneyHash } from '@/context/moneyHashProvider';
-import useCurrency from '@/store/useCurrency';
-import useConfiguration from '@/store/useConfiguration';
 
 export function UrlToRender({
   intentId,
@@ -21,38 +19,18 @@ export function UrlToRender({
   onIntentDetailsChange: (intentDetails: IntentDetails<'payment'>) => void;
 } & IntentStateDetails<'URL_TO_RENDER'>) {
   const onIntentDetailsChangeRef = useCallbackRef(onIntentDetailsChange);
-
-  const currency = useCurrency(s => s.currency);
-  const configRenderStrategy = useConfiguration(s => s.renderStrategy);
-
-  // `auto` keeps the default behavior: force POPUP_IFRAME for ZAR, otherwise
-  // fall back to the strategy provided by the intent. Any explicit config value
-  // overrides both.
-  const resolvedRenderStrategy =
-    configRenderStrategy !== 'auto'
-      ? configRenderStrategy
-      : currency === 'ZAR'
-      ? 'POPUP_IFRAME'
-      : renderStrategy;
-
   const moneyHash = useMoneyHash();
   useEffect(() => {
     moneyHash
       .renderUrl({
         intentId,
-        renderStrategy: resolvedRenderStrategy,
+        renderStrategy,
         url,
       })
       .then(onIntentDetailsChangeRef);
-  }, [
-    intentId,
-    url,
-    resolvedRenderStrategy,
-    onIntentDetailsChangeRef,
-    moneyHash,
-  ]);
+  }, [intentId, url, renderStrategy, onIntentDetailsChangeRef, moneyHash]);
 
-  if (resolvedRenderStrategy === 'POPUP_IFRAME')
+  if (renderStrategy === 'POPUP_IFRAME')
     return (
       <div className="p-4 flex gap-3">
         <Button
@@ -61,7 +39,7 @@ export function UrlToRender({
             moneyHash
               .renderUrl({
                 intentId,
-                renderStrategy: resolvedRenderStrategy,
+                renderStrategy,
                 url,
               })
               .then(onIntentDetailsChangeRef)
@@ -76,7 +54,7 @@ export function UrlToRender({
       </div>
     );
 
-  if (resolvedRenderStrategy === 'IFRAME') {
+  if (renderStrategy === 'IFRAME') {
     return <div className="h-96" id="rendered-url-iframe-container" />;
   }
 
