@@ -14,6 +14,8 @@ import safeLocalStorage from '@/utils/safeLocalStorage';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { localEnv } from '@/utils/moneyHash';
+import { hasAccountKeys } from '@/api';
+import { cn } from '@/utils/cn';
 
 function isJsonValid(str: string) {
   try {
@@ -26,13 +28,28 @@ function isJsonValid(str: string) {
 
 export function JsonConfiguration() {
   const [isOpen, setIsOpen] = useState(false);
+  // Keys only change on save, which reloads the page.
+  const missingKeys = !hasAccountKeys();
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="space-x-1 text-subtle">
+        <Button
+          variant="outline"
+          className={cn(
+            'relative space-x-1 text-subtle',
+            missingKeys && 'ring-2 ring-primary/60',
+          )}
+          title={missingKeys ? 'Add your API keys' : undefined}
+        >
           <Settings className="w-5 h-5" />
           <span>Config</span>
+          {missingKeys && (
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
+            </span>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 space-y-4">
@@ -59,13 +76,8 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
     }
 
     // public api key and api key needs to be set together
-    if (apiKey && !publicApiKey) {
-      toast.error('Please set the public API key.');
-      return;
-    }
-
-    if (!apiKey && publicApiKey) {
-      toast.error('Please set the API key.');
+    if (!apiKey || !publicApiKey) {
+      toast.error('Please set both API keys.');
       return;
     }
 
@@ -108,7 +120,7 @@ function ConfigurationContent({ onClose }: { onClose: () => void }) {
       </div>
       <hr />
 
-      <p className="text-sm mb-2 text-subtle">Custom Account</p>
+      <p className="text-sm mb-2 text-subtle">Account API Keys</p>
       <div className="flex flex-col gap-3">
         <Input
           label="Account API Key"

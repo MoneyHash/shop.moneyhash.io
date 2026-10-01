@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import MoneyHash, { IntentDetails } from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
 import { SubscriptionPlan } from '@moneyhash/js-sdk';
+import { cn } from '@/utils/cn';
 import NavBar from '@/components/navbar';
 import { Input } from '@/components/ui/input';
 import {
@@ -30,16 +31,6 @@ type FormConfiguration = {
   publicApiKey: string;
 };
 
-const defaultApiKey: Record<Env, string> = {
-  production: 'NMyQeKCE.PE1ibNHTXepIxg0hyYrmU4LzK4sNdUS1',
-  staging: 'wocSeGMI.e3l92r5b9NYXVgTLfBXvED88oppdsi3H',
-};
-
-const defaultPublicApiKey: Record<Env, string> = {
-  production: 'public.WsCZwBVz.mUyakj73ByciUGMOE1UYvGSFDJC7uu6ftLs4C5fy',
-  staging: 'public.nFsXq2BS.rwzwRJAZaq8jEEPZcnMldOSFXIqklPOe9QXaOwW1',
-};
-
 const storedEnv =
   (localStorage.getItem('subscription-env') as Env) || 'production';
 if (storedEnv === 'staging') {
@@ -52,15 +43,15 @@ if (storedEnv === 'staging') {
 
 const moneyHash = new MoneyHash({
   type: 'payment',
-  publicApiKey: defaultPublicApiKey[storedEnv],
+  publicApiKey: '',
 });
 
 export default function Subscriptions() {
   const [config, setConfig] = useState<FormConfiguration>(() => ({
     planGroupId: '4L25xY9',
     customerId: 'd6006d6d-d7d1-4eb1-81aa-982efa56f599',
-    apiKey: defaultApiKey[storedEnv],
-    publicApiKey: defaultPublicApiKey[storedEnv],
+    apiKey: localStorage.getItem('subscription-apiKey') || '',
+    publicApiKey: localStorage.getItem('subscription-publicApiKey') || '',
     env: storedEnv,
   }));
   const [isLoading, setIsLoading] = useState(true);
@@ -69,10 +60,15 @@ export default function Subscriptions() {
   >(null);
 
   useEffect(() => {
+    if (!config.apiKey || !config.publicApiKey) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
 
     logJSON.info('Configuration Used', { ...config });
 
+    moneyHash.setPublicApiKey(config.publicApiKey);
     moneyHash
       .getSubscriptionPlans({
         customerId: config.customerId,
@@ -214,15 +210,26 @@ function ConfigurationForm({
         onChange={e => setCustomerId(e.target.value)}
         containerClassName="flex-1"
       />
+      {(!initialConfiguration.apiKey || !initialConfiguration.publicApiKey) && (
+        <p className="text-sm text-muted-foreground">
+          Enter your API keys to load subscription plans.
+        </p>
+      )}
       <Input
         label="Account API Key"
         value={apiKey}
         onChange={e => setApiKey(e.target.value)}
+        containerClassName={cn(
+          !apiKey && 'rounded ring-2 ring-primary/60 animate-pulse',
+        )}
       />
       <Input
         label="Public Account API Key"
         value={publicApiKey}
         onChange={e => setPublicApiKey(e.target.value)}
+        containerClassName={cn(
+          !publicApiKey && 'rounded ring-2 ring-primary/60 animate-pulse',
+        )}
       />
       <Select
         value={initialConfiguration.env}
@@ -245,6 +252,12 @@ function ConfigurationForm({
         disabled={!planGroupId || !customerId}
         onClick={() => {
           try {
+            if (!apiKey || !publicApiKey) {
+              toast.error('Please set both API keys.');
+              return;
+            }
+            localStorage.setItem('subscription-apiKey', apiKey);
+            localStorage.setItem('subscription-publicApiKey', publicApiKey);
             onUpdate({
               planGroupId,
               customerId,

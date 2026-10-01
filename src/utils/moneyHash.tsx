@@ -4,7 +4,6 @@ import MoneyHashHeadless, {
   type MoneyHashHeadless as MoneyHashHeadlessInstance,
 } from '@moneyhash/js-sdk/headless';
 import Agentic from '@moneyhash/js-sdk/agentic';
-import { ACCOUNT_PUBLIC_API_KEY } from '@/api';
 import safeLocalStorage from '@/utils/safeLocalStorage';
 
 export const localEnv = localStorage.getItem('env') || 'production';
@@ -86,8 +85,7 @@ export const moneyHash = new MoneyHashHeadless({
       color: loaderColor,
     },
   },
-  publicApiKey:
-    safeLocalStorage.getItem('publicApiKey') || ACCOUNT_PUBLIC_API_KEY,
+  publicApiKey: safeLocalStorage.getItem('publicApiKey') || '',
   locale: safeLocalStorage.getItem('language') || 'en',
   plugins: [new Agentic()] as unknown as [],
 }) as unknown as MoneyHashHeadlessInstance<'payment'> & { agentic: Agentic };

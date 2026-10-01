@@ -13,6 +13,7 @@ import NavBar from '@/components/navbar';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
 import { localEnv, moneyHash } from '@/utils/moneyHash';
 import createIntent from '@/api/createIntent';
+import { hasAccountKeys } from '@/api';
 import useCurrency from '@/store/useCurrency';
 import TestCardsPanel from '@/components/testCardsPanel';
 import useJsonConfig from '@/store/useJsonConfig';
@@ -115,7 +116,8 @@ function CheckoutContent() {
       logJSON.BE('Create Intent', response);
     } catch (error: any) {
       const [key, message] =
-        Object.entries(error.response.data.status.errors[0] || {})[0] || [];
+        Object.entries(error.response?.data?.status?.errors?.[0] || {})[0] ||
+        [];
       if (key) {
         toast.error(`${key}: ${message}`);
       } else {
@@ -240,6 +242,10 @@ function CheckoutContent() {
 
   useEffect(() => {
     if (!userInfo) return;
+    if (!hasAccountKeys()) {
+      toast.error('Add your API keys in Config first');
+      return;
+    }
     async function fetchMethods() {
       const extraConfig = jsonConfig ? JSON.parse(jsonConfig) : {};
 
@@ -305,7 +311,8 @@ function CheckoutContent() {
       } catch (error: any) {
         logJSON.error('getMethods', error);
         const [key, message] =
-          Object.entries(error.response.data.status.errors[0] || {})[0] || [];
+          Object.entries(error.response?.data?.status?.errors?.[0] || {})[0] ||
+          [];
         if (key) {
           toast.error(`${key}: ${message}`);
         } else {

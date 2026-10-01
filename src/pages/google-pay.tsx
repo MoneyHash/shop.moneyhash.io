@@ -45,18 +45,6 @@ const defaultConfig = JSON.stringify(
   2,
 );
 
-const defaultApiKey: Record<Env, string> = {
-  production: 'NMyQeKCE.PE1ibNHTXepIxg0hyYrmU4LzK4sNdUS1',
-  staging: 'wocSeGMI.e3l92r5b9NYXVgTLfBXvED88oppdsi3H',
-  preprod: 'wocSeGMI.e3l92r5b9NYXVgTLfBXvED88oppdsi3H',
-};
-
-const defaultPublicApiKey: Record<Env, string> = {
-  production: 'public.WsCZwBVz.mUyakj73ByciUGMOE1UYvGSFDJC7uu6ftLs4C5fy',
-  staging: 'public.nFsXq2BS.rwzwRJAZaq8jEEPZcnMldOSFXIqklPOe9QXaOwW1',
-  preprod: 'public.nFsXq2BS.rwzwRJAZaq8jEEPZcnMldOSFXIqklPOe9QXaOwW1',
-};
-
 const storedEnv =
   (localStorage.getItem('google-pay-env') as Env) || 'production';
 const API_URLS: Record<Env, string> = {
@@ -80,15 +68,15 @@ if (storedEnv === 'staging') {
 
 const moneyHash = new MoneyHash({
   type: 'payment',
-  publicApiKey: defaultPublicApiKey.production,
+  publicApiKey: '',
 });
 
 export default function GooglePay() {
   const [config, setConfig] = useState<FormConfiguration>(() => ({
     intentConfig: defaultConfig,
-    apiKey: defaultApiKey[storedEnv],
+    apiKey: localStorage.getItem('google-pay-apiKey') || '',
     env: storedEnv,
-    publicApiKey: defaultPublicApiKey[storedEnv],
+    publicApiKey: localStorage.getItem('google-pay-publicApiKey') || '',
   }));
   const [nativePayData, setNativePayData] =
     useState<Method['nativePayData']>(null);
@@ -96,6 +84,10 @@ export default function GooglePay() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!config.apiKey || !config.publicApiKey) {
+      setIsLoading(false);
+      return;
+    }
     const { intentConfig } = config;
     setIsLoading(true);
     const intent = JSON.parse(intentConfig);
@@ -270,15 +262,26 @@ function ConfigurationForm({
 
   return (
     <div className="flex flex-col gap-4">
+      {(!initialConfiguration.apiKey || !initialConfiguration.publicApiKey) && (
+        <p className="text-sm text-muted-foreground">
+          Enter your API keys to load Google Pay.
+        </p>
+      )}
       <Input
         label="Account API Key"
         value={apiKey}
         onChange={e => setApiKey(e.target.value)}
+        containerClassName={cn(
+          !apiKey && 'rounded ring-2 ring-primary/60 animate-pulse',
+        )}
       />
       <Input
         label="Public Account API Key"
         value={publicApiKey}
         onChange={e => setPublicApiKey(e.target.value)}
+        containerClassName={cn(
+          !publicApiKey && 'rounded ring-2 ring-primary/60 animate-pulse',
+        )}
       />
       <Select
         value={initialConfiguration.env}
@@ -310,6 +313,12 @@ function ConfigurationForm({
         onClick={() => {
           try {
             JSON.parse(intentConfig);
+            if (!apiKey || !publicApiKey) {
+              toast.error('Please set both API keys.');
+              return;
+            }
+            localStorage.setItem('google-pay-apiKey', apiKey);
+            localStorage.setItem('google-pay-publicApiKey', publicApiKey);
             onUpdate({
               intentConfig,
               apiKey,
