@@ -338,12 +338,10 @@
         "txnId": "Txn ID"
       },
       "receipt": {
-        "immediateTitle": "Payment complete",
-        "immediateSubtitle": "Your order is confirmed.",
-        "scheduledTitle": "Scheduled payment charged",
-        "scheduledSubtitle": "We charged your saved card as scheduled.",
-        "failedTitle": "Scheduled payment failed",
-        "failedSubtitle": "We couldn't complete your scheduled payment.",
+        "successTitle": "Payment charged",
+        "successSubtitle": "Your order is confirmed.",
+        "failedTitle": "Payment failed",
+        "failedSubtitle": "We couldn't complete your payment.",
         "total": "Total",
         "txnId": "Txn ID"
       },

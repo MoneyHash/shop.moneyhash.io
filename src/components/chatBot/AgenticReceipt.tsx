@@ -20,14 +20,8 @@ export function AgenticReceipt({ receipt }: { receipt: Receipt }) {
     return <FailedReceipt receipt={receipt} />;
   }
 
-  const title =
-    receipt.kind === 'scheduled'
-      ? t('chatBot.checkout.receipt.scheduledTitle')
-      : t('chatBot.checkout.receipt.immediateTitle');
-  const subtitle =
-    receipt.kind === 'scheduled'
-      ? t('chatBot.checkout.receipt.scheduledSubtitle')
-      : t('chatBot.checkout.receipt.immediateSubtitle');
+  const title = t('chatBot.checkout.receipt.successTitle');
+  const subtitle = t('chatBot.checkout.receipt.successSubtitle');
 
   return (
     <div

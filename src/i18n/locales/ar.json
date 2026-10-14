@@ -338,12 +338,10 @@
         "txnId": "رقم العملية"
       },
       "receipt": {
-        "immediateTitle": "اكتمل الدفع",
-        "immediateSubtitle": "تم تأكيد طلبك.",
-        "scheduledTitle": "تم تحصيل الدفعة المجدولة",
-        "scheduledSubtitle": "قمنا بخصم المبلغ من بطاقتك المحفوظة كما هو مجدول.",
-        "failedTitle": "فشلت الدفعة المجدولة",
-        "failedSubtitle": "تعذّر إتمام دفعتك المجدولة.",
+        "successTitle": "تم تحصيل الدفعة",
+        "successSubtitle": "تم تأكيد طلبك.",
+        "failedTitle": "فشلت الدفعة",
+        "failedSubtitle": "تعذّر إتمام دفعتك.",
         "total": "الإجمالي",
         "txnId": "رقم العملية"
       },
