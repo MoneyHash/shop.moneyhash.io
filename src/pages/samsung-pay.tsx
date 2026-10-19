@@ -77,7 +77,7 @@ function buildSamsungPayConfig(
   };
 
   const transactionDetail: SamsungPayTransactionDetail = {
-    orderNumber: nativePayData.trx_uuid,
+    orderNumber: String(Date.now()),
     merchant: {
       name: nativePayData.merchant_name,
       url: window.location.hostname,
