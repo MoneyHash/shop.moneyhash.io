@@ -17,9 +17,13 @@ const POPULAR_PICK_KEYS = ['shirts', 'bags', 'underHundred'] as const;
 export function CartView({
   onBack,
   onPromptClick,
+  onBuyNow,
+  isBuyNowDisabled,
 }: {
   onBack: () => void;
   onPromptClick?: (prompt: string) => void;
+  onBuyNow?: (prompt: string) => void;
+  isBuyNowDisabled?: boolean;
 }) {
   const { t } = useTranslation();
   const cart = useShoppingCart(s => s.cart);
@@ -228,6 +232,19 @@ export function CartView({
               {totalPrice.toFixed(2)} {currency}
             </span>
           </div>
+          {onBuyNow && (
+            <Button
+              className="mt-3 w-full gap-1.5"
+              disabled={isBuyNowDisabled}
+              onClick={() => {
+                onBuyNow(t('chatBot.cartView.buyNow.prompt'));
+                onBack();
+              }}
+            >
+              <ShoppingBagIcon className="size-4" />
+              {t('chatBot.cartView.buyNow.label')}
+            </Button>
+          )}
         </div>
       )}
     </div>

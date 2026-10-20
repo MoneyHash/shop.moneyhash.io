@@ -230,6 +230,10 @@
       "decreaseQuantity": "Decrease quantity",
       "increaseQuantity": "Increase quantity",
       "total": "Total",
+      "buyNow": {
+        "label": "Buy now",
+        "prompt": "I'd like to buy the items in my cart now. Please proceed to checkout."
+      },
       "empty": {
         "title": "Your cart is wide open",
         "description": "Nothing tucked inside yet. Tell our assistant what you're hunting for and we'll bring it here.",
@@ -321,7 +325,7 @@
         "cvv": "CVV",
         "expiry": "Expiry",
         "buyNow": "Buy now",
-        "addCard": "Add card",
+        "addCard": "Proceed",
         "processing": "Processing...",
         "cancel": "Cancel",
         "tls": "256-bit TLS",

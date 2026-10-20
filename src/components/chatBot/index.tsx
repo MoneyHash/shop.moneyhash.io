@@ -307,6 +307,11 @@ export default function ChatBot({ customerId }: { customerId: string }) {
           <CartView
             onBack={() => setView('chat')}
             onPromptClick={prompt => sendMessage({ text: prompt })}
+            onBuyNow={prompt => {
+              // A checkout is already open in the chat; just switch back to it.
+              if (!hasPendingCheckout) sendMessage({ text: prompt });
+            }}
+            isBuyNowDisabled={status !== 'ready'}
           />
         ) : (
           <>
