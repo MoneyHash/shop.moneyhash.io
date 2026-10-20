@@ -287,9 +287,10 @@ export default function SamsungPay() {
     setIsLoading(true);
 
     // SDK types require receiptBillingData, but Samsung Pay doesn't send it.
-    const samsungPayReceipt = {
+    const samsungPayReceipt: NativeReceiptData = {
       receipt: JSON.stringify(credential),
-    } as NativeReceiptData;
+      receiptBillingData: {},
+    };
     logJSON.info('Samsung Pay Receipt', samsungPayReceipt);
 
     let intentId;
