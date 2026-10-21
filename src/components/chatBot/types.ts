@@ -109,4 +109,14 @@ type ChatUIDataParts = {
   receipt: Receipt;
 };
 
-export type ChatUIMessage = UIMessage<unknown, ChatUIDataParts, ChatUITools>;
+export type ChatUIMetadata = {
+  // Set on the user message sent when the customer clicks "Add to cart" on a
+  // product card. Rendered as the add-to-cart confirmation instead of the text.
+  manualAddToCart?: { productId: string; quantity: number };
+};
+
+export type ChatUIMessage = UIMessage<
+  ChatUIMetadata,
+  ChatUIDataParts,
+  ChatUITools
+>;

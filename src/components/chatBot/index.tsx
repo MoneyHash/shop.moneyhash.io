@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
+import type { StickToBottomContext } from 'use-stick-to-bottom';
 import { useTranslation } from 'react-i18next';
-import type { Language } from './clientTools/searchProductsAgentTool';
+import type { Language, Product } from './clientTools/searchProductsAgentTool';
 
 import { FloatingButton } from './floatingButton';
 import { ChatBotHeader } from './chatbotHeader';
@@ -55,6 +56,7 @@ export default function ChatBot({ customerId }: { customerId: string }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [input, setInput] = useState('');
   const [view, setView] = useState<'chat' | 'cart'>('chat');
+  const conversationRef = useRef<StickToBottomContext>(null);
   // Scheduled ("pay later") charges we're still awaiting a receipt for. Seeded
   // from localStorage so a reload keeps polling; polling only runs while this is
   // non-empty (see the effects below).
@@ -291,6 +293,25 @@ export default function ChatBot({ customerId }: { customerId: string }) {
         part.state === 'input-available',
     );
 
+  // Manual "Add to cart" from a product card. When the agent is idle we tell it
+  // via a user message (rendered as the confirmation card, not as text) so it
+  // can follow up. While it's streaming or a checkout is open we only update
+  // the cart — sending a message then would interrupt the conversation.
+  const handleManualAddToCart = (product: Product) => {
+    const result = addToCart({ productId: product.id });
+    if (!result.success || status !== 'ready' || hasPendingCheckout) return;
+
+    sendMessage({
+      text: `I just added ${result.quantity} × ${product.name} (${product.color}) to my cart myself using the "Add to cart" button. It's already in my cart, so don't add or remove it.`,
+      metadata: {
+        manualAddToCart: { productId: product.id, quantity: result.quantity },
+      },
+    });
+    // The product card may be far up the history; jump to the new card and
+    // stay pinned while the agent's follow-up streams in.
+    conversationRef.current?.scrollToBottom();
+  };
+
   return (
     <div className="fixed bottom-6 end-6 z-50 flex flex-col items-end gap-2 max-sm:inset-0 pointer-events-none">
       <ChatContainer isOpen={isOpen} isExpanded={isExpanded}>
@@ -315,7 +336,7 @@ export default function ChatBot({ customerId }: { customerId: string }) {
           />
         ) : (
           <>
-            <Conversation>
+            <Conversation contextRef={conversationRef}>
               <ConversationContent>
                 {messages.length === 0 && (
                   <ChatEmptyMessages
@@ -323,150 +344,168 @@ export default function ChatBot({ customerId }: { customerId: string }) {
                   />
                 )}
 
-                {messages.map(({ id, parts, role }) => (
-                  <Message key={id} from={role}>
-                    <MessageContent>
-                      {parts.map((part, i) => {
-                        switch (part.type) {
-                          case 'text':
-                            return (
-                              <MessageResponse isAnimating key={`${id}-${i}`}>
-                                {part.text}
-                              </MessageResponse>
-                            );
-
-                          case 'tool-searchProducts': {
-                            if (
-                              part.state === 'input-streaming' ||
-                              part.state === 'input-available'
-                            )
+                {messages.map(({ id, parts, role, metadata }) =>
+                  metadata?.manualAddToCart ? (
+                    <Message key={id} from="assistant">
+                      <MessageContent>
+                        <AddToCartConfirmation
+                          productId={metadata.manualAddToCart.productId}
+                          quantity={metadata.manualAddToCart.quantity}
+                          onViewCart={() => setView('cart')}
+                        />
+                      </MessageContent>
+                    </Message>
+                  ) : (
+                    <Message key={id} from={role}>
+                      <MessageContent>
+                        {parts.map((part, i) => {
+                          switch (part.type) {
+                            case 'text':
                               return (
-                                <ProductsListSkeleton key={`${id}-${i}`} />
+                                <MessageResponse isAnimating key={`${id}-${i}`}>
+                                  {part.text}
+                                </MessageResponse>
                               );
 
-                            if (part.state === 'output-available')
-                              return (
-                                <ProductsList
-                                  key={`${id}-${i}`}
-                                  products={part.output}
-                                  currency={part.input.currency ?? currency}
-                                />
-                              );
-                            return null;
-                          }
+                            case 'tool-searchProducts': {
+                              if (
+                                part.state === 'input-streaming' ||
+                                part.state === 'input-available'
+                              )
+                                return (
+                                  <ProductsListSkeleton key={`${id}-${i}`} />
+                                );
 
-                          case 'tool-addToCart': {
-                            if (
-                              part.state === 'output-available' &&
-                              part.output.success
-                            )
-                              return (
-                                <AddToCartConfirmation
-                                  key={`${id}-${i}`}
-                                  productId={part.output.productId}
-                                  quantity={part.output.quantity}
-                                  onViewCart={() => setView('cart')}
-                                />
-                              );
-                            return null;
-                          }
-
-                          case 'tool-removeFromCart': {
-                            if (
-                              part.state === 'output-available' &&
-                              part.output.success
-                            )
-                              return (
-                                <RemoveFromCartConfirmation
-                                  key={`${id}-${i}`}
-                                  productId={part.output.productId}
-                                  removedQuantity={part.output.removedQuantity}
-                                  lineRemoved={part.output.lineRemoved}
-                                  onViewCart={() => setView('cart')}
-                                />
-                              );
-                            return null;
-                          }
-
-                          case 'tool-clearCart': {
-                            if (part.state === 'output-available')
-                              return (
-                                <ClearCartConfirmation
-                                  key={`${id}-${i}`}
-                                  removedItems={part.output.removedItems}
-                                  removedLines={part.output.removedLines}
-                                  alreadyEmpty={part.output.alreadyEmpty}
-                                  onViewCart={() => setView('cart')}
-                                />
-                              );
-                            return null;
-                          }
-
-                          case 'tool-proceedToCheckout': {
-                            if (part.state === 'input-available') {
-                              const handleComplete = (
-                                output: CheckoutResult,
-                              ) => {
-                                addToolOutput({
-                                  tool: 'proceedToCheckout',
-                                  toolCallId: part.toolCallId,
-                                  output,
-                                });
-                                sendMessage();
-                              };
-
-                              return (
-                                <Checkout
-                                  key={`${id}-${i}`}
-                                  paymentType={part.input.paymentType}
-                                  customerId={customerId}
-                                  onComplete={handleComplete}
-                                />
-                              );
+                              if (part.state === 'output-available')
+                                return (
+                                  <ProductsList
+                                    key={`${id}-${i}`}
+                                    products={part.output}
+                                    currency={part.input.currency ?? currency}
+                                    onAddToCart={handleManualAddToCart}
+                                    isAddToCartDisabled={
+                                      status !== 'ready' || hasPendingCheckout
+                                    }
+                                  />
+                                );
+                              return null;
                             }
 
-                            if (part.state === 'output-available') {
-                              return (
-                                <CheckoutResultBadge
-                                  key={`${id}-${i}`}
-                                  output={part.output}
-                                />
-                              );
+                            case 'tool-addToCart': {
+                              if (
+                                part.state === 'output-available' &&
+                                part.output.success
+                              )
+                                return (
+                                  <AddToCartConfirmation
+                                    key={`${id}-${i}`}
+                                    productId={part.output.productId}
+                                    quantity={part.output.quantity}
+                                    onViewCart={() => setView('cart')}
+                                  />
+                                );
+                              return null;
                             }
 
-                            return null;
-                          }
+                            case 'tool-removeFromCart': {
+                              if (
+                                part.state === 'output-available' &&
+                                part.output.success
+                              )
+                                return (
+                                  <RemoveFromCartConfirmation
+                                    key={`${id}-${i}`}
+                                    productId={part.output.productId}
+                                    removedQuantity={
+                                      part.output.removedQuantity
+                                    }
+                                    lineRemoved={part.output.lineRemoved}
+                                    onViewCart={() => setView('cart')}
+                                  />
+                                );
+                              return null;
+                            }
 
-                          case 'tool-executeAgenticPayment': {
-                            if (
-                              part.state === 'output-available' &&
-                              part.output.status === 'SUCCEEDED' &&
-                              part.output.receipt
-                            )
+                            case 'tool-clearCart': {
+                              if (part.state === 'output-available')
+                                return (
+                                  <ClearCartConfirmation
+                                    key={`${id}-${i}`}
+                                    removedItems={part.output.removedItems}
+                                    removedLines={part.output.removedLines}
+                                    alreadyEmpty={part.output.alreadyEmpty}
+                                    onViewCart={() => setView('cart')}
+                                  />
+                                );
+                              return null;
+                            }
+
+                            case 'tool-proceedToCheckout': {
+                              if (part.state === 'input-available') {
+                                const handleComplete = (
+                                  output: CheckoutResult,
+                                ) => {
+                                  addToolOutput({
+                                    tool: 'proceedToCheckout',
+                                    toolCallId: part.toolCallId,
+                                    output,
+                                  });
+                                  sendMessage();
+                                };
+
+                                return (
+                                  <Checkout
+                                    key={`${id}-${i}`}
+                                    paymentType={part.input.paymentType}
+                                    customerId={customerId}
+                                    onComplete={handleComplete}
+                                  />
+                                );
+                              }
+
+                              if (part.state === 'output-available') {
+                                return (
+                                  <CheckoutResultBadge
+                                    key={`${id}-${i}`}
+                                    output={part.output}
+                                  />
+                                );
+                              }
+
+                              return null;
+                            }
+
+                            case 'tool-executeAgenticPayment': {
+                              if (
+                                part.state === 'output-available' &&
+                                part.output.status === 'SUCCEEDED' &&
+                                part.output.receipt
+                              )
+                                return (
+                                  <AgenticReceipt
+                                    key={`${id}-${i}`}
+                                    receipt={part.output.receipt}
+                                  />
+                                );
+                              return null;
+                            }
+
+                            case 'data-receipt':
                               return (
                                 <AgenticReceipt
                                   key={`${id}-${i}`}
-                                  receipt={part.output.receipt}
+                                  receipt={part.data}
                                 />
                               );
-                            return null;
+
+                            default:
+                              return null;
                           }
-
-                          case 'data-receipt':
-                            return (
-                              <AgenticReceipt
-                                key={`${id}-${i}`}
-                                receipt={part.data}
-                              />
-                            );
-
-                          default:
-                            return null;
-                        }
-                      })}
-                    </MessageContent>
-                  </Message>
-                ))}
+                        })}
+                      </MessageContent>
+                    </Message>
+                  ),
+                )}
                 {status === 'submitted' && <TypingIndicator />}
               </ConversationContent>
 

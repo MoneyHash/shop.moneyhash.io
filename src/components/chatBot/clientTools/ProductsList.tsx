@@ -20,9 +20,13 @@ function StarRating({ rating }: { rating: number }) {
 function ProductCard({
   product,
   currency,
+  onAddToCart,
+  disabled,
 }: {
   product: Product;
   currency: Currency;
+  onAddToCart?: (product: Product) => void;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation();
   const [added, setAdded] = useState(false);
@@ -53,9 +57,14 @@ function ProductCard({
               ? 'bg-green-500 hover:bg-green-500 text-white border-green-500'
               : ''
           }`}
+          disabled={disabled && !added}
           onClick={() => {
             if (added) return;
-            addProductToCart(product);
+            if (onAddToCart) {
+              onAddToCart(product);
+            } else {
+              addProductToCart(product);
+            }
             setAdded(true);
             setTimeout(() => setAdded(false), 1500);
           }}
@@ -103,9 +112,13 @@ export function ProductsListSkeleton() {
 export function ProductsList({
   products,
   currency,
+  onAddToCart,
+  isAddToCartDisabled,
 }: {
   products: Product[];
   currency: Currency;
+  onAddToCart?: (product: Product) => void;
+  isAddToCartDisabled?: boolean;
 }) {
   const { t } = useTranslation();
   if (!products.length) {
@@ -120,7 +133,13 @@ export function ProductsList({
     <ScrollArea>
       <div className="flex gap-2.5 pb-1">
         {products.map(product => (
-          <ProductCard key={product.id} product={product} currency={currency} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            currency={currency}
+            onAddToCart={onAddToCart}
+            disabled={isAddToCartDisabled}
+          />
         ))}
       </div>
       <ScrollBar orientation="horizontal" />
