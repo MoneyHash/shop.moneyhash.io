@@ -17,6 +17,8 @@ import createAgenticConsent, {
   type AgenticProduct,
 } from './createAgenticConsent';
 import { saveReceiptDraft } from './receiptDraft';
+import { formatChargeDelay } from './chargeTiming';
+import type { CartItem } from '../types';
 import { moneyHash } from '@/utils/moneyHash';
 import useShoppingCart, { useTotalPrice } from '@/store/useShoppingCart';
 import useCurrency from '@/store/useCurrency';
@@ -103,10 +105,13 @@ type Step =
 export function Checkout({
   customerId,
   paymentType,
+  chargeDelaySeconds,
   onComplete,
 }: {
   customerId: string;
   paymentType?: 'card' | 'apple_pay';
+  // When the agent will charge the card after authorization (0 = right away).
+  chargeDelaySeconds: number;
   onComplete: (result: CheckoutResult) => void;
 }) {
   const { t, i18n } = useTranslation();
@@ -130,6 +135,9 @@ export function Checkout({
     any
   > | null>(null);
   const [savedCards, setSavedCards] = useState<Card[]>([]);
+  // The saved card the customer authorized with, shown on the consent summary.
+  // Unknown for a newly entered card.
+  const [authorizedCard, setAuthorizedCard] = useState<Card | null>(null);
 
   // The agentic consent + zero-auth intent, created up front for the card flow.
   const consentRef = useRef<Consent | null>(null);
@@ -360,6 +368,7 @@ export function Checkout({
 
     setStep({ kind: 'card-paying' });
     setError(null);
+    setAuthorizedCard(savedCards.find(card => card.id === cardId) ?? null);
     try {
       // Pay the zero-auth intent with a saved card, passing the CVV as metadata.
       const intentDetails = await moneyHash.proceedWith({
@@ -410,6 +419,9 @@ export function Checkout({
     setError(null);
     setStep({ kind: 'authorize', phase: 'passkey' });
 
+    // The approved charge time. The backend enforces it when the agent executes
+    // the payment, so the charge happens exactly when the customer consented.
+    let chargeAt: string;
     try {
       const options = await generateOptionsWithRetry(consent.consentId);
       const credential = await moneyHash.agentic.authenticatePassKey(options);
@@ -422,6 +434,7 @@ export function Checkout({
         consentId: consent.consentId,
         credential,
       });
+      chargeAt = new Date(Date.now() + chargeDelaySeconds * 1000).toISOString();
 
       // Capture the receipt snapshot before finish() empties the cart. The
       // backend renders it as the receipt once the agent executes the charge
@@ -432,6 +445,7 @@ export function Checkout({
         currency: consent.currency,
         total: totalRef.current,
         items: buildReceiptItems(),
+        chargeAt,
       });
     } catch (err: any) {
       setStep({ kind: 'authorize', phase: 'idle' });
@@ -454,6 +468,9 @@ export function Checkout({
       currency: consent.currency,
       total: totalRef.current,
       products: consent.products,
+      when: chargeDelaySeconds > 0 ? 'later' : 'now',
+      delaySeconds: chargeDelaySeconds,
+      chargeAt,
     });
   };
 
@@ -612,8 +629,11 @@ export function Checkout({
       >
         {inAuthorizeStep ? (
           <AuthorizeAgentSection
+            items={cart}
             total={totalPrice}
             currency={currency}
+            chargeDelaySeconds={chargeDelaySeconds}
+            card={authorizedCard}
             onAuthorize={handleAuthorizeAgent}
             phase={step.phase}
           />
@@ -833,36 +853,121 @@ function OrDivider() {
   );
 }
 
+function ConsentRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 truncate text-end">{children}</dd>
+    </div>
+  );
+}
+
 function AuthorizeAgentSection({
+  items,
   total,
   currency,
+  chargeDelaySeconds,
+  card,
   onAuthorize,
   phase,
 }: {
+  items: CartItem[];
   total: number;
   currency: string;
+  chargeDelaySeconds: number;
+  card: Card | null;
   onAuthorize: () => void;
   phase: 'idle' | 'passkey';
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const when =
+    chargeDelaySeconds > 0
+      ? formatChargeDelay(chargeDelaySeconds, i18n.language)
+      : t('chatBot.checkout.agentic.consent.whenNow');
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       <p className="text-[11px] leading-snug text-muted-foreground">
         {t('chatBot.checkout.agentic.authorizeExplainer')}
       </p>
 
-      <div className="flex items-baseline justify-between rounded-md border border-dashed border-border/80 bg-muted/20 px-2.5 py-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          {t('chatBot.checkout.agentic.total')}
-        </span>
-        <span className="flex items-baseline gap-1">
-          <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
-            {total.toFixed(2)}
-          </span>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            {currency}
-          </span>
-        </span>
+      <div className="rounded-md border border-dashed border-border/80 bg-muted/20">
+        <p className="px-2.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          {t('chatBot.checkout.agentic.consent.title')}
+        </p>
+        <dl className="space-y-1.5 px-2.5 py-2 text-[11px]">
+          <ConsentRow label={t('chatBot.checkout.agentic.consent.amount')}>
+            <span className="font-mono font-semibold tabular-nums text-foreground">
+              {total.toFixed(2)}
+            </span>{' '}
+            <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {currency}
+            </span>{' '}
+            <span className="text-muted-foreground">
+              {t('chatBot.checkout.agentic.consent.once')}
+            </span>
+          </ConsentRow>
+          <ConsentRow label={t('chatBot.checkout.agentic.consent.when')}>
+            <span className="font-semibold text-foreground">{when}</span>
+          </ConsentRow>
+          {card && (
+            <ConsentRow label={t('chatBot.checkout.agentic.consent.card')}>
+              <span className="font-semibold text-foreground">
+                {card.brand}
+              </span>{' '}
+              <span className="font-mono text-foreground">
+                •••• {card.last4}
+              </span>
+            </ConsentRow>
+          )}
+        </dl>
+
+        <div className="border-t border-dashed border-border/80 px-2.5 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            {t('chatBot.checkout.agentic.consent.items')}
+          </p>
+          <ul className="mt-1.5 space-y-1">
+            {items.map(item => (
+              <li
+                key={item.id}
+                className="flex items-baseline justify-between gap-2 text-[11px]"
+              >
+                <span className="min-w-0 truncate text-foreground">
+                  {t(item.nameKey)}
+                  <span className="text-muted-foreground">
+                    {' · '}
+                    {t(item.descriptionKey)}
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-baseline gap-2 tabular-nums">
+                  <span className="text-muted-foreground">
+                    ×{item.quantity}
+                  </span>
+                  <span className="font-mono text-foreground">
+                    {(
+                      item.price[currency as keyof typeof item.price] *
+                      item.quantity
+                    ).toFixed(2)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="flex items-start gap-1.5 border-t border-dashed border-border/80 px-2.5 py-2 text-[10px] leading-snug text-muted-foreground">
+          <ShieldCheckIcon
+            className="mt-px size-3 shrink-0 text-emerald-600 dark:text-emerald-400"
+            strokeWidth={2.4}
+          />
+          {t('chatBot.checkout.agentic.consent.scope')}
+        </p>
       </div>
 
       <Button

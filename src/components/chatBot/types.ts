@@ -85,7 +85,11 @@ type ChatUITools = {
     output: ClearCartResult;
   };
   proceedToCheckout: {
-    input: { paymentType?: 'card' | 'apple_pay' };
+    input: {
+      paymentType?: 'card' | 'apple_pay';
+      when?: 'now' | 'later';
+      delaySeconds?: number;
+    };
     output: CheckoutResult;
   };
   executeAgenticPayment: {

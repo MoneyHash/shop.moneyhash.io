@@ -222,6 +222,17 @@
         "helpWithOrder": "Help me with my order"
       }
     },
+    "testCards": {
+      "title": "Test cards",
+      "copied": "Card number copied",
+      "copyHint": "Tap a card number to copy it.",
+      "expiryLabel": "Expiry",
+      "expiryValue": "Any future date",
+      "cvvLabel": "CVV",
+      "cvvValue": "Any 3 digits",
+      "success": "Success",
+      "failed": "Decline"
+    },
     "cartView": {
       "title": "Your Cart",
       "items": "items",
@@ -357,7 +368,18 @@
         "authorizeCta": "Authorize with passkey",
         "verifying": "Verifying passkey…",
         "authorizedTitle": "Authorized — placing your order",
-        "authorizedSubtitle": "The assistant is completing your payment"
+        "authorizedSubtitle": "The assistant is completing your payment",
+        "authorizedScheduledSubtitle": "The assistant will charge your card at {{time}}",
+        "consent": {
+          "title": "You're allowing the assistant to",
+          "amount": "Charge",
+          "once": "once",
+          "when": "When",
+          "whenNow": "Right after you approve",
+          "card": "Card",
+          "items": "Items",
+          "scope": "This approval covers only this order, for the amount above."
+        }
       }
     }
   }

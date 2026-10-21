@@ -4,6 +4,7 @@ import { ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import { MoneyHashLogo } from '../moneyHashLogo';
 import { Button } from '@/components/ui/button';
+import { TestCardsPopover } from './testCardsPopover';
 import useShoppingCart from '@/store/useShoppingCart';
 
 export function ChatBotHeader({
@@ -55,6 +56,8 @@ export function ChatBotHeader({
       </div>
 
       <div className="flex items-center gap-0.5">
+        <TestCardsPopover />
+
         <div className="relative">
           <Button
             variant="ghost"

@@ -222,6 +222,17 @@
         "helpWithOrder": "ساعدني في طلبي"
       }
     },
+    "testCards": {
+      "title": "بطاقات تجريبية",
+      "copied": "تم نسخ رقم البطاقة",
+      "copyHint": "اضغط على رقم البطاقة لنسخه.",
+      "expiryLabel": "تاريخ الانتهاء",
+      "expiryValue": "أي تاريخ مستقبلي",
+      "cvvLabel": "رمز CVV",
+      "cvvValue": "أي 3 أرقام",
+      "success": "ناجحة",
+      "failed": "مرفوضة"
+    },
     "cartView": {
       "title": "عربتك",
       "items": "عناصر",
@@ -357,7 +368,18 @@
         "authorizeCta": "التفويض بمفتاح المرور",
         "verifying": "جارٍ التحقق من مفتاح المرور…",
         "authorizedTitle": "تم التفويض — جارٍ تنفيذ طلبك",
-        "authorizedSubtitle": "المساعد يُكمل عملية الدفع"
+        "authorizedSubtitle": "المساعد يُكمل عملية الدفع",
+        "authorizedScheduledSubtitle": "سيخصم المساعد المبلغ من بطاقتك في {{time}}",
+        "consent": {
+          "title": "أنت تسمح للمساعد بما يلي",
+          "amount": "خصم",
+          "once": "مرة واحدة",
+          "when": "الموعد",
+          "whenNow": "فور موافقتك",
+          "card": "البطاقة",
+          "items": "المنتجات",
+          "scope": "تغطي هذه الموافقة هذا الطلب فقط وبالمبلغ الموضح أعلاه."
+        }
       }
     }
   }

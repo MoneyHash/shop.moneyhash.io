@@ -34,6 +34,7 @@ import { Message, MessageContent, MessageResponse } from './message';
 import { TypingIndicator } from './typingIndicator';
 import { Checkout } from './checkout';
 import { CheckoutResultBadge, type CheckoutResult } from './checkout/result';
+import { resolveChargeDelaySeconds } from './checkout/chargeTiming';
 import { AgenticReceipt } from './AgenticReceipt';
 import { AGENT_API_BASE_URL } from './agentApi';
 import {
@@ -457,6 +458,9 @@ export default function ChatBot({ customerId }: { customerId: string }) {
                                   <Checkout
                                     key={`${id}-${i}`}
                                     paymentType={part.input.paymentType}
+                                    chargeDelaySeconds={resolveChargeDelaySeconds(
+                                      part.input,
+                                    )}
                                     customerId={customerId}
                                     onComplete={handleComplete}
                                   />

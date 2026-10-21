@@ -9,6 +9,8 @@ export type ReceiptDraft = {
   currency: string;
   total: number;
   items: ReceiptItem[];
+  // ISO time the customer approved the charge for; the backend enforces it.
+  chargeAt: string;
 };
 
 // Post the rich receipt snapshot (product images, resolved names, routing

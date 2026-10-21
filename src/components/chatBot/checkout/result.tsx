@@ -3,6 +3,7 @@ import { CheckIcon, CopyIcon, SparklesIcon, XCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import type { AgenticProduct } from './createAgenticConsent';
+import { formatChargeTime } from './chargeTiming';
 
 export type ReceiptItem = {
   id: string;
@@ -31,6 +32,10 @@ export type CheckoutResult =
       currency: string;
       total: number;
       products: AgenticProduct[];
+      // The charge timing the customer approved (passed through to the agent).
+      when: 'now' | 'later';
+      delaySeconds: number;
+      chargeAt: string;
     }
   | { status: 'cancelled'; message: string };
 
@@ -41,7 +46,13 @@ export function CheckoutResultBadge({ output }: { output: CheckoutResult }) {
   }
 
   if (output.status === 'authorized') {
-    return <AuthorizedBadge total={output.total} currency={output.currency} />;
+    return (
+      <AuthorizedBadge
+        total={output.total}
+        currency={output.currency}
+        chargeAt={output.when === 'later' ? output.chargeAt : undefined}
+      />
+    );
   }
 
   return (
@@ -63,11 +74,14 @@ export function CheckoutResultBadge({ output }: { output: CheckoutResult }) {
 function AuthorizedBadge({
   total,
   currency,
+  chargeAt,
 }: {
   total: number;
   currency: string;
+  // Set for a deferred charge.
+  chargeAt?: string;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (
     <div
       data-fill-bubble
@@ -84,7 +98,11 @@ function AuthorizedBadge({
           {t('chatBot.checkout.agentic.authorizedTitle')}
         </p>
         <p className="truncate text-[11px] text-muted-foreground">
-          {t('chatBot.checkout.agentic.authorizedSubtitle')}
+          {chargeAt
+            ? t('chatBot.checkout.agentic.authorizedScheduledSubtitle', {
+                time: formatChargeTime(new Date(chargeAt), i18n.language),
+              })
+            : t('chatBot.checkout.agentic.authorizedSubtitle')}
         </p>
       </div>
       <span className="flex shrink-0 items-baseline gap-1">
