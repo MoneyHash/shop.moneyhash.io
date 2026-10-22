@@ -375,7 +375,7 @@
           "amount": "Charge",
           "once": "once",
           "when": "When",
-          "whenNow": "Right after you approve",
+          "whenNow": "immediate",
           "card": "Card",
           "items": "Items",
           "scope": "This approval covers only this order, for the amount above."

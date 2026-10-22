@@ -909,9 +909,6 @@ function AuthorizeAgentSection({
             <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               {currency}
             </span>{' '}
-            <span className="text-muted-foreground">
-              {t('chatBot.checkout.agentic.consent.once')}
-            </span>
           </ConsentRow>
           <ConsentRow label={t('chatBot.checkout.agentic.consent.when')}>
             <span className="font-semibold text-foreground">{when}</span>
