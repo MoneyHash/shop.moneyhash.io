@@ -261,6 +261,7 @@ export default function ApplePay() {
         const intentDetails = await moneyHash.submitPaymentReceipt({
           nativeReceiptData: applePayReceipt,
           intentId,
+          methodId: nativePayData.method_id,
         });
         logJSON.response('Submit Receipt', intentDetails);
 
@@ -424,6 +425,7 @@ export default function ApplePay() {
                     const intentDetails = await moneyHash.submitPaymentReceipt({
                       nativeReceiptData: applePayReceipt,
                       intentId,
+                      methodId: nativePayData.method_id,
                     });
                     logJSON.response('Submit Receipt', intentDetails);
 
@@ -939,6 +941,7 @@ export default function ApplePay() {
                     const intentDetails = await moneyHash.submitPaymentReceipt({
                       nativeReceiptData: applePayReceipt,
                       intentId,
+                      methodId: nativePayData.method_id,
                     });
                     logJSON.response('Submit Receipt', intentDetails);
                     toast.success(
@@ -1048,6 +1051,7 @@ export default function ApplePay() {
                     const intentDetails = await moneyHash.submitPaymentReceipt({
                       nativeReceiptData: applePayReceipt,
                       intentId,
+                      methodId: fixedNativePayData.method_id,
                     });
                     logJSON.response('Submit Receipt', intentDetails);
 
