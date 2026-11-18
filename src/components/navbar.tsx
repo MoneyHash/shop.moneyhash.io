@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import useCurrency from '../store/useCurrency';
 import type { Currency } from '../store/useCurrency';
 import Logo from '../assets/logo.svg';
+import Configuration, { EnvironmentSelect } from './configuration';
 
 export default function NavBar({
   hideCurrency = false,
@@ -35,7 +36,9 @@ export default function NavBar({
           </ul>
         </div>
 
-        <div className="ml-auto flex items-center">
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          <EnvironmentSelect />
+          <Configuration />
           {!hideCurrency && (
             <>
               <label htmlFor="currency" className="sr-only">

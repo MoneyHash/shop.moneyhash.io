@@ -1,3 +1,5 @@
+// Must be first: sets SDK environment globals before anything uses the SDK
+import './utils/environment';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';

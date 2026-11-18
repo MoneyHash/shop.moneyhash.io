@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import { Fragment, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -13,6 +11,7 @@ import NavBar from '../components/navbar';
 import { useShoppingCart } from '../store/useShoppingCart';
 import useMoneyHash from '../hooks/useMoneyHash';
 import createIntent from '../api/createIntent';
+import { hasAccountKey } from '../api';
 import useCurrency from '../store/useCurrency';
 import PaymentExperiencePanel from '../components/paymentExperiencePanel';
 import usePaymentExperience from '../store/usePaymentExperience';
@@ -53,6 +52,10 @@ export default function Checkout() {
   });
 
   const handleCreateIntent = async (data: FormValues) => {
+    if (!hasAccountKey()) {
+      toast.error('Add your account API key in Config first');
+      return;
+    }
     const intent = await createIntent({
       amount: totalPrice,
       currency,
