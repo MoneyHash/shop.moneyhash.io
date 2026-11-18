@@ -1,21 +1,27 @@
 import axios from 'axios';
+import safeLocalStorage from '../utils/safeLocalStorage';
+import { apiBaseURLs, localEnv } from '../utils/environment';
 
 const axiosInstance = axios.create({
-  // baseURL: 'https://web.moneyhash.io/api/v1.1',
-  baseURL: 'https://staging-web.moneyhash.io/api/v1.1',
+  baseURL: apiBaseURLs[localEnv],
 });
 
 axiosInstance.interceptors.response.use(res => res.data);
 
-// Production API key
-// const ACCOUNT_API_KEY = 'FLMn2Ux5.dev7XQ9wqrZyxJjjgNXFkrG455YDf6r5'; // Account: (XZOJyog: Rick Garage)
-
-// Staging API key
-const ACCOUNT_API_KEY = 'sjnhi2lf.S1YLEyimkbIdNjjKnujDvmRscxAEkJAt';
+export function hasAccountKeys() {
+  return (
+    !!safeLocalStorage.getItem('apiKey') &&
+    !!safeLocalStorage.getItem('publicApiKey')
+  );
+}
 
 axiosInstance.interceptors.request.use(config => {
+  const apiKey = safeLocalStorage.getItem('apiKey');
+  if (!apiKey) {
+    return Promise.reject(new Error('Missing API key — set it in Config'));
+  }
   // eslint-disable-next-line no-param-reassign
-  config.headers['x-api-key'] = ACCOUNT_API_KEY;
+  config.headers['x-api-key'] = apiKey;
   return config;
 });
 

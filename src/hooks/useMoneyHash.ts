@@ -1,6 +1,7 @@
 import MoneyHash from '@moneyhash/js-sdk/headless';
 import { useEffect, useMemo, useRef } from 'react';
 import useCurrency from '../store/useCurrency';
+import safeLocalStorage from '../utils/safeLocalStorage';
 
 export default function useMoneyHash({
   onComplete,
@@ -45,9 +46,8 @@ export default function useMoneyHash({
             color: '#1A82C3',
           },
         },
-        publicApiKey:
-          'public.26eMVt1V.8aHrRwG81Xrzha5SyeyhTOSzpH48VDQCPhYvhRx4',
-        // 'public.b7WVmnAe.GKSX3OfQGUTqT5fz0C3lIAZH8P05nnQSfnGtRmIU',
+        // Set from the Config panel in the navbar.
+        publicApiKey: safeLocalStorage.getItem('publicApiKey') || '',
       }),
     [currency],
   );

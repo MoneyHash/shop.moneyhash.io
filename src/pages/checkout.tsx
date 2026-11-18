@@ -11,6 +11,7 @@ import useShoppingCart from '../store/useShoppingCart';
 import twoFixedDigit from '../utils/twoFixedDigits';
 import useMoneyHash from '../hooks/useMoneyHash';
 import createIntent from '../api/createIntent';
+import { hasAccountKeys } from '../api';
 import useCurrency from '../store/useCurrency';
 import formatCurrency from '../utils/formatCurrency';
 import PaymentExperiencePanel from '../components/paymentExperiencePanel';
@@ -69,6 +70,10 @@ export default function Checkout() {
   );
 
   const handleCreateIntent = async (data: FormValues) => {
+    if (!hasAccountKeys()) {
+      toast.error('Add your API keys in Config first');
+      return;
+    }
     const intent = await createIntent({
       operation: paymentOperation,
       amount: totalPrice,

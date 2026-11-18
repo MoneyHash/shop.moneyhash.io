@@ -1,4 +1,5 @@
 import axiosInstance from '.';
+import { getJsonConfig } from '../store/useJsonConfig';
 
 type ProductItem = {
   name: string;
@@ -31,5 +32,7 @@ export default function createIntent({
     // operation: 'purchase',
     webhook_url: 'https://webhook.site/605f6773-6c1a-4711-bea2-21faca2211e1',
     ...rest,
+    // Intent overrides from the Config panel (e.g. flow_id, operation)
+    ...getJsonConfig(),
   });
 }

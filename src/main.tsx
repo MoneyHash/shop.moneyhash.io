@@ -1,4 +1,6 @@
 /* eslint-disable */
+// Must be first: sets SDK environment globals before anything uses the SDK
+import './utils/environment';
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';

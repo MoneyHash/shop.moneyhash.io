@@ -3,6 +3,7 @@ import useCurrency from '../store/useCurrency';
 import type { Currency } from '../utils/productSections';
 import ShoppingCart from './shoppingCart';
 import DecathlonLogo from '../assets/Decathlon.svg';
+import Configuration, { EnvironmentSelect } from './configuration';
 
 const navigation = [
   { name: 'Fleeces', href: '#Fleeces' },
@@ -28,7 +29,7 @@ export default function NavBar({
             <img src={DecathlonLogo} alt="Decathlon" className="h-10" />
           </Link>
 
-          <ul className="flex space-x-1 sm:space-x-3 px-px sm:px-4">
+          <ul className="hidden md:flex space-x-3 px-4">
             {navigation.map(navItem => (
               <li
                 key={navItem.name}
@@ -45,7 +46,9 @@ export default function NavBar({
           </ul>
         </div>
 
-        <div className="ml-auto flex items-center">
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          <EnvironmentSelect />
+          <Configuration />
           {!hideCurrency && (
             <>
               <label htmlFor="currency" className="sr-only">
