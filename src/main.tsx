@@ -3,9 +3,11 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from '@/App';
 import '@/index.css';
-import Home from '@/pages/home';
 import IntegrationGuide from '@/pages/integrationGuide';
 
+// Lazy so the shop's MoneyHash setup (`@/utils/moneyHash`, loaded by Home) never
+// runs on the standalone test pages — each of those configures its own env.
+const Home = lazy(() => import('@/pages/home'));
 const Checkout = lazy(() => import('@/pages/checkout'));
 const Order = lazy(() => import('@/pages/order'));
 const ApplePay = lazy(() => import('@/pages/apple-pay'));

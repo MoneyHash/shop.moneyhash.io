@@ -3,7 +3,6 @@ import MoneyHash, { IntentDetails } from '@moneyhash/js-sdk/headless';
 import toast from 'react-hot-toast';
 import { SubscriptionPlan } from '@moneyhash/js-sdk';
 import { cn } from '@/utils/cn';
-import NavBar from '@/components/navbar';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -20,6 +19,7 @@ import Loader from '@/components/loader';
 import { IntentStateRenderer } from '@/components/checkout/intentStateRenderer';
 import { MoneyHashProvider } from '@/context/moneyHashProvider';
 import { SubscriptionPlanCard } from '@/components/subscriptionPlanCard';
+import { loadMoneyHashEnv, storeMoneyHashEnv } from '@/utils/moneyHashEnv';
 
 type Env = 'production' | 'staging';
 
@@ -31,16 +31,9 @@ type FormConfiguration = {
   publicApiKey: string;
 };
 
-const storedEnv =
-  (localStorage.getItem('subscription-env') as Env) || 'production';
-if (storedEnv === 'staging') {
-  window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
-  window.API_URL = 'https://staging-web.moneyhash.io';
-  window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
-    'https://vault-staging-form.moneyhash.io';
-  window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
-}
-
+// This page keeps its own environment, independent of the shop's `env`.
+const ENV_KEY = 'subscription-env';
+const storedEnv = loadMoneyHashEnv(ENV_KEY) as Env;
 const moneyHash = new MoneyHash({
   type: 'payment',
   publicApiKey: '',
@@ -88,36 +81,29 @@ export default function Subscriptions() {
   }, [config]);
 
   return (
-    <>
-      <NavBar hideCart hideCurrency hideConfig />
-
-      <section className=" mx-auto px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8 max-w-screen-xl">
-        <Header />
-        <div className="grid grid-cols-1 items-start md:grid-cols-3 gap-8 mt-12">
-          <div className="flex flex-col gap-4 md:col-span-2 ">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-72">
-                <Loader />
-              </div>
-            ) : subscriptionPlans ? (
-              <SubscriptionEmbed
-                subscriptionPlans={subscriptionPlans}
-                planGroupId={config.planGroupId}
-                customerId={config.customerId}
-              />
-            ) : (
-              <p className="text-lg text-center text-muted-foreground">
-                No subscription plans found.
-              </p>
-            )}
-          </div>
-          <ConfigurationForm
-            initialConfiguration={config}
-            onUpdate={setConfig}
-          />
+    <section className=" mx-auto px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8 max-w-screen-xl">
+      <Header />
+      <div className="grid grid-cols-1 items-start md:grid-cols-3 gap-8 mt-12">
+        <div className="flex flex-col gap-4 md:col-span-2 ">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-72">
+              <Loader />
+            </div>
+          ) : subscriptionPlans ? (
+            <SubscriptionEmbed
+              subscriptionPlans={subscriptionPlans}
+              planGroupId={config.planGroupId}
+              customerId={config.customerId}
+            />
+          ) : (
+            <p className="text-lg text-center text-muted-foreground">
+              No subscription plans found.
+            </p>
+          )}
         </div>
-      </section>
-    </>
+        <ConfigurationForm initialConfiguration={config} onUpdate={setConfig} />
+      </div>
+    </section>
   );
 }
 
@@ -233,10 +219,7 @@ function ConfigurationForm({
       />
       <Select
         value={initialConfiguration.env}
-        onValueChange={v => {
-          localStorage.setItem('subscription-env', v);
-          window.location.reload();
-        }}
+        onValueChange={v => storeMoneyHashEnv(ENV_KEY, v)}
       >
         <SelectTrigger className="flex-1 border border-input group relative focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/20">
           <SelectValue />

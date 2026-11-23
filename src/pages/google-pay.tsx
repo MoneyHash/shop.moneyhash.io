@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import GooglePayButton from '@google-pay/button-react';
 import axios from 'axios';
 import { JsonEditor } from '@/components/jsonEditor';
-import NavBar from '@/components/navbar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';
 import { logJSON } from '@/utils/logJSON';
+import { loadMoneyHashEnv, storeMoneyHashEnv } from '@/utils/moneyHashEnv';
 
 type Env = 'production' | 'staging' | 'preprod';
 
@@ -45,27 +45,14 @@ const defaultConfig = JSON.stringify(
   2,
 );
 
-const storedEnv =
-  (localStorage.getItem('google-pay-env') as Env) || 'production';
+// This page keeps its own environment, independent of the shop's `env`.
+const ENV_KEY = 'google-pay-env';
+const storedEnv = loadMoneyHashEnv(ENV_KEY);
 const API_URLS: Record<Env, string> = {
   production: 'https://web.moneyhash.io/api/v1.1',
   staging: 'https://staging-web.moneyhash.io/api/v1.1',
   preprod: 'https://preprod-web.moneyhash.io/api/v1.1',
 };
-if (storedEnv === 'staging') {
-  window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
-  window.API_URL = 'https://staging-web.moneyhash.io';
-  window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
-    'https://vault-staging-form.moneyhash.io';
-  window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
-} else if (storedEnv === 'preprod') {
-  window.MONEYHASH_IFRAME_URL = 'https://preprod-embed.moneyhash.io';
-  window.API_URL = 'https://preprod-web.moneyhash.io';
-  window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
-    'https://vault-staging-form.moneyhash.io';
-  window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
-}
-
 const moneyHash = new MoneyHash({
   type: 'payment',
   publicApiKey: '',
@@ -129,119 +116,112 @@ export default function GooglePay() {
   }, [config]);
 
   return (
-    <>
-      <NavBar hideCart hideCurrency hideConfig />
-
-      <section className=" mx-auto px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8 max-w-screen-xl">
-        <Header />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-          <div
-            className={cn(
-              'flex flex-col gap-4',
-              isLoading && 'opacity-50 animate-pulse',
-            )}
-          >
-            <GooglePayButton
-              environment="TEST"
-              buttonColor="white"
-              buttonSizeMode="fill"
-              buttonType="pay"
-              buttonRadius={4}
-              className="[&_#gpay-button-online-api-id]:block [&_#gpay-button-online-api-id]:outline-none [&_#gpay-button-online-api-id]:border [&_#gpay-button-online-api-id]:border-input [&_#gpay-button-online-api-id]:border-solid"
-              paymentRequest={{
-                apiVersion: 2,
-                apiVersionMinor: 0,
-                allowedPaymentMethods: [
-                  {
-                    type: 'CARD',
+    <section className=" mx-auto px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8 max-w-screen-xl">
+      <Header />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+        <div
+          className={cn(
+            'flex flex-col gap-4',
+            isLoading && 'opacity-50 animate-pulse',
+          )}
+        >
+          <GooglePayButton
+            environment="TEST"
+            buttonColor="white"
+            buttonSizeMode="fill"
+            buttonType="pay"
+            buttonRadius={4}
+            className="[&_#gpay-button-online-api-id]:block [&_#gpay-button-online-api-id]:outline-none [&_#gpay-button-online-api-id]:border [&_#gpay-button-online-api-id]:border-input [&_#gpay-button-online-api-id]:border-solid"
+            paymentRequest={{
+              apiVersion: 2,
+              apiVersionMinor: 0,
+              allowedPaymentMethods: [
+                {
+                  type: 'CARD',
+                  parameters: {
+                    allowedAuthMethods:
+                      nativePayData?.allowed_card_auth_methods,
+                    allowedCardNetworks: nativePayData?.allowed_card_networks,
+                  },
+                  tokenizationSpecification: {
+                    type: 'PAYMENT_GATEWAY',
                     parameters: {
-                      allowedAuthMethods:
-                        nativePayData?.allowed_card_auth_methods,
-                      allowedCardNetworks: nativePayData?.allowed_card_networks,
-                    },
-                    tokenizationSpecification: {
-                      type: 'PAYMENT_GATEWAY',
-                      parameters: {
-                        gateway: nativePayData?.gateway,
-                        gatewayMerchantId: nativePayData?.gateway_merchant_id,
-                      },
+                      gateway: nativePayData?.gateway,
+                      gatewayMerchantId: nativePayData?.gateway_merchant_id,
                     },
                   },
-                ],
-                merchantInfo: {
-                  merchantId: nativePayData?.merchant_id,
-                  merchantName: nativePayData?.merchant_name,
                 },
-                transactionInfo: {
-                  totalPriceStatus: 'FINAL',
-                  totalPriceLabel: 'Total',
-                  totalPrice: `${nativePayData?.amount}`,
-                  currencyCode: nativePayData?.currency_code,
-                  countryCode: nativePayData?.country_code || 'US',
+              ],
+              merchantInfo: {
+                merchantId: nativePayData?.merchant_id,
+                merchantName: nativePayData?.merchant_name,
+              },
+              transactionInfo: {
+                totalPriceStatus: 'FINAL',
+                totalPriceLabel: 'Total',
+                totalPrice: `${nativePayData?.amount}`,
+                currencyCode: nativePayData?.currency_code,
+                countryCode: nativePayData?.country_code || 'US',
+              },
+              emailRequired: true,
+            }}
+            onLoadPaymentData={async paymentRequest => {
+              setIsLoading(true);
+              const { paymentMethodData, email } = paymentRequest;
+              const paymentToken = paymentMethodData.tokenizationData.token;
+              const googlePayReceipt = {
+                receipt: paymentToken,
+                receiptBillingData: {
+                  email,
                 },
-                emailRequired: true,
-              }}
-              onLoadPaymentData={async paymentRequest => {
-                setIsLoading(true);
-                const { paymentMethodData, email } = paymentRequest;
-                const paymentToken = paymentMethodData.tokenizationData.token;
-                const googlePayReceipt = {
-                  receipt: paymentToken,
-                  receiptBillingData: {
-                    email,
-                  },
-                };
-                logJSON.info('GooglePay Receipt', googlePayReceipt);
+              };
+              logJSON.info('GooglePay Receipt', googlePayReceipt);
 
-                let intentId;
+              let intentId;
 
-                try {
-                  intentId = await axios
-                    .post(
-                      `${API_URLS[config.env]}/payments/intent/`,
-                      JSON.parse(config.intentConfig),
-                      {
-                        headers: {
-                          'x-api-key': config.apiKey,
-                        },
+              try {
+                intentId = await axios
+                  .post(
+                    `${API_URLS[config.env]}/payments/intent/`,
+                    JSON.parse(config.intentConfig),
+                    {
+                      headers: {
+                        'x-api-key': config.apiKey,
                       },
-                    )
-                    .then(res => res.data.data.id);
-                } catch (error) {
-                  toast.error('Failed to create intent, check logs');
-                  logJSON.error('Create Intent', error);
-                }
+                    },
+                  )
+                  .then(res => res.data.data.id);
+              } catch (error) {
+                toast.error('Failed to create intent, check logs');
+                logJSON.error('Create Intent', error);
+              }
 
-                try {
-                  await moneyHash.proceedWith({
-                    type: 'method',
-                    id: 'GOOGLE_PAY',
-                    intentId,
-                  });
+              try {
+                await moneyHash.proceedWith({
+                  type: 'method',
+                  id: 'GOOGLE_PAY',
+                  intentId,
+                });
 
-                  const intentDetails = await moneyHash.submitPaymentReceipt({
-                    nativeReceiptData: googlePayReceipt,
-                    intentId,
-                  });
-                  logJSON.response('Submit Receipt', intentDetails);
-                  toast.success(`Submitted receipt successfully, check logs.`);
-                } catch (error) {
-                  toast.error('Failed to submit receipt, check logs');
-                  logJSON.error('Submit Receipt', error);
-                }
+                const intentDetails = await moneyHash.submitPaymentReceipt({
+                  nativeReceiptData: googlePayReceipt,
+                  intentId,
+                });
+                logJSON.response('Submit Receipt', intentDetails);
+                toast.success(`Submitted receipt successfully, check logs.`);
+              } catch (error) {
+                toast.error('Failed to submit receipt, check logs');
+                logJSON.error('Submit Receipt', error);
+              }
 
-                setIsLoading(false);
-              }}
-            />
-          </div>
-
-          <ConfigurationForm
-            initialConfiguration={config}
-            onUpdate={setConfig}
+              setIsLoading(false);
+            }}
           />
         </div>
-      </section>
-    </>
+
+        <ConfigurationForm initialConfiguration={config} onUpdate={setConfig} />
+      </div>
+    </section>
   );
 }
 
@@ -285,10 +265,7 @@ function ConfigurationForm({
       />
       <Select
         value={initialConfiguration.env}
-        onValueChange={v => {
-          localStorage.setItem('google-pay-env', v);
-          window.location.reload();
-        }}
+        onValueChange={v => storeMoneyHashEnv(ENV_KEY, v)}
       >
         <SelectTrigger className="border border-input group relative focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/20">
           <SelectValue />

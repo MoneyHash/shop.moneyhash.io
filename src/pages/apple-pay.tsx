@@ -6,7 +6,6 @@ import MoneyHash, {
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { JsonEditor } from '@/components/jsonEditor';
-import NavBar from '@/components/navbar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -27,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/utils/cn';
 import { logJSON } from '@/utils/logJSON';
+import { loadMoneyHashEnv, storeMoneyHashEnv } from '@/utils/moneyHashEnv';
 
 type Env = 'production' | 'staging' | 'preprod';
 
@@ -54,27 +54,14 @@ const defaultConfig = JSON.stringify(
   2,
 );
 
-const storedEnv =
-  (localStorage.getItem('apple-pay-env') as Env) || 'production';
+// This page keeps its own environment, independent of the shop's `env`.
+const ENV_KEY = 'apple-pay-env';
+const storedEnv = loadMoneyHashEnv(ENV_KEY);
 const API_URLS: Record<Env, string> = {
   production: 'https://web.moneyhash.io/api/v1.1',
   staging: 'https://staging-web.moneyhash.io/api/v1.1',
   preprod: 'https://preprod-web.moneyhash.io/api/v1.1',
 };
-
-if (storedEnv === 'staging') {
-  window.MONEYHASH_IFRAME_URL = 'https://stg-embed.moneyhash.io';
-  window.API_URL = 'https://staging-web.moneyhash.io';
-  window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
-    'https://vault-staging-form.moneyhash.io';
-  window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
-} else if (storedEnv === 'preprod') {
-  window.MONEYHASH_IFRAME_URL = 'https://preprod-embed.moneyhash.io';
-  window.API_URL = 'https://preprod-web.moneyhash.io';
-  window.MONEYHASH_VAULT_INPUT_IFRAME_URL =
-    'https://vault-staging-form.moneyhash.io';
-  window.MONEYHASH_VAULT_API_URL = 'https://vault-staging.moneyhash.io';
-}
 
 const moneyHash = new MoneyHash({
   type: 'payment',
@@ -317,8 +304,6 @@ export default function ApplePay() {
 
   return (
     <>
-      <NavBar hideCart hideCurrency hideConfig />
-
       <section className=" mx-auto px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8 max-w-screen-xl">
         <Header />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
@@ -1149,10 +1134,7 @@ function ConfigurationForm({
       />
       <Select
         value={initialConfiguration.env}
-        onValueChange={v => {
-          localStorage.setItem('apple-pay-env', v);
-          window.location.reload();
-        }}
+        onValueChange={v => storeMoneyHashEnv(ENV_KEY, v)}
       >
         <SelectTrigger className="border border-input group relative focus:border-ring focus-visible:ring-2 focus-visible:ring-ring/20">
           <SelectValue />
